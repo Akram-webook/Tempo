@@ -4666,7 +4666,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       return;
     }
     const e = WP.engage.get(me.id);
-    const goalPct = Math.min(100, Math.round((e.weekDone / e.weekGoal) * 100));
+    const goalPct = e.weekGoal > 0 ? Math.min(100, Math.round((e.weekDone / e.weekGoal) * 100)) : 0;
     const habitDays = WP.engage.habitDays;            // ~66 (Lally 2010)
     const habitPct = Math.min(100, Math.round((e.daysActive / habitDays) * 100));
     const nextMs = WP.engage.nextMilestone(e.streak);
@@ -5309,5 +5309,3 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 </script>
 </body>
 </html>
-
-                    <style>.live-ind{display:none !important}</style>
