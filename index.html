@@ -465,6 +465,15 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .controlbar .seg button { height: 28px; padding: 0 13px; color: var(--text-muted); font-weight: 500; }
 .controlbar .seg button:hover:not(.active) { color: var(--text); background: transparent; }
 .controlbar .seg button.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.18); }
+/* live indicator — shows the board auto-refreshes (every 10s) */
+.live-ind { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; flex: none; animation: livepulse 2.4s ease-out infinite; }
+@keyframes livepulse {
+  0%   { box-shadow: 0 0 0 0 rgba(22,163,74,.5); }
+  70%  { box-shadow: 0 0 0 6px rgba(22,163,74,0); }
+  100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); }
+}
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
 /* date navigator — one tidy pill: Today · ‹ · label · › */
 .datenav { height: 36px; gap: 2px; padding: 4px; background: var(--surface-2); border-radius: var(--radius-sm); box-sizing: border-box; }
 .datenav .btn { height: 28px; border: 0; background: transparent; padding: 0 10px; color: var(--text-muted); }
@@ -537,7 +546,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .tree-scroll.panning, .tree-scroll.panning * { cursor: grabbing !important; user-select: none; }
 
 /* team section labels — name + separate each branch under the Operations Director */
-.team-branch { text-align: center; padding-inline: 16px; }       /* breathing room between teams */
+.team-branch { text-align: center; padding-inline: 8px; }        /* tighter gap between teams = less wasted space */
 .team-tag {
   display: inline-block; margin: 0 auto 12px; padding: 5px 14px;
   font-family: var(--font-display, sans-serif); font-stretch: 125%;
@@ -548,18 +557,50 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 }
 .tree-fit { display: inline-block; transform-origin: top center; transition: transform .15s ease; }
 .tree, .tree ul { position: relative; white-space: nowrap; margin: 0; padding: 0; list-style: none; }
-.tree ul { padding-top: 22px; }
+.tree ul { padding-top: 20px; }
 .tree li {
   display: inline-block; vertical-align: top; position: relative;
-  padding: 22px 6px 0 6px;
+  padding: 20px 3px 0 3px;
 }
-/* every card has the same width; height grows to fit content with even rhythm */
+/* every card has the same width; height grows to fit content with even rhythm.
+   Compact: smaller footprint so a multi-team view fits with less wasted space. */
 .tree .node {
   white-space: normal; text-align: center; box-sizing: border-box;
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
-  width: 176px; min-height: 188px; padding: 16px 14px 20px; margin: 0 auto;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  width: 150px; padding: 11px 11px 15px; margin: 0 auto;
 }
-.tree .node .avatar { width: 48px; height: 48px; margin: 0 0 2px; }
+.tree .node .avatar { width: 42px; height: 42px; margin: 0 0 1px; }
+/* manager cards expand on click → make that obvious */
+.tree .node.has-kids { cursor: pointer; }
+.tree .node.has-kids:hover { border-color: var(--brand); }
+/* avatar is the dedicated "open profile" target */
+.node-ava { display: inline-block; border-radius: 50%; line-height: 0; }
+.tree .node.has-kids .node-ava { cursor: pointer; }
+.tree .node.has-kids .node-ava:hover .avatar { box-shadow: 0 0 0 3px var(--brand); }
+.node-ava:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 50%; }
+/* corner tag (freelance / open / joining) — marks only the exception, full-time is unmarked */
+.node-corner {
+  position: absolute; top: 8px; inset-inline-start: 12px;
+  font-size: 9px; font-weight: 700; letter-spacing: .02em; line-height: 1;
+  padding: 3px 7px; border-radius: 999px; border: 1px solid transparent; white-space: nowrap;
+}
+.nc-free { background: rgba(124,92,255,.16); color: #7C5CFF; border-color: rgba(124,92,255,.32); }
+.nc-open { background: var(--surface-2); color: var(--text-muted); border-style: dashed; border-color: var(--border); }
+.nc-join { background: var(--state-balanced-bg, rgba(246,177,0,.16)); color: #9a6b00; border-color: rgba(246,177,0,.35); }
+[data-theme="dark"] .nc-join { color: var(--state-balanced); }
+/* status line — clean Full-time vs Freelance signal: colored dot + quiet label, one line */
+.statusline {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10.5px; font-weight: 600; line-height: 1; color: var(--text-muted); white-space: nowrap;
+}
+.statusline .sl-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; background: currentColor; }
+.sl-ft   .sl-dot { background: #16a34a; }                 /* Full-time → on the team (green) */
+.sl-free { color: #7C5CFF; }                              /* Freelance → violet label + dot */
+.sl-open { color: var(--text-muted); }
+.sl-open .sl-dot { background: var(--text-muted); }
+.sl-join { color: #9a6b00; }
+.sl-join .sl-dot { background: #f6b100; }
+[data-theme="dark"] .sl-join { color: var(--state-balanced); }
 .tree .node .nm {
   font-size: 13.5px; width: 100%; margin: 0;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -589,20 +630,26 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .node-caret:hover { border-color: var(--brand); background: var(--surface-2); }
 .node-caret:active { transform: translateX(-50%) scale(.94); }
 [dir="rtl"] .node-caret:active { transform: translateX(50%) scale(.94); }
-/* connector lines */
+/* connector lines — the visible link between a card and its reports */
+.tree { --node-line: #b7bbc7; }
+[data-theme="dark"] .tree { --node-line: #4a4a52; }
 .tree li::before, .tree li::after {
   content: ''; position: absolute; top: 0; right: 50%;
-  border-top: 2px solid var(--border); width: 50%; height: 22px;
+  border-top: 2px solid var(--node-line); width: 50%; height: 20px;
 }
-.tree li::after { right: auto; left: 50%; border-left: 2px solid var(--border); }
-.tree li:only-child::before, .tree li:only-child::after { display: none; }
-.tree li:only-child { padding-top: 22px; }
+.tree li::after { right: auto; left: 50%; border-left: 2px solid var(--node-line); }
+/* single child: drop the horizontal half-bus but keep a SHORT vertical link
+   (shows the relationship without a long dangling line) */
+.tree li:only-child::before { display: none; }
+.tree li:only-child::after { display: block; left: 50%; right: auto; height: 20px; }
+.tree li:only-child { padding-top: 20px; }
 .tree > li:only-child { padding-top: 0; }
+.tree > li:only-child::after { display: none; }   /* the root has nothing above it */
 .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
-.tree li:last-child::before { border-inline-end: 2px solid var(--border); }
+.tree li:last-child::before { border-inline-end: 2px solid var(--node-line); }
 .tree ul ul::before {
   content: ''; position: absolute; top: 0; left: 50%;
-  border-inline-start: 2px solid var(--border); width: 0; height: 22px;
+  border-inline-start: 2px solid var(--node-line); width: 0; height: 20px;
 }
 .tree > li::before, .tree > li::after { display: none; }
 
@@ -919,7 +966,15 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   padding: 9px 10px; border-radius: var(--radius-sm); transition: background .12s ease;
 }
 .g-acct:hover { background: var(--surface-2); }
-.g-acct .avatar { width: 34px; height: 34px; margin: 0; }
+.g-acct[data-denied="1"] { opacity: .6; }
+.g-noaccess { margin-inline-start: auto; font-size: 10px; font-weight: 600; color: var(--state-overloaded);
+  background: var(--state-overloaded-bg, rgba(248,40,90,.16)); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+.g-denied { text-align: center; padding: 8px 4px 4px; }
+.g-denied-ic { width: 44px; height: 44px; border-radius: 50%; margin: 0 auto 10px; display: grid; place-items: center;
+  color: var(--state-overloaded); background: var(--state-overloaded-bg, rgba(248,40,90,.16)); }
+.g-denied-h { font-weight: 600; font-size: 16px; }
+.g-denied-sub { font-size: 13px; color: var(--text-muted); margin: 4px 0 14px; }
+.login-note .icn { vertical-align: -2px; }
 .g-meta { min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
 .g-nm { font-size: 14px; font-weight: 500; }
 .g-ml { font-size: 12.5px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1962,8 +2017,15 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     openRole:       { en: 'Open role', ar: 'شاغر' },
     joining:        { en: 'Joining', ar: 'ينضم' },
     noAccount:      { en: 'No account yet', ar: 'بدون حساب بعد' },
+    live:           { en: 'Live', ar: 'مباشر' },
+    liveHint:       { en: 'Live — refreshes automatically every 10 seconds', ar: 'مباشر — يُحدّث تلقائياً كل ١٠ ثوانٍ' },
     totalLoad:      { en: 'Total load', ar: 'إجمالي الحِمل' },
     navLibrary:     { en: 'Components', ar: 'المكوّنات' },
+    securedNote:    { en: 'Restricted to @webook.com accounts your admin has granted access.', ar: 'مقصور على حسابات @webook.com التي منحها المدير صلاحية الدخول.' },
+    noAccessTag:    { en: 'No access', ar: 'لا صلاحية' },
+    accessDenied:   { en: 'Access denied', ar: 'الدخول مرفوض' },
+    accessDeniedSub:{ en: "this account hasn't been granted access. Ask your admin.", ar: 'هذا الحساب لم يُمنح صلاحية الدخول. كلّم المدير.' },
+    useAnother:     { en: 'Use another account', ar: 'استخدم حساباً آخر' },
   };
 
   function t(key) {
@@ -2183,8 +2245,24 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     return rel === 'self' || rel === 'manager' || rel === 'director';
   }
 
+  /* ---- Access allow-list (separate from role) ----
+   * "Has this person been granted entry to the app at all?" Domain is enforced
+   * separately (must be @webook.com). Default: current team is granted; an admin
+   * can revoke/grant from the Permissions screen. NOTE: this is the APP-LEVEL gate
+   * — on a public static host it deters but does not truly lock (see SECURITY.md);
+   * the real lock is an edge gate (Cloudflare Access) or a server backend. */
+  const GRANTED = {};
+  WP.data.PEOPLE.forEach(function (p) { if (!p.tbc) GRANTED[p.id] = true; });
+  function hasAccess(id) { return !!GRANTED[id]; }
+  function grantAccess(id, on) {
+    GRANTED[id] = !!on;
+    WP.logEvent && WP.logEvent({ type: on ? 'access-grant' : 'access-revoke', by: WP.state.viewerId, target: id });
+  }
+  function listAccess() { return Object.keys(GRANTED).filter(function (id) { return GRANTED[id]; }); }
+
   WP.access = { byId, directReports, teamOf, visiblePeople, canSee, canAct, canManage,
-                managerChainOf, relationshipTo, canSeeSensitive, canSeeUpward, canSeeComp };
+                managerChainOf, relationshipTo, canSeeSensitive, canSeeUpward, canSeeComp,
+                hasAccess: hasAccess, grantAccess: grantAccess, listAccess: listAccess };
 })(window.WP = window.WP || {});
 
 </script>
@@ -2654,18 +2732,30 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 
   function render(root) {
     const t = WP.i18n.t;
-    const logo = '' + (WP.state.theme === 'dark' ? 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAxOS4wLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiDQoJIHZpZXdCb3g9IjE1OCAzNTYgNzY0IDM2OCIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgMTA4MCAxMDgwOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPg0KCS5zdDB7ZmlsbDojRkZGRkZGO30NCjwvc3R5bGU+DQo8cG9seWdvbiBpZD0iWE1MSURfODJfIiBjbGFzcz0ic3QwIiBwb2ludHM9IjI0OSw2NDguNCAyNzAuMyw2NDguNCAyNDguNyw3MTAuNCAyMzIsNzEwLjQgMjIwLjcsNjcyLjIgMjA5LjksNzEwLjQgMTkzLjIsNzEwLjQgDQoJMTcxLDY0OC40IDE5Mi4zLDY0OC40IDIwMi41LDY4My45IDIxMi43LDY0OC40IDIyOC41LDY0OC40IDIzOC44LDY4My45ICIvPg0KPHBhdGggaWQ9IlhNTElEXzc5XyIgY2xhc3M9InN0MCIgZD0iTTMxOCw2NzMuNmMtMC4zLTYuMS01LjctMTAuMi0xMi44LTEwLjJjLTUuOCwwLTExLjYsMi44LTEzLjYsMTAuMkgzMTh6IE0zMzcuMyw2ODUuMmgtNDUuNQ0KCWMxLjksNiw3LDkuNywxNC41LDkuN2M1LjgsMCwxMS44LTIuNywxNS43LTYuNGwxMC4xLDEyLjhDMzI2LDcwNy45LDMxNS4zLDcxMiwzMDUsNzEyYy0xOS43LDAtMzMuNS0xMy42LTMzLjUtMzIuNA0KCWMwLTIwLjIsMTUuNS0zMi44LDMzLjQtMzIuOGMxNy44LDAsMzIuNywxMi41LDMyLjcsMzEuNEMzMzcuNSw2NzkuOSwzMzcuNCw2ODIuMSwzMzcuMyw2ODUuMiIvPg0KPHBhdGggaWQ9IlhNTElEXzc2XyIgY2xhc3M9InN0MCIgZD0iTTM5NS43LDY3OS4zYzAtNy44LTYuNi0xNC40LTE0LjQtMTQuNGMtNy40LDAtMTQuNCw2LjQtMTQuNCwxNC40YzAsOCw2LjgsMTQuNSwxNC40LDE0LjUNCglDMzg5LjEsNjkzLjgsMzk1LjcsNjg3LjIsMzk1LjcsNjc5LjMgTTQxNS43LDY3OS4zYzAsMjAuMS0xNC42LDMyLjctMzAuMiwzMi43Yy02LjQsMC0xNC42LTIuNS0xOS4xLTguNXY2LjloLTE5Ljd2LTg2LjJoMTkuN3YzMC45DQoJYzQuNS01LjgsMTIuOC04LjQsMTkuMS04LjRDNDAxLjEsNjQ2LjgsNDE1LjcsNjU5LjMsNDE1LjcsNjc5LjMiLz4NCjxwYXRoIGlkPSJYTUxJRF83M18iIGNsYXNzPSJzdDAiIGQ9Ik00NjksNjc5LjVjMC04LjUtNi4xLTE0LjUtMTMuNy0xNC41Yy03LjYsMC0xMy43LDYtMTMuNywxNC41YzAsOC41LDYuMSwxNC40LDEzLjcsMTQuNA0KCUM0NjIuOSw2OTMuOCw0NjksNjg4LDQ2OSw2NzkuNSBNNDIxLjcsNjc5LjVjMC0xOS43LDE1LjktMzIuNywzMy42LTMyLjdjMTcuNywwLDMzLjgsMTMsMzMuOCwzMi43QzQ4OSw2OTksNDczLDcxMiw0NTUuMyw3MTINCglDNDM3LjYsNzEyLDQyMS43LDY5OSw0MjEuNyw2NzkuNSIvPg0KPHBhdGggaWQ9IlhNTElEXzcwXyIgY2xhc3M9InN0MCIgZD0iTTU0Mi4yLDY3OS41YzAtOC41LTYuMS0xNC41LTEzLjctMTQuNWMtNy42LDAtMTMuNyw2LTEzLjcsMTQuNWMwLDguNSw2LjEsMTQuNCwxMy43LDE0LjQNCglDNTM2LjEsNjkzLjgsNTQyLjIsNjg4LDU0Mi4yLDY3OS41IE00OTQuOSw2NzkuNWMwLTE5LjcsMTUuOS0zMi43LDMzLjYtMzIuN2MxNy43LDAsMzMuOCwxMywzMy44LDMyLjdjMCwxOS41LTE2LjEsMzIuNi0zMy44LDMyLjYNCglDNTEwLjgsNzEyLDQ5NC45LDY5OSw0OTQuOSw2NzkuNSIvPg0KPHBvbHlnb24gaWQ9IlhNTElEXzY3XyIgY2xhc3M9InN0MCIgcG9pbnRzPSI2MzQuNCw3MTAuNCA2MTAuNSw3MTAuNCA1OTEuNCw2ODUuMiA1OTEuNCw3MTAuNCA1NzEuNyw3MTAuNCA1NzEuNyw2MjQuMyA1OTEuNCw2MjQuMyANCgk1OTEuNCw2NjUuOCA2MDQuNyw2NDguNCA2MjkuNCw2NDguNCA2MDYsNjc1LjkgIi8+DQo8cGF0aCBpZD0iWE1MSURfNjZfIiBjbGFzcz0ic3QwIiBkPSJNNjM1LjgsNjk5LjhjMC02LjYsNS40LTExLjYsMTItMTEuNmM2LjYsMCwxMi4yLDQuOSwxMi4yLDExLjZjMCw2LjktNS42LDExLjgtMTIuMiwxMS44DQoJQzY0MS4yLDcxMS42LDYzNS44LDcwNi43LDYzNS44LDY5OS44Ii8+DQo8cGF0aCBpZD0iWE1MSURfNjVfIiBjbGFzcz0ic3QwIiBkPSJNNjY2LjksNjc5LjJjMC0xOS43LDE2LjItMzIuNCwzNC4zLTMyLjRjMTIsMCwyMS4xLDUuOCwyNy4xLDE0LjZMNzEzLDY3MQ0KCWMtMi40LTMuNy03LjQtNi0xMS43LTZjLTksMC0xNC40LDYuNS0xNC40LDE0LjJjMCw3LjgsNS4zLDE0LjYsMTQuNCwxNC42YzQuMywwLDkuMy0yLjMsMTEuNy02bDE1LjMsOS42DQoJYy02LDguOC0xNS4xLDE0LjYtMjcuMSwxNC42QzY4My4xLDcxMiw2NjYuOSw2OTguOSw2NjYuOSw2NzkuMiIvPg0KPHBhdGggaWQ9IlhNTElEXzYyXyIgY2xhc3M9InN0MCIgZD0iTTc3OS42LDY3OS41YzAtOC41LTYuMS0xNC41LTEzLjctMTQuNWMtNy42LDAtMTMuNyw2LTEzLjcsMTQuNWMwLDguNSw2LjEsMTQuNCwxMy43LDE0LjQNCglDNzczLjQsNjkzLjgsNzc5LjYsNjg4LDc3OS42LDY3OS41IE03MzIuMiw2NzkuNWMwLTE5LjcsMTUuOS0zMi43LDMzLjYtMzIuN2MxNy43LDAsMzMuOCwxMywzMy44LDMyLjdjMCwxOS41LTE2LjEsMzIuNi0zMy44LDMyLjYNCglDNzQ4LjIsNzEyLDczMi4yLDY5OSw3MzIuMiw2NzkuNSIvPg0KPHBhdGggaWQ9IlhNTElEXzYxXyIgY2xhc3M9InN0MCIgZD0iTTkwOSw2NzcuMXYzMy40aC0xOS43di0zMi44YzAtOS42LTQuOC0xMi42LTkuOC0xMi42Yy02LjEsMC0xMC42LDQuMy0xMC42LDE1LjF2MzAuM2gtMTkuN1Y2NzgNCgljMC05LjYtNC44LTEzLTkuNy0xM2MtNS4zLDAtMTAuOCwyLjctMTAuOCwxM3YzMi40aC0xOS43di02Mi4xaDE5Ljd2OS44YzIuNC03LjgsMTAuOS0xMS40LDE2LjctMTEuNGM5LjIsMCwxNS45LDQuNCwxOS43LDExLjgNCgljNC4zLTguMiwxMy44LTExLjgsMjAuMy0xMS44QzkwMSw2NDYuOCw5MDksNjU4LjEsOTA5LDY3Ny4xIi8+DQo8cGF0aCBpZD0iWE1MSURfNjBfIiBjbGFzcz0ic3QwIiBkPSJNNjMwLjMsNDY0LjRsLTIwLjUsMTEuOGMtMi4zLDEuMy0yLjMsNC42LDAsNmwyMC41LDExLjhsMjMuOSwxMy44YzEuMSwwLjYsMS43LDEuOCwxLjcsM3Y1My4xDQoJYzAsMS4yLTAuNywyLjQtMS43LDNsLTM5LjcsMjIuOWMtMC41LDAuMy0xLjEsMC41LTEuNywwLjVINDI3LjVjLTEuOSwwLTMuNC0xLjUtMy40LTMuNFYzNzEuNWMwLTEuOSwxLjUtMy40LDMuNC0zLjRoMTg1LjINCgljMC42LDAsMS4yLDAuMiwxLjcsMC41bDM5LjcsMjIuOWMxLjEsMC42LDEuNywxLjcsMS43LDN2NTMuMWMwLDEuMi0wLjcsMi40LTEuNywzTDYzMC4zLDQ2NC40eiIvPg0KPHBhdGggaWQ9IlhNTElEXzU5XyIgY2xhc3M9InN0MCIgZD0iTTg3OC4yLDQ2MC44bC0yNi43LDE1LjRjLTIuMywxLjMtMi4zLDQuNiwwLDZsMjYuNywxNS40bDMwLjEsMTcuNGMxLjEsMC42LDEuNywxLjcsMS43LDN2NjguOQ0KCWMwLDEuOS0xLjUsMy40LTMuNCwzLjRoLTg2LjFjLTEuMiwwLTIuNC0wLjctMy0xLjdsLTExLjItMTkuNGwtOS4yLTE1LjljLTEuMy0yLjMtNC42LTIuMy02LDBsLTIwLjQsMzUuM2MtMC42LDEuMS0xLjcsMS43LTMsMS43DQoJaC04Ni4xYy0xLjksMC0zLjQtMS41LTMuNC0zLjRWMzcxLjVjMC0xLjksMS41LTMuNCwzLjQtMy40aDg2LjFjMS4yLDAsMi40LDAuNywzLDEuN2wyMC40LDM1LjNjMS4zLDIuMyw0LjYsMi4zLDYsMGwyMC40LTM1LjMNCgljMC42LTEuMSwxLjgtMS43LDMtMS43aDg2LjFjMS45LDAsMy40LDEuNSwzLjQsMy40djY4LjljMCwxLjItMC43LDIuNC0xLjcsM0w4NzguMiw0NjAuOHoiLz4NCjxwYXRoIGlkPSJYTUxJRF81OF8iIGNsYXNzPSJzdDAiIGQ9Ik00MDIuMywzNzEuNXYyMTUuM2MwLDEuOS0xLjUsMy40LTMuNCwzLjRoLTg2LjFjLTEuMiwwLTIuNC0wLjctMy0xLjdsLTIwLjQtMzUuMw0KCWMtMS4zLTIuMy00LjYtMi4zLTYsMGwtMjAuNCwzNS4zYy0wLjYsMS4xLTEuNywxLjctMywxLjdIMTc0Yy0xLjksMC0zLjQtMS41LTMuNC0zLjRWMzcxLjVjMC0xLjksMS41LTMuNCwzLjQtMy40aDQyLjkNCgljMS4yLDAsMi40LDAuNywzLDEuN2wxNy4zLDMwbDE1LjQsMjYuN2MxLjMsMi4zLDQuNiwyLjMsNiwwbDI1LTQzLjNjMS4zLTIuMyw0LjYtMi4zLDYsMGwyNSw0My4zYzEuMywyLjMsNC42LDIuMyw2LDBsMTUuNC0yNi43DQoJbDE3LjMtMzBjMC42LTEuMSwxLjgtMS43LDMtMS43aDQyLjlDNDAwLjgsMzY4LjEsNDAyLjMsMzY5LjYsNDAyLjMsMzcxLjUiLz4NCjwvc3ZnPg0K' : 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjE1OCAzNTYgNzY0IDM2OCI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5jbHMtMSB7CiAgICAgICAgZmlsbDogI2ZmMmI3ODsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPHBvbHlnb24gY2xhc3M9ImNscy0xIiBwb2ludHM9IjI0OS4wMSA2NDguMzcgMjcwLjI3IDY0OC4zNyAyNDguNzUgNzEwLjQ0IDIzMiA3MTAuNDQgMjIwLjcgNjcyLjE2IDIwOS45NCA3MTAuNDQgMTkzLjE5IDcxMC40NCAxNzEgNjQ4LjM3IDE5Mi4yNiA2NDguMzcgMjAyLjUgNjgzLjg2IDIxMi43MyA2NDguMzcgMjI4LjU0IDY0OC4zNyAyMzguNzggNjgzLjg2IDI0OS4wMSA2NDguMzciLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0zMTcuOTksNjczLjYzYy0uMjYtNi4xMi01LjcxLTEwLjI0LTEyLjc2LTEwLjI0LTUuODUsMC0xMS41NiwyLjc5LTEzLjU2LDEwLjI0aDI2LjMxWk0zMzcuMjYsNjg1LjE5aC00NS40NWMxLjg2LDUuOTgsNy4wNCw5LjcsMTQuNDgsOS43LDUuODUsMCwxMS44My0yLjY2LDE1LjY4LTYuMzhsMTAuMSwxMi43NmMtNi4xMSw2LjY0LTE2Ljc1LDEwLjc2LTI3LjExLDEwLjc2LTE5LjY3LDAtMzMuNDktMTMuNTYtMzMuNDktMzIuNDMsMC0yMC4yLDE1LjU1LTMyLjgzLDMzLjM2LTMyLjgzczMyLjY5LDEyLjQ5LDMyLjY5LDMxLjM3YzAsMS43My0uMTMsMy45OS0uMjYsNy4wNCIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTM5NS43Myw2NzkuMzRjMC03Ljg0LTYuNjUtMTQuMzUtMTQuMzUtMTQuMzVzLTE0LjM1LDYuMzgtMTQuMzUsMTQuMzUsNi43OCwxNC40OCwxNC4zNSwxNC40OCwxNC4zNS02LjY0LDE0LjM1LTE0LjQ4TTQxNS42Nyw2NzkuMzRjMCwyMC4wNy0xNC42MiwzMi42OS0zMC4xNywzMi42OS02LjM4LDAtMTQuNjItMi41Mi0xOS4xNC04LjUxdjYuOTFoLTE5LjY3di04Ni4xOGgxOS42N3YzMC44OWM0LjUyLTUuODUsMTIuNzYtOC4zNywxOS4xNC04LjM3LDE1LjU1LDAsMzAuMTcsMTIuNDksMzAuMTcsMzIuNTYiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik00NjguOTcsNjc5LjQ3YzAtOC41MS02LjExLTE0LjQ4LTEzLjY5LTE0LjQ4cy0xMy42OSw1Ljk4LTEzLjY5LDE0LjQ4LDYuMTEsMTQuMzUsMTMuNjksMTQuMzUsMTMuNjktNS44NSwxMy42OS0xNC4zNU00MjEuNjUsNjc5LjQ3YzAtMTkuNjcsMTUuOTUtMzIuNjksMzMuNjItMzIuNjlzMzMuNzYsMTMuMDMsMzMuNzYsMzIuNjktMTYuMDgsMzIuNTYtMzMuNzYsMzIuNTYtMzMuNjItMTMuMDItMzMuNjItMzIuNTYiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik01NDIuMTksNjc5LjQ3YzAtOC41MS02LjExLTE0LjQ4LTEzLjY5LTE0LjQ4cy0xMy42OSw1Ljk4LTEzLjY5LDE0LjQ4LDYuMTEsMTQuMzUsMTMuNjksMTQuMzUsMTMuNjktNS44NSwxMy42OS0xNC4zNU00OTQuODgsNjc5LjQ3YzAtMTkuNjcsMTUuOTUtMzIuNjksMzMuNjItMzIuNjlzMzMuNzYsMTMuMDMsMzMuNzYsMzIuNjktMTYuMDgsMzIuNTYtMzMuNzYsMzIuNTYtMzMuNjItMTMuMDItMzMuNjItMzIuNTYiLz4KICA8cG9seWdvbiBjbGFzcz0iY2xzLTEiIHBvaW50cz0iNjM0LjQzIDcxMC40NCA2MTAuNSA3MTAuNDQgNTkxLjM3IDY4NS4xOSA1OTEuMzcgNzEwLjQ0IDU3MS43IDcxMC40NCA1NzEuNyA2MjQuMjYgNTkxLjM3IDYyNC4yNiA1OTEuMzcgNjY1Ljc5IDYwNC42NiA2NDguMzggNjI5LjM4IDY0OC4zOCA2MDUuOTkgNjc1Ljg4IDYzNC40MyA3MTAuNDQiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik02MzUuNzYsNjk5LjgxYzAtNi42NSw1LjQ1LTExLjU2LDExLjk2LTExLjU2czEyLjIyLDQuOTIsMTIuMjIsMTEuNTYtNS41OCwxMS44My0xMi4yMiwxMS44My0xMS45Ni00LjkyLTExLjk2LTExLjgzIi8+CiAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNjY2Ljg2LDY3OS4yMWMwLTE5LjY3LDE2LjIxLTMyLjQzLDM0LjI5LTMyLjQzLDExLjk2LDAsMjEuMTMsNS44NSwyNy4xMSwxNC42MmwtMTUuMjgsOS41N2MtMi4zOS0zLjcyLTcuNDQtNS45OC0xMS43LTUuOTgtOS4wMywwLTE0LjM1LDYuNTEtMTQuMzUsMTQuMjJzNS4zMiwxNC42MiwxNC4zNSwxNC42MmM0LjI1LDAsOS4zMS0yLjI2LDExLjctNS45OGwxNS4yOCw5LjU3Yy01Ljk4LDguNzctMTUuMTUsMTQuNjItMjcuMTEsMTQuNjItMTguMDgsMC0zNC4yOS0xMy4xNS0zNC4yOS0zMi44MyIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTc3OS41Niw2NzkuNDdjMC04LjUxLTYuMTEtMTQuNDgtMTMuNjktMTQuNDhzLTEzLjY5LDUuOTgtMTMuNjksMTQuNDgsNi4xMSwxNC4zNSwxMy42OSwxNC4zNSwxMy42OS01Ljg1LDEzLjY5LTE0LjM1TTczMi4yNCw2NzkuNDdjMC0xOS42NywxNS45NS0zMi42OSwzMy42Mi0zMi42OXMzMy43NiwxMy4wMywzMy43NiwzMi42OS0xNi4wOCwzMi41Ni0zMy43NiwzMi41Ni0zMy42Mi0xMy4wMi0zMy42Mi0zMi41NiIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTkwOSw2NzcuMDh2MzMuMzZoLTE5LjY3di0zMi44M2MwLTkuNTctNC43OC0xMi42Mi05LjgzLTEyLjYyLTYuMTEsMC0xMC42Myw0LjI1LTEwLjYzLDE1LjE1djMwLjNoLTE5LjY3di0zMi40M2MwLTkuNTctNC43OC0xMy4wMi05LjctMTMuMDItNS4zMiwwLTEwLjc3LDIuNjYtMTAuNzcsMTMuMDJ2MzIuNDNoLTE5LjY3di02Mi4wNmgxOS42N3Y5LjgzYzIuMzktNy44NCwxMC45LTExLjQzLDE2Ljc1LTExLjQzLDkuMTcsMCwxNS45NSw0LjM5LDE5LjY3LDExLjgzLDQuMjUtOC4yNCwxMy44Mi0xMS44MywyMC4zMy0xMS44MywxNS41NSwwLDIzLjUyLDExLjMsMjMuNTIsMzAuMyIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTYzMC4yOSw0NjQuMzdsLTIwLjQ2LDExLjgxYy0yLjI5LDEuMzItMi4yOSw0LjYzLDAsNS45NWwyMC40NiwxMS44MiwyMy45LDEzLjhjMS4wNi42MSwxLjcyLDEuNzUsMS43MiwyLjk4djUzLjE0YzAsMS4yMy0uNjYsMi4zNi0xLjcyLDIuOTdsLTM5LjY4LDIyLjkyYy0uNTIuMy0xLjEyLjQ2LTEuNzIuNDZoLTE4NS4yNGMtMS45LDAtMy40NC0xLjU0LTMuNDQtMy40NHYtMjE1LjI0YzAtMS45LDEuNTQtMy40NCwzLjQ0LTMuNDRoMTg1LjI0Yy42LDAsMS4yLjE2LDEuNzIuNDZsMzkuNjgsMjIuOTFjMS4wNi42MSwxLjcyLDEuNzUsMS43MiwyLjk4djUzLjE0YzAsMS4yMy0uNjYsMi4zNi0xLjcyLDIuOTdsLTIzLjksMTMuOFoiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik04NzguMTksNDYwLjhsLTI2LjY1LDE1LjM4Yy0yLjI5LDEuMzItMi4yOSw0LjYzLDAsNS45NWwyNi42NSwxNS4zOCwzMC4wOCwxNy4zN2MxLjA2LjYxLDEuNzIsMS43NSwxLjcyLDIuOTh2NjguOTFjMCwxLjktMS41NCwzLjQ0LTMuNDQsMy40NGgtODYuMTJjLTEuMjMsMC0yLjM2LS42Ni0yLjk4LTEuNzJsLTExLjE4LTE5LjM4LTkuMjEtMTUuOTVjLTEuMzItMi4yOS00LjYzLTIuMjktNS45NSwwbC0yMC40LDM1LjMyYy0uNjEsMS4wNi0xLjc1LDEuNzItMi45OCwxLjcyaC04Ni4xMWMtMS45LDAtMy40NC0xLjU0LTMuNDQtMy40NHYtMjE1LjI0YzAtMS45LDEuNTQtMy40NCwzLjQ0LTMuNDRoODYuMTFjMS4yMywwLDIuMzYuNjYsMi45OCwxLjcybDIwLjQsMzUuMzJjMS4zMiwyLjI5LDQuNjMsMi4yOSw1Ljk1LDBsMjAuMzktMzUuMzJjLjYxLTEuMDYsMS43NS0xLjcyLDIuOTgtMS43Mmg4Ni4xMmMxLjksMCwzLjQ0LDEuNTQsMy40NCwzLjQ0djY4LjkyYzAsMS4yMy0uNjYsMi4zNi0xLjcyLDIuOTdsLTMwLjA4LDE3LjM3WiIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTQwMi4zMSwzNzEuNTN2MjE1LjI1YzAsMS45LTEuNTQsMy40NC0zLjQ0LDMuNDRoLTg2LjFjLTEuMjMsMC0yLjM2LS42Ni0yLjk4LTEuNzJsLTIwLjQxLTM1LjM0Yy0xLjMyLTIuMjktNC42My0yLjI5LTUuOTUsMGwtMjAuMzgsMzUuMzNjLS42MSwxLjA2LTEuNzUsMS43Mi0yLjk4LDEuNzJoLTg2LjEyYy0xLjksMC0zLjQ0LTEuNTQtMy40NC0zLjQ0di0yMTUuMjVjMC0xLjksMS41NC0zLjQ0LDMuNDQtMy40NGg0Mi44NWMxLjIzLDAsMi4zNi42NiwyLjk4LDEuNzJsMTcuMzEsMjkuOTksMTUuNDIsMjYuN2MxLjMyLDIuMjksNC42MywyLjI5LDUuOTUsMGwyNC45OC00My4yN2MxLjMyLTIuMjksNC42My0yLjI5LDUuOTUsMGwyNC45OCw0My4yN2MxLjMyLDIuMjksNC42MywyLjI5LDUuOTUsMGwxNS40LTI2LjcsMTcuMzEtMjkuOTljLjYxLTEuMDYsMS43NS0xLjcyLDIuOTgtMS43Mmg0Mi44NWMxLjksMCwzLjQ0LDEuNTQsMy40NCwzLjQ0Ii8+Cjwvc3ZnPg==');
+    const logo = 'src/assets/' + (WP.state.theme === 'dark' ? 'wbk-white.svg' : 'wbk-pink.svg');
     const picking = !!WP._gPick;
 
-    const accounts = WP.data.PEOPLE.map(function (p) {
-      return '<button class="g-acct" data-id="' + p.id + '">' +
+    // Only real @webook.com people can appear (TBC placeholders are not sign-in accounts).
+    const accounts = WP.data.PEOPLE.filter(function (p) { return !p.tbc; }).map(function (p) {
+      const denied = !WP.access.hasAccess(p.id);
+      return '<button class="g-acct" data-id="' + p.id + '"' + (denied ? ' data-denied="1"' : '') + '>' +
         ui.avatar(p, 'var(--brand)') +
         '<span class="g-meta"><span class="g-nm">' + ui.esc(WP.i18n.name(p)) + '</span>' +
-        '<span class="g-ml">' + ui.esc(emailOf(p)) + '</span></span></button>';
+        '<span class="g-ml">' + ui.esc(emailOf(p)) + '</span></span>' +
+        (denied ? '<span class="g-noaccess">' + t('noAccessTag') + '</span>' : '') + '</button>';
     }).join('');
 
     let body;
-    if (!picking) {
+    if (WP._denied) {
+      const d = WP._denied;
+      body =
+        '<div class="g-denied">' +
+          '<div class="g-denied-ic">' + WP.ui.icon('lock', 22) + '</div>' +
+          '<div class="g-denied-h">' + t('accessDenied') + '</div>' +
+          '<div class="g-denied-sub">' + ui.esc(emailOf(d)) + ' — ' + t('accessDeniedSub') + '</div>' +
+          '<button class="g-back" id="g-denied-back">' + t('useAnother') + '</button>' +
+        '</div>';
+    } else if (!picking) {
       body =
         '<button class="g-btn" id="g-start">' + gLogo() + '<span>' + t('googleContinue') + '</span></button>';
     } else {
@@ -2684,7 +2774,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
           '<h1 class="login-title">' + t('signInTitle') + '</h1>' +
           '<p class="login-sub">' + t('signInSub') + '</p>' +
           body +
-          '<div class="login-note">' + t('googleDemo') + '</div>' +
+          '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('securedNote') + '</div>' +
         '</div>' +
         '<div class="login-controls">' +
           '<button class="btn" id="login-lang">' + t('lang') + '</button>' +
@@ -2697,8 +2787,15 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     if (start) start.onclick = function () { WP._gPick = true; render(root); };
     const back = root.querySelector('#g-back');
     if (back) back.onclick = function () { WP._gPick = false; render(root); };
+    const dback = root.querySelector('#g-denied-back');
+    if (dback) dback.onclick = function () { WP._denied = null; WP._gPick = true; render(root); };
     root.querySelectorAll('.g-acct').forEach(function (b) {
-      b.onclick = function () { signIn(b.dataset.id); };
+      b.onclick = function () {
+        const id = b.dataset.id;
+        // domain is already guaranteed (webook.com accounts only); enforce the access allow-list
+        if (!WP.access.hasAccess(id)) { WP._denied = WP.access.byId(id); WP._gPick = false; render(root); return; }
+        signIn(id);
+      };
     });
     root.querySelector('#login-lang').onclick = function () { WP.setState({ lang: WP.state.lang === 'en' ? 'ar' : 'en' }); };
     root.querySelector('#login-theme').onclick = function () { WP.setState({ theme: WP.state.theme === 'light' ? 'dark' : 'light' }); };
@@ -2930,13 +3027,34 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       '</div>';
   }
 
-  // Employment / status chip — makes Full-time vs Freelance (and open/joining roles) unambiguous.
+  // A "joining" date only counts while it is still in the FUTURE. Once the date
+  // arrives (e.g. today is past it), the person is simply active — no stale badge.
+  function joiningSoon(person) {
+    if (!person.joining) return null;
+    return person.joining > todayISO() ? person.joining : null;
+  }
+
+  // Employment / status chip (used in the LIST view, where there's room for a full label).
   function empBadge(person) {
     const t = WP.i18n.t;
     if (person.tbc) return '<span class="emp emp-open">' + t('openRole') + '</span>';
-    if (person.joining) return '<span class="emp emp-join">' + t('joining') + ' ' + WP.i18n.shortDate(person.joining) + '</span>';
+    const js = joiningSoon(person);
+    if (js) return '<span class="emp emp-join">' + t('joining') + ' ' + WP.i18n.shortDate(js) + '</span>';
     if (person.employment === 'freelance') return '<span class="emp emp-free">' + t('freelance') + '</span>';
     return '<span class="emp emp-ft">' + t('fullTime') + '</span>';
+  }
+
+  // Clean one-line status for the TREE card — a small color-coded dot + word, so it's
+  // instantly clear whether someone is Full-time or Freelance (or Open / Joining), with
+  // none of the bulk of a full pill. Senior-design call: the dot carries the signal,
+  // the label stays quiet, every card reads the same height.
+  function statusLine(person) {
+    const t = WP.i18n.t;
+    if (person.tbc) return '<div class="statusline sl-open"><span class="sl-dot"></span>' + t('openRole') + '</div>';
+    const js = joiningSoon(person);
+    if (js) return '<div class="statusline sl-join"><span class="sl-dot"></span>' + t('joining') + ' ' + WP.i18n.shortDate(js) + '</div>';
+    if (person.employment === 'freelance') return '<div class="statusline sl-free"><span class="sl-dot"></span>' + t('freelance') + '</div>';
+    return '<div class="statusline sl-ft"><span class="sl-dot"></span>' + t('fullTime') + '</div>';
   }
 
   // Tier dot color for an account/event (Tier 1 = brand, 2 = near, 3 = muted).
@@ -2981,16 +3099,23 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   function nodeHTML(person, snap, kidCount, isCol) {
     const accent = ui.stateColor(snap.state);
     const flame = snap.burnout ? '<div class="flame" title="' + WP.i18n.t('burnoutFlag') + '">' + WP.ui.icon('flame', 15) + '</div>' : '';
+    // Caret keeps the report COUNT visible and acts as a secondary toggle; the whole
+    // card is also clickable to expand (see render). aria-expanded for screen readers.
     const caret = kidCount
       ? '<button class="node-caret' + (isCol ? ' is-col' : '') + '" data-caret="' + person.id +
-        '" aria-label="' + (isCol ? 'expand' : 'collapse') + '">' + kidCount + '<span class="chev"></span></button>'
+        '" aria-label="' + (isCol ? 'show team' : 'hide team') + '" aria-expanded="' + (!isCol) + '">' +
+        kidCount + '<span class="chev"></span></button>'
       : '';
-    return '<div class="node' + (person.tbc ? ' is-tbc' : '') + '" data-id="' + person.id + '" style="--node-accent:' + accent + '">' +
+    // Manager cards expand on click; the avatar is the dedicated "open profile" affordance.
+    return '<div class="node' + (person.tbc ? ' is-tbc' : '') + (kidCount ? ' has-kids' : '') + '"' +
+        ' data-id="' + person.id + '" style="--node-accent:' + accent + '"' +
+        (kidCount ? ' title="' + (isCol ? 'Click to show team' : 'Click to hide team') + '"' : '') + '>' +
       flame +
-      ui.avatar(person, accent) +
+      '<span class="node-ava" data-profile="' + person.id + '" role="button" tabindex="0"' +
+        ' aria-label="' + ui.esc(WP.i18n.name(person)) + ' — open profile">' + ui.avatar(person, accent) + '</span>' +
       '<div class="nm">' + ui.esc(WP.i18n.name(person)) + '</div>' +
       '<div class="ttl">' + ui.esc(WP.i18n.title(person)) + '</div>' +
-      empBadge(person) +
+      statusLine(person) +
       acctLine(person) +
       (person.tbc ? '' : loadBar(snap)) +
       caret +
@@ -3211,7 +3336,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     const m = WP.capacity.teamMetrics(scopeSet, WP.state.window, WP.state.refDate);
     const snapById = {};
     m.snaps.forEach(function (s) { snapById[s.id] = s; });
-    const colMap = focusPerson ? {} : collapsed;
+    const colMap = collapsed;
 
     // snapshots for EVERYONE (so predictive search works across all teams,
     // even while the tree is focused on one team)
@@ -3231,6 +3356,8 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
         }).join('') +
       '</div>' +
       dateNav(win, WP.state.refDate) +
+      '<span class="live-ind" title="' + t('liveHint') + '"><span class="live-dot"></span>' +
+        '<span>' + t('live') + ' · <span id="live-ts">' + nowClock() + '</span></span></span>' +
     '</div>';
 
     const legend = '<div class="legend">' + WP.data.STATES.map(function (s) {
@@ -3264,6 +3391,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
         else WP.setState({ refDate: shiftDate(WP.state.window, WP.state.refDate, dir === 'next' ? 1 : -1) });
       };
     });
+    // caret chip — secondary toggle (still shows the report count)
     root.querySelectorAll('[data-caret]').forEach(function (b) {
       b.onclick = function (e) {
         e.stopPropagation();
@@ -3271,7 +3399,23 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
         render(root);
       };
     });
-    root.querySelectorAll('[data-id]').forEach(function (el) {
+    // avatar = dedicated "open profile" affordance (works on every card)
+    root.querySelectorAll('[data-profile]').forEach(function (el) {
+      el.onclick = function (e) { e.stopPropagation(); WP.ui.peek(el.dataset.profile); };
+      el.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); WP.ui.peek(el.dataset.profile); } };
+    });
+    // TREE card: click the body to show/hide the team (one click, no hunting for arrows).
+    // Cards with no reports just open the profile.
+    root.querySelectorAll('.tree .node[data-id]').forEach(function (el) {
+      el.onclick = function (e) {
+        if (e.target.closest('[data-caret]') || e.target.closest('[data-profile]')) return;
+        const id = el.dataset.id;
+        if (el.classList.contains('has-kids')) { collapsed[id] = !collapsed[id]; render(root); }
+        else WP.ui.peek(id);
+      };
+    });
+    // LIST rows always open the profile
+    root.querySelectorAll('.list .row[data-id]').forEach(function (el) {
       el.onclick = function () { WP.ui.peek(el.dataset.id); };
     });
 
@@ -3285,6 +3429,39 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 
     // drag-to-pan the org canvas (grab / grabbing cursors)
     setupPan(root);
+
+    // keep the board live — refresh on a light interval (see scheduleAutoRefresh)
+    scheduleAutoRefresh(root);
+  }
+
+  // Live clock for the "Updated …" indicator.
+  function nowClock() {
+    const d = new Date();
+    return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+  }
+
+  // Auto-refresh every 10s so the board always reflects the latest state. It re-renders
+  // ONLY when it's safe: the view is still mounted + visible, no menu open, the user isn't
+  // typing in search, and no drag is in progress — and it restores the scroll position so
+  // the refresh is invisible. A single shared timer (cleared each render) avoids pile-ups.
+  let refreshTimer = null;
+  function scheduleAutoRefresh(root) {
+    if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+    refreshTimer = setInterval(function () {
+      if (!document.body.contains(root)) { clearInterval(refreshTimer); refreshTimer = null; return; }
+      if (document.hidden) return;
+      const sc = root.querySelector('.tree-scroll');
+      const menuOpen = root.querySelector('.scope.open');
+      const search = root.querySelector('#map-search');
+      const typing = search && (document.activeElement === search || search.value);
+      const dragging = sc && sc.classList.contains('panning');
+      const ddOpen = root.querySelector('.predict.open');
+      if (menuOpen || typing || dragging || ddOpen) return;       // don't interrupt the user
+      const sx = sc ? sc.scrollLeft : 0, sy = sc ? sc.scrollTop : 0;
+      render(root);
+      const sc2 = root.querySelector('.tree-scroll');
+      if (sc2) { sc2.scrollLeft = sx; sc2.scrollTop = sy; }
+    }, 10000);
   }
 
   // Click-and-drag panning on the tree canvas, with native grab/grabbing cursors.
@@ -3334,7 +3511,12 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       const s = menu.querySelector('.scope-opt.selected') || opts[0]; if (s) s.focus();
     }
     function close() { wrap.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
-    function choose(o) { focusId = o.dataset.team || null; render(root); }
+    function choose(o) {
+      focusId = o.dataset.team || null;
+      // Focusing a team shows it fully expanded; All teams returns to the fit-first default.
+      collapsed = focusId ? {} : defaultCollapsed(WP.access.visiblePeople(WP.viewer()));
+      render(root);
+    }
     btn.onclick = function (e) { e.stopPropagation(); wrap.classList.contains('open') ? close() : open(); };
     btn.onkeydown = function (e) {
       if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
@@ -3348,7 +3530,11 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
         else if (e.key === 'Escape') { e.preventDefault(); close(); btn.focus(); }
       };
     });
-    document.addEventListener('click', function (ev) { if (!wrap.contains(ev.target)) close(); });
+    // single shared outside-click listener (removed before re-adding) so 10s refreshes
+    // never pile up handlers
+    if (WP._scopeDocClose) document.removeEventListener('click', WP._scopeDocClose);
+    WP._scopeDocClose = function (ev) { if (!wrap.contains(ev.target)) close(); };
+    document.addEventListener('click', WP._scopeDocClose);
   }
 
   function highlight(name, q) {
