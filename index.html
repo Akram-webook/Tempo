@@ -499,6 +499,22 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 @media (prefers-reduced-motion: reduce) { .scope-menu, .scope-caret { transition: none; } }
 .map-empty { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 40px; color: var(--text-muted); }
 
+/* ---- mandatory evaluation banner (persists across pages until reviews are done) ---- */
+#eval-banner:empty { display: none; }
+.eval-banner[hidden] { display: none; }
+.eval-banner { position: sticky; top: 0; z-index: 30; margin: 0 0 14px;
+  background: var(--brand-soft, rgba(255,44,121,.12)); border: 1px solid rgba(255,44,121,.35);
+  border-radius: var(--radius-sm); }
+.eval-banner.is-overdue { background: var(--state-overloaded-bg, rgba(248,40,90,.14)); border-color: var(--state-overloaded, #f8285a); }
+.eval-banner .eb-in { display: flex; align-items: center; gap: 10px; padding: 10px 14px; }
+.eval-banner .icn { flex: none; color: var(--brand); }
+.eval-banner.is-overdue .icn { color: var(--state-overloaded, #f8285a); }
+.eval-banner .eb-msg { flex: 1; min-width: 0; font-size: 13.5px; color: var(--text); }
+.eval-banner .eb-msg b { font-weight: 600; }
+.eval-banner .eb-cta { flex: none; height: 32px; padding: 0 14px; }
+.eval-banner.is-overdue .eb-cta { background: var(--state-overloaded, #f8285a); border-color: transparent; }
+@media (max-width: 600px) { .eval-banner .eb-msg { font-size: 12.5px; } .eval-banner .eb-cta { padding: 0 10px; } }
+
 /* predictive search (typeahead) — functional, accessible, animated */
 .search input:placeholder-shown ~ .search-clear { display: none; }
 .predict {
@@ -1662,13 +1678,29 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 
   /* ---- Evaluation cycles (HR opens them) ---- */
   const CYCLES = [
-    { id: 'q1_2025',     name: 'Q1 2025',       type: 'Quarterly', start: '2025-01-01', end: '2025-03-31', status: 'Completed' },
-    { id: 'mid_2025',    name: '2025 Mid-Year', type: 'Mid-Year',  start: '2025-07-29', end: '2025-08-17', status: 'Active' },
-    { id: 'q3_2025',     name: 'Q3 2025',       type: 'Quarterly', start: '2025-10-01', end: '2025-10-15', status: 'Upcoming' },
-    { id: 'annual_2025', name: '2025 Annual',   type: 'Annual',    start: '2025-12-01', end: '2025-12-20', status: 'Upcoming' },
+    { id: 'q1_2026',     name: 'Q1 2026',       type: 'Quarterly', start: '2026-01-01', end: '2026-03-31', due: '2026-04-07', status: 'Completed' },
+    { id: 'q2_2026',     name: 'Q2 2026',       type: 'Quarterly', start: '2026-04-01', end: '2026-06-30', due: '2026-06-30', status: 'Active' },
+    { id: 'q3_2026',     name: 'Q3 2026',       type: 'Quarterly', start: '2026-07-01', end: '2026-09-30', due: '2026-10-07', status: 'Upcoming' },
+    { id: 'annual_2026', name: '2026 Annual',   type: 'Annual',    start: '2026-12-01', end: '2026-12-20', due: '2026-12-25', status: 'Upcoming' },
   ];
-  let activeCycleId = 'mid_2025';
+  let activeCycleId = 'q2_2026';
   function activeCycle() { return CYCLES.find(function (c) { return c.id === activeCycleId; }); }
+
+  // Deadline state for the active cycle (drives the mandatory banner + overdue flags).
+  function dueInfo() {
+    const c = activeCycle();
+    if (!c || !c.due) return null;
+    const today = new Date().toISOString().slice(0, 10);
+    const daysLeft = Math.ceil((Date.parse(c.due) - Date.parse(today)) / 86400000);
+    return { cycle: c, due: c.due, daysLeft: daysLeft, overdue: daysLeft < 0 };
+  }
+  // What a manager MUST complete this cycle = a review for each direct report.
+  function requiredFor(viewerId) {
+    const reports = (WP.access && WP.access.directReports(viewerId)) || [];
+    let done = 0;
+    reports.forEach(function (p) { const e = EVALUATIONS[p.id]; if (e && e.status === 'Completed') done++; });
+    return { total: reports.length, done: done, pending: reports.length - done, reports: reports };
+  }
 
   /* ---- SELF-assessment (employee rates themselves) — shown beside the
    * manager's rating to surface blind spots (the fairness move). ---- */
@@ -1743,6 +1775,8 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     upwardOverall: upwardOverall, compaRatio: compaRatio,
     cycles: function () { return CYCLES; },
     activeCycle: activeCycle,
+    dueInfo: dueInfo,
+    requiredFor: requiredFor,
     setActiveCycle: function (id) { activeCycleId = id; },
     addCycle: function (c) { CYCLES.push(c); activeCycleId = c.id; },
   };
@@ -1838,6 +1872,14 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     teams:          { en: 'Teams',                  ar: 'الفرق' },
     people:         { en: 'People',                 ar: 'الأشخاص' },
     view:           { en: 'View',                   ar: 'عرض' },
+    viewTeam:       { en: 'View team',              ar: 'عرض الفريق' },
+    reviewsDue:     { en: 'reviews due',            ar: 'تقييمات مطلوبة' },
+    reviewNow:      { en: 'Review now',             ar: 'ابدأ الآن' },
+    dueInDays:      { en: 'due in {d} days',        ar: 'باقٍ {d} يوم' },
+    dueToday:       { en: 'due today',              ar: 'تستحق اليوم' },
+    overdueBy:      { en: 'overdue by {d} days',    ar: 'متأخرة {d} يوم' },
+    ledBy:          { en: 'Led by',                 ar: 'بقيادة' },
+    inTeam:         { en: 'in',                     ar: 'في' },
     teamLead:       { en: 'Team lead',              ar: 'قائد الفريق' },
     allTeams:       { en: 'All teams',              ar: 'كل الفرق' },
     seniorTeams:    { en: 'Senior teams',           ar: 'الفرق الرئيسية' },
@@ -3259,16 +3301,13 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     while (p && guard++ < 20) { if (p.team) return p; p = p.managerId ? WP.access.byId(p.managerId) : null; }
     return null;
   }
-  // All focusable "teams" = anyone with reports, team-leads first (business order), then the rest.
+  // The named teams = people who carry a team label (the real teams), in business order.
+  // Sub-managers without a team label are NOT listed as "teams" here — they appear under
+  // People (and still offer a "View team" chip because they have reports).
   function teamsList(base) {
-    const hasKids = {};
-    base.forEach(function (p) { if (p.managerId) hasKids[p.managerId] = true; });
     const ORDER = ['Automation & Execution', 'Sports', 'Entertainment', 'On Ground', 'Cashless'];
-    return base.filter(function (p) { return hasKids[p.id]; }).sort(function (a, b) {
-      const ra = a.team ? (ORDER.indexOf(a.team) + 1 || 99) : 999;
-      const rb = b.team ? (ORDER.indexOf(b.team) + 1 || 99) : 999;
-      if (ra !== rb) return ra - rb;
-      return WP.i18n.name(a).localeCompare(WP.i18n.name(b), undefined, { sensitivity: 'base' });
+    return base.filter(function (p) { return p.team; }).sort(function (a, b) {
+      return (ORDER.indexOf(a.team) + 1 || 99) - (ORDER.indexOf(b.team) + 1 || 99);
     });
   }
 
@@ -3330,8 +3369,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     if (win === 'year') return '' + y;
     if (win === 'month') return mn[mo] + ' ' + y;
     if (win === 'day') {
-      const wd = WEEKDAYS[ar ? 'ar' : 'en'][new Date(Date.UTC(y, mo, day)).getUTCDay()];
-      return wd + (ar ? '، ' : ', ') + day + ' ' + mn[mo] + ' ' + y;
+      // Clean day label — no weekday clutter (e.g. "23 Jun 2026"); the "today" dot already
+      // signals when it's the current day, so the weekday + "Today" text are redundant.
+      return day + ' ' + mn[mo] + ' ' + y;
     }
     // week → Sunday..Saturday containing refDate
     const dow = new Date(Date.UTC(y, mo, day)).getUTCDay();
@@ -3377,7 +3417,8 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     //   contrast, NOT a filled/selected pill (avoids reading as "this date = today").
     let today;
     if (cur) {
-      today = '<button class="btn datenav-today is-current" data-nav="today" disabled aria-disabled="true">' + t('today') + '</button>';
+      // On the current period: no "Today" text — the pink dot on the label already says so.
+      today = '';
     } else {
       // Arrow points toward "today". In LTR earlier=left / later=right; in RTL it's mirrored,
       // so choose the glyph explicitly per language (not relying on a blanket icon flip).
@@ -3631,6 +3672,8 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     const clr = root.querySelector('#map-search-clear');
     if (!finder || !input || !dd) return;
     const teams = teamsList(base);
+    const hasRep = {};
+    base.forEach(function (p) { if (p.managerId) hasRep[p.managerId] = true; });
     let rows = [], active = -1;
     const hay = function (p) { return (p.name + ' ' + (p.nameAr || '') + ' ' + (p.title || '') + ' ' + (p.titleAr || '')).toLowerCase(); };
 
@@ -3638,24 +3681,27 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     function focusTeam(id) { closeDd(); input.value = ''; focusId = id || null; collapsed = focusId ? {} : defaultCollapsed(base); render(root); }
     function openPerson(id) { closeDd(); input.value = ''; WP.ui.peek(id); }
 
+    // Team row: lead's photo + the TEAM name + who leads it + a clear "View team" action.
     function teamRow(p, q) {
       return '<div class="predict-row pr-team" role="option" data-team="' + p.id + '">' +
-        '<span class="pr-ico">' + WP.ui.icon('users', 15) + '</span>' +
+        ui.avatar(p, 'var(--brand)') +
         '<span class="predict-meta"><span class="nm">' + (q ? highlight(teamLabel(p), q) : ui.esc(teamLabel(p))) + '</span>' +
-        '<span class="ttl">' + ui.esc(WP.i18n.title(p)) + '</span></span>' +
-        '<span class="pr-go">' + t('view') + '</span></div>';
+        '<span class="ttl">' + t('ledBy') + ' ' + ui.esc(WP.i18n.name(p)) + '</span></span>' +
+        '<span class="pr-go">' + t('viewTeam') + '</span></div>';
     }
+    // Person row: their photo + name + role, plus ONE team chip — "View team" if they lead
+    // a team, otherwise "in <their team>" — so every row says who they are and where they sit.
     function personRow(p, q) {
       const s = snapById[p.id]; const c = s ? ui.stateColor(s.state) : 'var(--brand)';
       const lead = teamLeadOf(p.id);
-      const teamBit = (lead && lead.id !== p.id)
-        ? ' · <button class="pr-teamchip" data-team="' + lead.id + '" title="' + ui.esc(teamLabel(lead)) + '">' + WP.ui.icon('users', 11) + ' ' + ui.esc(teamLabel(lead)) + '</button>'
-        : (lead && lead.id === p.id) ? ' · <span class="pr-teamself">' + t('teamLead') + '</span>' : '';
+      let chip = '';
+      if (hasRep[p.id]) chip = ' · <button class="pr-teamchip is-lead" data-team="' + p.id + '">' + WP.ui.icon('users', 11) + ' ' + t('viewTeam') + '</button>';
+      else if (lead) chip = ' · <button class="pr-teamchip" data-team="' + lead.id + '" title="' + ui.esc(teamLabel(lead)) + '">' + WP.ui.icon('users', 11) + ' ' + t('inTeam') + ' ' + ui.esc(teamLabel(lead)) + '</button>';
       const load = s ? '<span class="predict-load" style="color:' + c + '">' + s.load + '%</span>' : '';
       return '<div class="predict-row pr-person" role="option" data-pick="' + p.id + '">' +
         ui.avatar(p, c) +
         '<span class="predict-meta"><span class="nm">' + (q ? highlight(WP.i18n.name(p), q) : ui.esc(WP.i18n.name(p))) + '</span>' +
-        '<span class="ttl">' + ui.esc(WP.i18n.title(p)) + teamBit + '</span></span>' + load + '</div>';
+        '<span class="ttl">' + ui.esc(WP.i18n.title(p)) + chip + '</span></span>' + load + '</div>';
     }
 
     function build() {
@@ -5360,6 +5406,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       bar.innerHTML = ''; bar.style.display = 'none';
       if (appbar) { appbar.innerHTML = ''; appbar.style.display = 'none'; }
       if (backdrop) backdrop.style.display = 'none';
+      const ebx = document.getElementById('eval-banner'); if (ebx) { ebx.innerHTML = ''; ebx.hidden = true; }
       document.getElementById('overlay-host').innerHTML = '';
       WP.ui.login.render(root);
       return;
@@ -5380,12 +5427,46 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     else if (WP.state.route === 'library') WP.ui.wbkLibrary.render(root);
     else WP.ui.workloadMap.render(root);
 
+    // mandatory evaluation banner — follows a manager across every page until done
+    renderEvalBanner();
+
     // one gentle daily check-in pop-up after first sign-in (per session)
     if (!WP._promptShown) {
       WP._promptShown = true;
       setTimeout(function () { if (WP.ui.dailyPrompt) WP.ui.dailyPrompt.open(); }, 450);
     }
   };
+
+  // Mandatory evaluation banner — a manager with outstanding reviews for the ACTIVE cycle
+  // sees a persistent, non-dismissible bar on every page (red once overdue) that links
+  // straight to their pending reviews. Lives in its own host above #view, so navigating
+  // and the workload auto-refresh never wipe it.
+  function renderEvalBanner() {
+    const root = document.getElementById('view');
+    let host = document.getElementById('eval-banner');
+    if (!host) { host = document.createElement('div'); host.id = 'eval-banner'; if (root && root.parentNode) root.parentNode.insertBefore(host, root); }
+    const t = WP.i18n.t, viewer = WP.viewer();
+    const cyc = WP.evaluation && WP.evaluation.activeCycle && WP.evaluation.activeCycle();
+    const req = (viewer && WP.evaluation && WP.evaluation.requiredFor) ? WP.evaluation.requiredFor(viewer.id) : null;
+    if (!viewer || viewer.id === '__admin__' || !cyc || cyc.status !== 'Active' || !req || req.total === 0 || req.pending === 0) {
+      host.innerHTML = ''; host.hidden = true; return;
+    }
+    const di = WP.evaluation.dueInfo && WP.evaluation.dueInfo();
+    const overdue = !!(di && di.overdue);
+    let when = '';
+    if (di) when = overdue ? t('overdueBy').replace('{d}', Math.abs(di.daysLeft))
+      : di.daysLeft === 0 ? t('dueToday') : t('dueInDays').replace('{d}', di.daysLeft);
+    host.hidden = false;
+    host.className = 'eval-banner' + (overdue ? ' is-overdue' : '');
+    host.innerHTML =
+      '<div class="eb-in">' + WP.ui.icon(overdue ? 'flame' : 'chart', 16) +
+        '<span class="eb-msg"><b>' + WP.ui.esc(cyc.name) + ' ' + t('reviewsDue') + '</b> · ' +
+          req.done + '/' + req.total + ' ' + t('done') + (when ? ' · ' + when : '') + '</span>' +
+        '<button class="btn primary eb-cta" id="eb-go">' + t('reviewNow') + '</button>' +
+      '</div>';
+    const go = document.getElementById('eb-go');
+    if (go) go.onclick = function () { WP.setState({ route: 'evaluations', selectedId: null }); };
+  }
 
   // Esc closes any open overlay (peek popover / assignment drawer) — user control & freedom.
   document.addEventListener('keydown', function (e) {
