@@ -1129,3 +1129,28 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .wbk-modal-card h4 { margin: 0 0 6px; font-size: 16px; }
 .wbk-modal-card p { margin: 0; color: var(--text-muted); font-size: 14px; }
 @media (prefers-reduced-motion: reduce) { .wbk-tip, .wbk-toggle span::after { transition: none; } }
+
+/* ── Signature / credits bar — decorative authed-app footer (Wave 3 supporting drop).
+   Credit-only; no data, no logic. Tokens map to the WBK palette; gold is darkened in
+   light theme to keep the small role labels readable (WCAG AA). RTL reverses the row. */
+.sig-bar { display: flex; align-items: stretch; gap: 0; padding: 18px 26px;
+  border-top: 1px solid var(--border, rgba(255,255,255,.12));
+  background: var(--bg, #09090B);
+  font-family: var(--font-sans, system-ui, sans-serif); }
+.sig-dept { flex: 1.5; display: flex; align-items: center; font-size: 12px; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--text-muted, #9b9ba3); font-weight: 500; }
+.sig-sep { width: 1px; background: var(--border, rgba(255,255,255,.12)); margin: 0 22px; }
+.sig-credit { flex: 1; text-align: center; padding: 0 6px; }
+.sig-role { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #c8a24a;
+  font-weight: 600; margin-bottom: 5px; }
+[data-theme="light"] .sig-role { color: #6e5410; } /* darker gold for AA contrast on light bg */
+.sig-name { font-size: 17px; font-weight: 700; color: var(--text, #f4f4f5); }
+.sig-name--accent { position: relative; display: inline-block; }
+.sig-name--accent::after { content: ""; position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: -5px; width: 30px; height: 2px; border-radius: 2px; background: var(--brand, #ff2c79); }
+[dir="rtl"] .sig-bar { flex-direction: row-reverse; }
+@media (max-width: 640px) {
+  .sig-bar { flex-direction: column; gap: 14px; align-items: center; text-align: center; }
+  .sig-dept { flex: none; justify-content: center; }
+  .sig-sep { display: none; }
+}

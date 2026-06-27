@@ -1239,6 +1239,31 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .wbk-modal-card p { margin: 0; color: var(--text-muted); font-size: 14px; }
 @media (prefers-reduced-motion: reduce) { .wbk-tip, .wbk-toggle span::after { transition: none; } }
 
+/* ── Signature / credits bar — decorative authed-app footer (Wave 3 supporting drop).
+   Credit-only; no data, no logic. Tokens map to the WBK palette; gold is darkened in
+   light theme to keep the small role labels readable (WCAG AA). RTL reverses the row. */
+.sig-bar { display: flex; align-items: stretch; gap: 0; padding: 18px 26px;
+  border-top: 1px solid var(--border, rgba(255,255,255,.12));
+  background: var(--bg, #09090B);
+  font-family: var(--font-sans, system-ui, sans-serif); }
+.sig-dept { flex: 1.5; display: flex; align-items: center; font-size: 12px; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--text-muted, #9b9ba3); font-weight: 500; }
+.sig-sep { width: 1px; background: var(--border, rgba(255,255,255,.12)); margin: 0 22px; }
+.sig-credit { flex: 1; text-align: center; padding: 0 6px; }
+.sig-role { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #c8a24a;
+  font-weight: 600; margin-bottom: 5px; }
+[data-theme="light"] .sig-role { color: #6e5410; } /* darker gold for AA contrast on light bg */
+.sig-name { font-size: 17px; font-weight: 700; color: var(--text, #f4f4f5); }
+.sig-name--accent { position: relative; display: inline-block; }
+.sig-name--accent::after { content: ""; position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: -5px; width: 30px; height: 2px; border-radius: 2px; background: var(--brand, #ff2c79); }
+[dir="rtl"] .sig-bar { flex-direction: row-reverse; }
+@media (max-width: 640px) {
+  .sig-bar { flex-direction: column; gap: 14px; align-items: center; text-align: center; }
+  .sig-dept { flex: none; justify-content: center; }
+  .sig-sep { display: none; }
+}
+
 </style>
 </head>
 <body>
@@ -1248,6 +1273,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     <div class="nav-backdrop" id="nav-backdrop"></div>
     <main class="view-main"><div id="eval-banner" hidden></div><div id="view"></div></main>
   </div>
+  <footer id="sig-bar"></footer>
   <div id="overlay-host"></div>
 
   <!-- Load order matters: data → core → ui → app.
@@ -2046,6 +2072,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     catEvaluation:  { en: 'Evaluation', ar: 'التقييم' },
     catRecognition: { en: 'Recognition', ar: 'التقدير' },
     catDecision:    { en: 'Decision', ar: 'القرار' },
+    sigDept:        { en: 'Events Operations Department', ar: 'إدارة عمليات الفعاليات' },
+    sigManaged:     { en: 'Managed & Executed by', ar: 'إدارة وتنفيذ' },
+    sigDirected:    { en: 'Directed by', ar: 'بإشراف' },
     skills:         { en: 'Skills & competencies', ar: 'المهارات والكفاءات' },
     hardSkills:     { en: 'Technical', ar: 'تقنية' },
     softSkills:     { en: 'Behavioral', ar: 'سلوكية' },
@@ -6494,6 +6523,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       if (backdrop) backdrop.style.display = 'none';
       const ebx = document.getElementById('eval-banner'); if (ebx) { ebx.innerHTML = ''; ebx.hidden = true; }
       document.getElementById('overlay-host').innerHTML = '';
+      renderSignatureBar();   // hidden on the sign-in screen
       WP.ui.login.render(root);
       return;
     }
@@ -6517,6 +6547,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     // mandatory evaluation banner — follows a manager across every page until done
     renderEvalBanner();
 
+    // Signature / credits bar — decorative footer, authed app only
+    renderSignatureBar();
+
     // Gentle daily check-in — at most ONCE PER DAY (not every load/session), and
     // only after the dashboard has painted, so it never interrupts orientation
     // (S3 — progressive disclosure / calm UI). Skip stays effortless.
@@ -6532,6 +6565,30 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       }
     }
   };
+
+  // Signature / credits bar — a thin decorative footer across the bottom of the authed
+  // app (department + the two credit signatures). Credit-only: no data, no logic. Hidden
+  // on the sign-in screen. Names are proper nouns, kept verbatim in both languages.
+  function renderSignatureBar() {
+    const host = document.getElementById('sig-bar');
+    if (!host) return;
+    if (!WP.state.authed) { host.innerHTML = ''; return; }
+    const t = WP.i18n.t;
+    host.innerHTML =
+      '<div class="sig-bar">' +
+        '<div class="sig-dept">' + t('sigDept') + '</div>' +
+        '<div class="sig-sep"></div>' +
+        '<div class="sig-credit">' +
+          '<div class="sig-role">' + t('sigManaged') + '</div>' +
+          '<div class="sig-name sig-name--accent">M. Akram</div>' +
+        '</div>' +
+        '<div class="sig-sep"></div>' +
+        '<div class="sig-credit">' +
+          '<div class="sig-role">' + t('sigDirected') + '</div>' +
+          '<div class="sig-name">Ahmed Othman</div>' +
+        '</div>' +
+      '</div>';
+  }
 
   // Mandatory evaluation banner — a manager with outstanding reviews for the ACTIVE cycle
   // sees a persistent, non-dismissible bar on every page (red once overdue) that links

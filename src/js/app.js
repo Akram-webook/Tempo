@@ -174,6 +174,7 @@
       if (backdrop) backdrop.style.display = 'none';
       const ebx = document.getElementById('eval-banner'); if (ebx) { ebx.innerHTML = ''; ebx.hidden = true; }
       document.getElementById('overlay-host').innerHTML = '';
+      renderSignatureBar();   // hidden on the sign-in screen
       WP.ui.login.render(root);
       return;
     }
@@ -197,6 +198,9 @@
     // mandatory evaluation banner — follows a manager across every page until done
     renderEvalBanner();
 
+    // Signature / credits bar — decorative footer, authed app only
+    renderSignatureBar();
+
     // Gentle daily check-in — at most ONCE PER DAY (not every load/session), and
     // only after the dashboard has painted, so it never interrupts orientation
     // (S3 — progressive disclosure / calm UI). Skip stays effortless.
@@ -212,6 +216,30 @@
       }
     }
   };
+
+  // Signature / credits bar — a thin decorative footer across the bottom of the authed
+  // app (department + the two credit signatures). Credit-only: no data, no logic. Hidden
+  // on the sign-in screen. Names are proper nouns, kept verbatim in both languages.
+  function renderSignatureBar() {
+    const host = document.getElementById('sig-bar');
+    if (!host) return;
+    if (!WP.state.authed) { host.innerHTML = ''; return; }
+    const t = WP.i18n.t;
+    host.innerHTML =
+      '<div class="sig-bar">' +
+        '<div class="sig-dept">' + t('sigDept') + '</div>' +
+        '<div class="sig-sep"></div>' +
+        '<div class="sig-credit">' +
+          '<div class="sig-role">' + t('sigManaged') + '</div>' +
+          '<div class="sig-name sig-name--accent">M. Akram</div>' +
+        '</div>' +
+        '<div class="sig-sep"></div>' +
+        '<div class="sig-credit">' +
+          '<div class="sig-role">' + t('sigDirected') + '</div>' +
+          '<div class="sig-name">Ahmed Othman</div>' +
+        '</div>' +
+      '</div>';
+  }
 
   // Mandatory evaluation banner — a manager with outstanding reviews for the ACTIVE cycle
   // sees a persistent, non-dismissible bar on every page (red once overdue) that links
