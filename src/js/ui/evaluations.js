@@ -14,7 +14,31 @@
     return '<span class="rating ' + cls + '">' + s + '</span>';
   }
 
+  // Backend sync states (loading / offline-fallback / subtle success). Reads
+  // WP.db.status; renders nothing when signed-out/local-only (no backend).
+  function syncBanner() {
+    const t = WP.i18n.t;
+    const db = WP.db;
+    if (!db || !db.usingBackend || !db.usingBackend()) return '';
+    const s = db.status || {};
+    if (s.loading) return '<div class="sync-note loading">' + WP.ui.icon('clock', 14) + ' ' + t('evalSyncing') + '</div>';
+    if (s.offline) return '<div class="sync-note offline">' + WP.ui.icon('alert', 14) + ' ' + t('evalLoadError') + '</div>';
+    if (s.synced)  return '<div class="sync-note synced">' + WP.ui.icon('check', 14) + ' ' + t('evalSynced') + '</div>';
+    return '';
+  }
+
+  // Phase 1: re-fetch shared evaluations once per session, then re-render.
+  // Realtime subscriptions are a later phase (SPEC P4).
+  function ensureLoaded() {
+    const db = WP.db;
+    if (db && db.usingBackend && db.usingBackend() && !db._evalLoaded) {
+      db._evalLoaded = true;
+      db.evaluations.list().then(function () { WP.setState({}); });
+    }
+  }
+
   function render(root) {
+    ensureLoaded();
     const t = WP.i18n.t, ar = WP.state.lang === 'ar';
     const viewer = WP.viewer();
     const cycle = WP.evaluation.activeCycle();
@@ -73,6 +97,8 @@
           (WP.access.canManage(viewer) ? '<button class="btn primary" id="new-cycle">' + WP.ui.icon('plus', 15) + ' ' + t('newCycle') + '</button>' : '') +
         '</div>' +
       '</div>' +
+
+      syncBanner() +
 
       '<div class="grid-2" style="align-items:start">' +
         '<div class="section"><h3>' + t('myTasks') + '</h3>' + tasks + '</div>' +

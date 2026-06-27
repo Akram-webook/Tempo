@@ -81,20 +81,30 @@
       '</div>';
 
     root.querySelector('#back').onclick = back;
+    // Downward evaluations sync through WP.db (shared backend + localStorage
+    // fallback). Self-assessments (SELF) stay local in Phase 1 — out of scope.
+    const saveEval = function () {
+      ev.updated_at = new Date().toISOString();
+      if (!selfMode && WP.db && WP.db.evaluations) {
+        WP.db.evaluations.upsert(p.id, ev).then(function (r) { if (r && r.offline) WP.setState({}); });
+      }
+    };
     root.querySelectorAll('.scale-btn').forEach(function (b) {
       b.onclick = function () {
         ev.scores[b.dataset.c] = parseInt(b.dataset.n, 10);
         if (ev.status === 'Not started') ev.status = 'In progress';
+        saveEval();
         WP.setState({});
       };
     });
     root.querySelectorAll('.eval-ta').forEach(function (ta) {
-      ta.onchange = function () { ev.feedback[ta.dataset.q] = ta.value; };
+      ta.onchange = function () { ev.feedback[ta.dataset.q] = ta.value; saveEval(); };
     });
     const ap = root.querySelector('#approve');
     if (ap) ap.onclick = function () {
       ev.status = 'Completed'; ev.evaluatorId = ev.evaluatorId || WP.state.viewerId;
       WP.logEvent({ type: 'evaluation', by: WP.state.viewerId, target: p.id, reason: 'approved · ' + (WP.evaluation.overall(ev) || '–') + '/5' });
+      saveEval();
       WP.setState({});
     };
     const dl = root.querySelector('#dl');

@@ -128,3 +128,47 @@ needed. Say the word and I'll wire it in.
 
 > Note: `fouda@` and `abdelaal@` are placeholders I inferred from the names — if their
 > real aliases differ, send them and I'll correct `EMAILS` in `mock-data.js`.
+
+---
+
+## Shared backend — evaluations (Supabase, Phase 1)
+
+Evaluations are the first entity moved from per-browser `localStorage` to a **shared
+Supabase table**, so teammates see the same data from any device. The app talks to it
+only through `WP.db` (`src/js/core/db.js`); no UI file calls Supabase directly. When the
+user is signed out or the backend is unreachable, `WP.db` transparently falls back to
+`localStorage` — nothing is lost, and the evaluations view shows an inline
+"Saved locally — will sync when back online" notice.
+
+### One-time setup
+Run the migration in the Supabase SQL editor (project `ftkbjsxdrxtjdzcojnve`):
+
+```
+supabase/0001_evaluations.sql
+```
+
+It creates `public.evaluations`, enables **Row Level Security**, and adds policies. The app
+uses only the public **publishable** key (`sb_publishable_…`); RLS does the gating. The
+`service_role` key is never used in the front-end.
+
+### RLS policies
+- **Write** (insert/update/delete): only your own rows — enforced by
+  `author_email = auth.email()`. `author_email` is stamped server-side by the column
+  default, so the client never sends it (and can't spoof it).
+- **Read (Phase 1 — PERMISSIVE, deliberate tradeoff):** any authenticated user may read
+  **all** evaluations. This ships the slice now without first moving role mapping
+  server-side. **Phase 2** tightens this to role-scoped reads (author + their managers /
+  directors / super-admin) once roles live in the database. Until then, do not treat
+  read-access as confidential separation.
+
+### Data mapping (lossless)
+`public.evaluations` keeps the SPEC's typed columns (`subject_id`, `author_id`, `cycle`,
+`scores`, `author_email`, `updated_at`) for RLS/query, **plus** `feedback jsonb` and
+`status text` so the app's full evaluation record (16 weighted scores + 6 qualitative
+answers + workflow status) round-trips with no data loss. On first signed-in load,
+existing local evaluations are imported once, de-duped by `id`, never overwriting a newer
+server row.
+
+### Not in this phase
+People/roles/check-ins stay local (unchanged). Realtime live updates and a server-side
+role model come in later phases (P2–P4).
