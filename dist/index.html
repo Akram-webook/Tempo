@@ -957,6 +957,27 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .wb-watch    { color: var(--state-near, #b8860b); background: var(--state-near-bg, rgba(246,177,0,.14)); border-color: rgba(246,177,0,.32); }
 .wb-atrisk   { color: #d2691e; background: rgba(210,105,30,.14); border-color: rgba(210,105,30,.34); }
 .wb-critical { color: var(--state-over, #c0392b); background: var(--state-over-bg, rgba(192,57,43,.13)); border-color: rgba(192,57,43,.34); }
+
+/* ===== Fairness / Overload Radar (Builder B) — reuses the wb-chip pattern ===== */
+.fr-team { padding: 14px 0; border-bottom: 1px solid var(--border); }
+.fr-team:last-child { border-bottom: 0; }
+.fr-team-head { display: flex; align-items: center; gap: 10px; }
+.fr-team-head .avatar { width: 34px; height: 34px; flex: none; }
+.fr-team-meta { flex: 1; min-width: 0; }
+.fr-team-meta .nm { font-weight: 600; font-size: 14px; }
+.fr-factors { margin: 8px 0 6px; padding-inline-start: 20px; color: var(--text); font-size: 13px; line-height: 1.6; }
+.fr-action { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+.fr-action .icn { flex: none; color: var(--state-available); }
+.fr-nodata { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.fr-nodata .icn { flex: none; }
+.fr-flagged-n { font-weight: 400; color: var(--text-muted); font-size: 12px; }
+/* band chip = icon + label + colour together (never colour as the only cue — WCAG 2.2) */
+.fr-chip { flex: none; display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700;
+  border-radius: 999px; padding: 3px 9px; border: 1px solid transparent; }
+.fr-chip .icn { flex: none; }
+.fr-balanced   { color: var(--state-available, #2e7d32); background: var(--state-available-bg, rgba(46,125,50,.12)); border-color: rgba(46,125,50,.30); }
+.fr-watch      { color: var(--state-near, #b8860b); background: var(--state-near-bg, rgba(246,177,0,.14)); border-color: rgba(246,177,0,.32); }
+.fr-unbalanced { color: var(--state-over, #c0392b); background: var(--state-over-bg, rgba(192,57,43,.13)); border-color: rgba(192,57,43,.34); }
 .prog { display: flex; height: 12px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
 .prog .pg-done { background: var(--state-available); height: 100%; }
 .prog .pg-prog { background: #1d58ff; height: 100%; }
@@ -2161,6 +2182,22 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     wbEmptyNote:    { en: 'That’s a good outcome — your team’s workload looks sustainable. Tempo will flag rising strain here early.', ar: 'هذه نتيجة جيدة — يبدو حِمل فريقك مستداماً. سيُنبّهك Tempo هنا مبكراً عند تزايد الضغط.' },
     wbDenied:       { en: 'Wellbeing signals are visible only to a person’s manager, their director, and super-admin.', ar: 'مؤشّرات الرفاهية تظهر فقط لمدير الشخص ومديره الأعلى ومشرف النظام.' },
     wbError:        { en: 'Couldn’t compute wellbeing signals right now.', ar: 'تعذّر حساب مؤشّرات الرفاهية حالياً.' },
+    /* ===== Fairness / Overload Radar (Builder B) — keep grouped; may rebase ===== */
+    navFairness:    { en: 'Fairness', ar: 'العدالة' },
+    frTitle:        { en: 'Fairness — Overload Radar', ar: 'العدالة — رادار الحِمل' },
+    frSubtitle:     { en: 'See where work is concentrated or unevenly spread, so you can rebalance early.', ar: 'اطّلع على أين يتركّز العمل أو يتوزّع بشكل غير متساوٍ، لتعيد التوازن مبكراً.' },
+    frFraming:      { en: 'A team-balance signal for leadership — about how work is distributed, never a ranking of managers or a judgment of people.', ar: 'إشارة توازن للفريق موجّهة للقيادة — حول كيفية توزيع العمل، وليست ترتيباً للمديرين ولا حكماً على الأشخاص.' },
+    frTeams:        { en: 'Teams', ar: 'الفرق' },
+    frLedBy:        { en: 'Led by', ar: 'بقيادة' },
+    frMembers:      { en: 'members', ar: 'أعضاء' },
+    frNeedAttention:{ en: 'need attention', ar: 'تحتاج انتباهاً' },
+    frSuggested:    { en: 'Suggested', ar: 'المقترح' },
+    frNoData:       { en: 'Not enough assignment data yet for this team.', ar: 'لا توجد بيانات إسناد كافية لهذا الفريق بعد.' },
+    frEmptyTitle:   { en: 'Not enough data to assess balance yet', ar: 'لا توجد بيانات كافية لتقييم التوازن بعد' },
+    frEmptyNote:    { en: 'No team has assignments to compare yet. Tempo will surface concentration or imbalance here as work is assigned.', ar: 'لا يوجد فريق لديه مهام للمقارنة بعد. سيُظهر Tempo هنا التركّز أو الاختلال عند إسناد العمل.' },
+    frDenied:       { en: 'Team-balance signals are visible only to a director / super-admin (across teams) and a manager (their own team).', ar: 'إشارات توازن الفريق تظهر فقط للمدير الأعلى / مشرف النظام (عبر الفرق) وللمدير (فريقه فقط).' },
+    frError:        { en: 'Couldn’t compute team-balance signals right now.', ar: 'تعذّر حساب إشارات توازن الفريق حالياً.' },
+    /* ===== end Fairness group ===== */
     evalNote:       { en: 'Conduct items (punctuality, appearance) are low-weight and kept separate from capability. Pair with a self-assessment; not auto-tied to pay.', ar: 'بنود السلوك (الالتزام، المظهر) وزنها منخفض ومفصولة عن القدرة. تُقرن بتقييم ذاتي؛ ولا تُربط تلقائياً بالراتب.' },
     evalDenied:     { en: 'Only the employee’s line manager (or Director) can run this evaluation.', ar: 'فقط المدير المباشر للموظف (أو الدايركتر) يقدر يجري هذا التقييم.' },
     evaluateMyManager:{ en: 'Evaluate my manager', ar: 'تقييم مديري' },
@@ -3331,6 +3368,241 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     scoreForPerson: scoreForPerson,
     canView: canView,
     atRisk: atRisk
+  };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
+ * Tempo — Fairness / Overload Radar (core)  ·  SPEC: docs/SPEC-fairness-radar.md
+ * ------------------------------------------------------------
+ * A TEAM-BALANCE support tool, NOT a "bad manager" scoreboard and NOT employee
+ * surveillance (Constitution Article II). Pure functions. No DOM. Rule-based and
+ * fully explainable (Article V): every flag lists the exact numbers behind it and
+ * a suggested rebalancing action.
+ *
+ * Decision it serves (Article IV): "Which teams have workload concentrated /
+ * unevenly distributed, so leadership can rebalance work, coach the manager, or
+ * justify a hire?" — redistribute load · coach · justify a hire.
+ *
+ * Hard rules baked in:
+ *  - Inputs are WORKLOAD-distribution signals already in the system (per-person
+ *    weekly capacity load %, from capacity.js). NEVER hours, activity, behaviour
+ *    or personality. We measure how work is SPREAD across a team, not people.
+ *  - No assignments in a team => "not enough data". The balance is NEVER inferred
+ *    from an absence of data (Article V).
+ *  - Audience gating lives in scan()/canView() via the EXISTING access model: a
+ *    director / super-admin sees across teams; a manager sees ONLY their own team.
+ *    Never peer-visible, never employee-facing as a judgment.
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+
+  /* Tunable, auditable config — ONE place so thresholds are explainable and any
+   * Phase-2 calibration is a config change, not a code change. All in load-% pts. */
+  var CONFIG = {
+    lookbackWeeks: 4,        // weeks of capacity history we read for the "sustained" check
+    overloadPct: 100,        // a member at/above this in the current week is "over capacity"
+    lightPct: 40,            // a member at/below this is "light" (matches the 'available' band)
+    watchSpreadPts: 30,      // max−min load gap at/above this = worth watching
+    bigSpreadPts: 50,        // max−min load gap at/above this = a large imbalance
+    wholeTeamRatio: 0.75,    // this share of the team over capacity = whole-team overload
+    sustainedMinWeeks: 2     // the imbalance/overload pattern must persist this many weeks to call it sustained
+  };
+
+  /* ---- date helpers (mirror capacity/wellbeing: ISO strings, UTC week steps) ---- */
+  function toISO(ref) {
+    if (!ref) ref = (WP.state && WP.state.refDate) || new Date().toISOString().slice(0, 10);
+    if (ref instanceof Date) return ref.toISOString().slice(0, 10);
+    return String(ref).slice(0, 10);
+  }
+  function shiftISO(refISO, days) {
+    var d = new Date(refISO + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
+  }
+
+  /* The members whose load distribution we balance: a manager's DIRECT reports
+   * (the people doing assignable work), excluding unfilled TBC placeholders so an
+   * empty seat never fakes a "light" member. */
+  function membersOf(managerId) {
+    return WP.access.directReports(managerId).filter(function (p) { return !p.tbc; });
+  }
+
+  /* Current-week load for one member (reuses the capacity engine — capacity %,
+   * never hours). */
+  function memberLoad(person, refISO) {
+    return WP.capacity.loadForPerson(person, 'week', refISO);
+  }
+
+  /* Did the team show the imbalance/overload pattern in a given past week?
+   * Pattern = someone over capacity (the thing we want to catch early). */
+  function patternInWeek(members, refISO) {
+    return members.some(function (p) { return memberLoad(p, refISO) >= CONFIG.overloadPct; });
+  }
+
+  function bandActionFor(band, pattern, nums) {
+    // pattern: 'wholeTeam' | 'uneven' | null   ·  nums: {over, light, n, spread}
+    if (band === 'unbalanced' && pattern === 'wholeTeam') {
+      return {
+        en: nums.over + ' of ' + nums.n + ' over capacity — the whole team is stretched. Consider load relief or a hire.',
+        ar: nums.over + ' من ' + nums.n + ' فوق الطاقة — الفريق كله مضغوط. فكّر بتخفيف الحمل أو بتوظيف.'
+      };
+    }
+    if (band === 'unbalanced') {
+      return {
+        en: nums.over + ' over 100% while ' + nums.light + ' under ' + CONFIG.lightPct + '% — rebalance work across the team.',
+        ar: nums.over + ' فوق 100٪ بينما ' + nums.light + ' تحت ' + CONFIG.lightPct + '٪ — أعد توزيع العمل على الفريق.'
+      };
+    }
+    if (band === 'watch') {
+      return {
+        en: 'Load is starting to spread unevenly (gap ' + nums.spread + ' pts) — redistribute before it tips.',
+        ar: 'الحِمل بدأ يتوزّع بشكل غير متساوٍ (فجوة ' + nums.spread + ' نقطة) — أعد التوزيع قبل أن يختل.'
+      };
+    }
+    return null; // balanced → no action needed (a good outcome)
+  }
+
+  /* Balance for ONE team (a manager + their direct reports). Returns band +
+   * explainable metrics + factors + a suggested action. Never throws on a missing
+   * person; returns a 'noData' shape instead. */
+  function teamBalance(managerId, ref) {
+    var manager = WP.access.byId(managerId);
+    var refISO = toISO(ref);
+    var members = manager ? membersOf(managerId) : [];
+
+    var base = {
+      managerId: managerId,
+      band: null,
+      size: members.length,
+      metrics: null,
+      factors: [],
+      suggestedAction: null,
+      noData: false
+    };
+    if (!manager || members.length < 2) {
+      // need at least two members to talk about distribution between them
+      base.noData = true;
+      base.factors.push({ key: 'noTeam', en: 'Not enough team members to assess balance', ar: 'لا يوجد أعضاء كافون لتقييم التوازن' });
+      return base;
+    }
+
+    var loads = members.map(function (p) { return { id: p.id, load: memberLoad(p, refISO), events: (p.assignedEvents || []).length }; });
+    var totalEvents = loads.reduce(function (a, x) { return a + x.events; }, 0);
+    if (totalEvents === 0) {
+      // genuinely no assignments yet — never infer balance from an absence of data
+      base.noData = true;
+      base.factors.push({ key: 'noAssignments', en: 'No assignments yet for this team', ar: 'لا توجد مهام مُسندة لهذا الفريق بعد' });
+      return base;
+    }
+
+    var values = loads.map(function (x) { return x.load; });
+    var maxLoad = Math.max.apply(null, values);
+    var minLoad = Math.min.apply(null, values);
+    var spread = maxLoad - minLoad;
+    var n = members.length;
+    var over = loads.filter(function (x) { return x.load >= CONFIG.overloadPct; });
+    var light = loads.filter(function (x) { return x.load <= CONFIG.lightPct; });
+
+    // how many of the last N weeks showed the pattern (sustained vs one-off)
+    var sustainedWeeks = 0;
+    for (var i = 0; i < CONFIG.lookbackWeeks; i++) {
+      if (patternInWeek(members, shiftISO(refISO, -7 * i))) sustainedWeeks++;
+    }
+
+    var wholeTeam = over.length >= Math.ceil(n * CONFIG.wholeTeamRatio);
+    var uneven = spread >= CONFIG.bigSpreadPts && over.length >= 1 && light.length >= 1;
+
+    var band, pattern = null;
+    if (wholeTeam) { band = 'unbalanced'; pattern = 'wholeTeam'; }
+    else if (uneven && sustainedWeeks >= CONFIG.sustainedMinWeeks) { band = 'unbalanced'; pattern = 'uneven'; }
+    else if (uneven || over.length >= 1 || spread >= CONFIG.watchSpreadPts) { band = 'watch'; }
+    else { band = 'balanced'; }
+
+    // ---- explainable factors: every number that drove the band ----
+    var factors = [];
+    if (over.length >= 1) {
+      factors.push({ key: 'overload', en: over.length + ' of ' + n + ' over capacity (≥' + CONFIG.overloadPct + '%)',
+        ar: over.length + ' من ' + n + ' فوق الطاقة (≥' + CONFIG.overloadPct + '٪)' });
+    }
+    factors.push({ key: 'spread', en: 'Load spread ' + minLoad + '%–' + maxLoad + '% (gap ' + spread + ' pts)',
+      ar: 'تفاوت الحِمل ' + minLoad + '٪–' + maxLoad + '٪ (فجوة ' + spread + ' نقطة)' });
+    if (over.length >= 1 && light.length >= 1) {
+      factors.push({ key: 'unevenSplit', en: light.length + ' under ' + CONFIG.lightPct + '% while ' + over.length + ' over capacity',
+        ar: light.length + ' تحت ' + CONFIG.lightPct + '٪ بينما ' + over.length + ' فوق الطاقة' });
+    }
+    if (band !== 'balanced' && sustainedWeeks >= 1) {
+      factors.push({ key: 'sustained', en: 'Pattern seen ' + sustainedWeeks + ' of the last ' + CONFIG.lookbackWeeks + ' weeks',
+        ar: 'النمط ظهر ' + sustainedWeeks + ' من آخر ' + CONFIG.lookbackWeeks + ' أسابيع' });
+    }
+    if (band === 'balanced') {
+      factors = [{ key: 'balanced', en: 'Work is evenly distributed (gap ' + spread + ' pts, none over capacity)',
+        ar: 'العمل موزّع بالتساوي (فجوة ' + spread + ' نقطة، لا أحد فوق الطاقة)' }];
+    }
+
+    var nums = { over: over.length, light: light.length, n: n, spread: spread };
+    return {
+      managerId: managerId,
+      band: band,
+      size: n,
+      noData: false,
+      metrics: {
+        overloaded: over.length,
+        light: light.length,
+        maxLoad: maxLoad,
+        minLoad: minLoad,
+        spread: spread,
+        sustainedWeeks: sustainedWeeks,
+        loads: loads
+      },
+      factors: factors,
+      suggestedAction: bandActionFor(band, pattern, nums)
+    };
+  }
+
+  /* ---- access gate (reuse the existing model) ----
+   * A director / super-admin sees balance ACROSS all teams. A line manager (or
+   * sr-manager) sees ONLY their own team. Specialists / individual contributors
+   * get nothing (never employee-facing as a judgment). */
+  function isManagerOf(personId) { return WP.access.directReports(personId).length > 0; }
+
+  function teamsInScope(viewer) {
+    if (!viewer) return [];
+    if (viewer.level === 'admin' || viewer.level === 'director' || viewer.superAdmin) {
+      // every real manager in the org is a team unit
+      return WP.data.PEOPLE.filter(function (p) { return !p.tbc && isManagerOf(p.id); }).map(function (p) { return p.id; });
+    }
+    if (viewer.level === 'manager' || viewer.level === 'sr_manager') {
+      return isManagerOf(viewer.id) ? [viewer.id] : []; // own team only
+    }
+    return [];
+  }
+
+  function canView(viewer) { return teamsInScope(viewer).length > 0; }
+
+  /* All teams a viewer may see, worst balance first (unbalanced → watch → balanced
+   * → noData). Returns the FULL list in scope (the view shows balanced as a positive
+   * outcome); never includes a team outside the viewer's gate. */
+  function scan(viewerId, ref) {
+    var viewer = WP.access.byId(viewerId);
+    var ids = teamsInScope(viewer);
+    if (!ids.length) return [];
+    var ORDER = { unbalanced: 0, watch: 1, balanced: 2 };
+    return ids.map(function (id) { return teamBalance(id, ref); })
+      .sort(function (a, b) {
+        var oa = a.noData ? 3 : (ORDER[a.band] != null ? ORDER[a.band] : 3);
+        var ob = b.noData ? 3 : (ORDER[b.band] != null ? ORDER[b.band] : 3);
+        if (oa !== ob) return oa - ob;
+        return (b.metrics ? b.metrics.spread : 0) - (a.metrics ? a.metrics.spread : 0);
+      });
+  }
+
+  WP.fairness = {
+    CONFIG: CONFIG,
+    teamBalance: teamBalance,
+    scan: scan,
+    canView: canView
   };
 })(window.WP = window.WP || {});
 
@@ -5895,6 +6167,121 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 </script>
   <script>
 /* ============================================================
+ * Tempo — Fairness / Overload Radar (view)  ·  director / super-admin (+ a manager
+ * for their OWN team) only.   SPEC: docs/SPEC-fairness-radar.md
+ * ------------------------------------------------------------
+ * Balance framing, never a ranking that shames managers (Constitution II). Each
+ * team shows its band + the 2–3 numbers behind it + a suggested rebalancing action.
+ * Band is shown as a LABEL + icon + colour (never colour alone — WCAG 2.2).
+ * EN/AR, RTL, dark mode via tokens. Reads only WP.fairness (core); no logic here.
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+  var ui = WP.ui;
+
+  var BAND_META = {
+    unbalanced: { icon: 'alert', cls: 'fr-unbalanced', en: 'Unbalanced', ar: 'غير متوازن' },
+    watch:      { icon: 'eye',   cls: 'fr-watch',      en: 'Watch',      ar: 'مراقبة' },
+    balanced:   { icon: 'check', cls: 'fr-balanced',   en: 'Balanced',   ar: 'متوازن' }
+  };
+
+  function bandChip(band, ar) {
+    var m = BAND_META[band]; if (!m) return '';
+    // label + icon + colour together (accessibility: never colour as the only cue)
+    return '<span class="fr-chip ' + m.cls + '">' + WP.ui.icon(m.icon, 13) + ' ' + (ar ? m.ar : m.en) + '</span>';
+  }
+
+  function teamCard(team, ar) {
+    var t = WP.i18n.t;
+    var mgr = WP.access.byId(team.managerId);
+    var name = mgr ? ui.esc(WP.i18n.name(mgr)) : '';
+    var teamLabel = (mgr && (ar ? mgr.teamAr : mgr.team)) ? ui.esc(ar ? mgr.teamAr : mgr.team) : name;
+
+    var head =
+      '<div class="fr-team-head">' +
+        '<div class="fr-team-id">' +
+          (mgr ? ui.avatar(mgr, 'var(--brand)') : '') +
+          '<div class="fr-team-meta"><div class="nm">' + teamLabel + '</div>' +
+            '<div class="ttl">' + t('frLedBy') + ' ' + name + ' · ' + team.size + ' ' + t('frMembers') + '</div></div>' +
+        '</div>' +
+        (team.noData ? '' : bandChip(team.band, ar)) +
+      '</div>';
+
+    if (team.noData) {
+      return '<div class="fr-team">' + head +
+        '<div class="ttl fr-nodata">' + WP.ui.icon('minus', 13) + ' ' + t('frNoData') + '</div></div>';
+    }
+
+    var nums = team.factors.map(function (f) {
+      return '<li>' + ui.esc(ar ? f.ar : f.en) + '</li>';
+    }).join('');
+
+    var action = team.suggestedAction
+      ? '<div class="fr-action">' + WP.ui.icon('sprout', 14) + ' <strong>' + t('frSuggested') + ':</strong> ' +
+          ui.esc(ar ? team.suggestedAction.ar : team.suggestedAction.en) + '</div>'
+      : '';
+
+    return '<div class="fr-team">' + head +
+      '<ul class="fr-factors">' + nums + '</ul>' + action + '</div>';
+  }
+
+  function render(root) {
+    var t = WP.i18n.t, ar = WP.state.lang === 'ar';
+    var viewer = WP.viewer();
+
+    // ---- audience gate (hard guardrail): director / super-admin, or a manager
+    // for their own team only. Never peer- or employee-facing. ----
+    if (!viewer || !WP.fairness.canView(viewer)) {
+      root.innerHTML =
+        '<div class="ttl">' + t('navFairness') + '</div>' +
+        '<div class="section"><div class="sub">' + WP.ui.icon('lock', 14) + ' ' + t('frDenied') + '</div></div>';
+      return;
+    }
+
+    var teams;
+    try { teams = WP.fairness.scan(viewer.id, WP.state.refDate); }
+    catch (e) {
+      root.innerHTML =
+        '<div class="ttl">' + t('navFairness') + '</div>' +
+        '<div class="sync-note offline">' + WP.ui.icon('alert', 14) + ' ' + t('frError') + '</div>';
+      return;
+    }
+
+    var head =
+      '<div class="ttl">' + t('navFairness') + '</div>' +
+      '<div class="eval-head" style="margin-top:4px">' +
+        '<div><h2 style="margin:0 0 2px">' + t('frTitle') + '</h2>' +
+          '<div class="ttl">' + t('frSubtitle') + '</div></div>' +
+      '</div>' +
+      '<div class="disclaimer">' + WP.ui.icon('bulb', 13) + ' ' + t('frFraming') + '</div>';
+
+    // ---- empty state: no team has assignment data yet ----
+    var hasData = teams.some(function (tm) { return !tm.noData; });
+    if (!teams.length || !hasData) {
+      root.innerHTML = head +
+        '<div class="section"><div style="text-align:center;padding:28px 0">' +
+          '<div style="color:var(--text-muted)">' + WP.ui.icon('minus', 32) + '</div>' +
+          '<div style="font-weight:600;margin-top:8px">' + t('frEmptyTitle') + '</div>' +
+          '<div class="sub">' + t('frEmptyNote') + '</div></div></div>';
+      return;
+    }
+
+    var flagged = teams.filter(function (tm) { return !tm.noData && tm.band !== 'balanced'; }).length;
+    var cards = teams.map(function (tm) { return teamCard(tm, ar); }).join('');
+
+    root.innerHTML = head +
+      '<div class="section">' +
+        '<h3>' + t('frTeams') + ' · ' + teams.length +
+          (flagged ? ' <span class="fr-flagged-n">(' + flagged + ' ' + t('frNeedAttention') + ')</span>' : '') +
+        '</h3>' + cards + '</div>';
+  }
+
+  WP.ui.fairness = { render: render };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
  * Webook Workload — "My Progress" (the employee's daily home)
  * ------------------------------------------------------------
  * The healthy-engagement dashboard: small wins, gentle streak,
@@ -6396,6 +6783,12 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     if (WP.wellbeing && WP.wellbeing.canView(viewer)) {
       nav.splice(4, 0, { id: 'wellbeing', routes: ['wellbeing'], icon: 'sprout', label: t('navWellbeing') });
     }
+    // Fairness / Overload Radar — team-balance support view. Director / super-admin
+    // see across teams; a line manager sees only their own team. Never peer- or
+    // employee-facing as a judgment (guardrail, Constitution II).
+    if (WP.fairness && WP.fairness.canView(viewer)) {
+      nav.splice(5, 0, { id: 'fairness', routes: ['fairness'], icon: 'tree', label: t('navFairness') });
+    }
     if (canManage) {
       nav.push({ id: 'permissions', routes: ['permissions'], icon: 'key',      label: t('permsTitle') });
       nav.push({ id: 'settings',    routes: ['settings'],    icon: 'settings', label: t('settings') });
@@ -6540,6 +6933,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     else if (WP.state.route === 'upward') WP.ui.upward.render(root);
     else if (WP.state.route === 'evaluations') WP.ui.evaluations.render(root);
     else if (WP.state.route === 'wellbeing') WP.ui.wellbeing.render(root);
+    else if (WP.state.route === 'fairness') WP.ui.fairness.render(root);
     else if (WP.state.route === 'me') WP.ui.me.render(root);
     else if (WP.state.route === 'library') WP.ui.wbkLibrary.render(root);
     else WP.ui.workloadMap.render(root);

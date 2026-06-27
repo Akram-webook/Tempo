@@ -47,6 +47,12 @@
     if (WP.wellbeing && WP.wellbeing.canView(viewer)) {
       nav.splice(4, 0, { id: 'wellbeing', routes: ['wellbeing'], icon: 'sprout', label: t('navWellbeing') });
     }
+    // Fairness / Overload Radar — team-balance support view. Director / super-admin
+    // see across teams; a line manager sees only their own team. Never peer- or
+    // employee-facing as a judgment (guardrail, Constitution II).
+    if (WP.fairness && WP.fairness.canView(viewer)) {
+      nav.splice(5, 0, { id: 'fairness', routes: ['fairness'], icon: 'tree', label: t('navFairness') });
+    }
     if (canManage) {
       nav.push({ id: 'permissions', routes: ['permissions'], icon: 'key',      label: t('permsTitle') });
       nav.push({ id: 'settings',    routes: ['settings'],    icon: 'settings', label: t('settings') });
@@ -191,6 +197,7 @@
     else if (WP.state.route === 'upward') WP.ui.upward.render(root);
     else if (WP.state.route === 'evaluations') WP.ui.evaluations.render(root);
     else if (WP.state.route === 'wellbeing') WP.ui.wellbeing.render(root);
+    else if (WP.state.route === 'fairness') WP.ui.fairness.render(root);
     else if (WP.state.route === 'me') WP.ui.me.render(root);
     else if (WP.state.route === 'library') WP.ui.wbkLibrary.render(root);
     else WP.ui.workloadMap.render(root);
