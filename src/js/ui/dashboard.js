@@ -13,6 +13,16 @@
       '<div class="value"' + (color ? ' style="color:' + color + '"' : '') + '>' + value + '</div>' +
       '<div class="sub">' + (sub || '') + '</div></div>';
   }
+  /* Team Health on sample/empty data: a bare "0%" reads as broken/alarming, not
+   * calm. When no real load signal exists yet, show a neutral "no data" state
+   * instead of a misleading 0% (S1 — Calm UI). A real 0% with load is still shown. */
+  function teamHealthKpi(m) {
+    const t = WP.i18n.t;
+    const hasData = m.snaps.some(function (s) { return s.load > 0; });
+    if (!hasData) return kpi(t('teamHealth'), '—', t('noDataYet'), 'var(--text-muted)');
+    return kpi(t('teamHealth'), m.teamHealth + '%', t('healthyZone'), 'var(--state-balanced)');
+  }
+  function ofPeople(n) { return WP.i18n.t('ofPeople').replace('{n}', n); }
   function loadBar(pct) {
     const c = ui.stateColor(WP.capacity.stateForLoad(pct));
     return '<span class="bar"><i style="width:' + Math.min(100, pct) + '%;background:' + c + '"></i></span>';
@@ -67,9 +77,9 @@
       '<div class="ttl">' + t('navDashboard') + ' · ' + t('director') + '</div>' +
       '<h2 style="margin:2px 0 16px">' + t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + ui.esc(WP.i18n.name(viewer).split(' ')[0]) + '</h2>' +
       '<div class="metrics">' +
-        kpi(t('teamHealth'), m.teamHealth + '%', t('healthyZone'), 'var(--state-balanced)') +
-        kpi(t('available'), m.counts.available, t('availableFlag')) +
-        kpi(t('nearCapacity'), m.nearOrOver, t('nearCapacity')) +
+        teamHealthKpi(m) +
+        kpi(t('available'), m.counts.available, ofPeople(people.length)) +
+        kpi(t('nearCapacity'), m.nearOrOver, t('nearCapSub')) +
         kpi(t('earlyWarnings'), m.earlyWarnings, t('burnoutShort')) +
       '</div>' +
       '<div class="grid-2" style="align-items:start">' +
@@ -117,9 +127,9 @@
       '<div class="ttl">' + t('navDashboard') + ' · ' + (viewer.level === 'sr_manager' ? t('director') : t('manager')) + '</div>' +
       '<h2 style="margin:2px 0 16px">' + t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + ui.esc(WP.i18n.name(viewer).split(' ')[0]) + '</h2>' +
       '<div class="metrics">' +
-        kpi(t('teamHealth'), m.teamHealth + '%', t('healthyZone'), 'var(--state-balanced)') +
-        kpi(t('freeForWork'), m.counts.available, t('availableFlag'), 'var(--state-available)') +
-        kpi(t('nearCapacity'), m.nearOrOver, t('nearCapacity'), 'var(--state-overloaded)') +
+        teamHealthKpi(m) +
+        kpi(t('freeForWork'), m.counts.available, ofPeople(reports.length), 'var(--state-available)') +
+        kpi(t('nearCapacity'), m.nearOrOver, t('nearCapSub'), 'var(--state-overloaded)') +
         kpi(t('toDevelop'), develop.length, t('talent')) +
       '</div>' +
       '<div class="grid-2" style="align-items:start">' +
@@ -161,7 +171,14 @@
     else employee(root, viewer);
 
     root.querySelectorAll('[data-open]').forEach(function (el) {
-      el.onclick = function () { WP.setState({ route: 'profile', selectedId: el.dataset.open }); };
+      const open = function () { WP.setState({ route: 'profile', selectedId: el.dataset.open }); };
+      // keyboard-accessible: clickable rows are divs, so make them real controls (WCAG 2.2)
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('role', 'button');
+      const who = WP.access.byId(el.dataset.open);
+      if (who) el.setAttribute('aria-label', WP.i18n.t('openProfile') + ' — ' + WP.i18n.name(who));
+      el.onclick = open;
+      el.onkeydown = function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); open(); } };
     });
     root.querySelectorAll('[data-assign]').forEach(function (b) {
       b.onclick = function (e) { e.stopPropagation(); if (WP.ui.assignmentDrawer) WP.ui.assignmentDrawer.openRequest(); };

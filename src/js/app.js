@@ -197,10 +197,19 @@
     // mandatory evaluation banner — follows a manager across every page until done
     renderEvalBanner();
 
-    // one gentle daily check-in pop-up after first sign-in (per session)
+    // Gentle daily check-in — at most ONCE PER DAY (not every load/session), and
+    // only after the dashboard has painted, so it never interrupts orientation
+    // (S3 — progressive disclosure / calm UI). Skip stays effortless.
     if (!WP._promptShown) {
       WP._promptShown = true;
-      setTimeout(function () { if (WP.ui.dailyPrompt) WP.ui.dailyPrompt.open(); }, 450);
+      const today = new Date().toISOString().slice(0, 10);
+      let last = null;
+      try { last = localStorage.getItem('tempo_checkin_prompt'); } catch (e) {}
+      const viewer = WP.viewer();
+      if (last !== today && viewer && viewer.id !== '__admin__' && WP.state.route === 'dashboard') {
+        try { localStorage.setItem('tempo_checkin_prompt', today); } catch (e) {}
+        setTimeout(function () { if (WP.ui.dailyPrompt) WP.ui.dailyPrompt.open(); }, 700);
+      }
     }
   };
 
