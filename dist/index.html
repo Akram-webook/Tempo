@@ -2015,6 +2015,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     theme:          { en: 'Theme',                  ar: 'السمة' },
     lang:           { en: 'العربية',                ar: 'English' },
     healthyZone:    { en: 'in healthy zone (41–75%)', ar: 'في النطاق الصحي (٤١-٧٥٪)' },
+    noDataYet:      { en: 'No data yet', ar: 'لا توجد بيانات بعد' },
+    ofPeople:       { en: 'of {n} people', ar: 'من {n} أشخاص' },
+    nearCapSub:     { en: 'at 76%+ load', ar: 'بحمل ٧٦٪ فأكثر' },
     skills:         { en: 'Skills & competencies', ar: 'المهارات والكفاءات' },
     hardSkills:     { en: 'Technical', ar: 'تقنية' },
     softSkills:     { en: 'Behavioral', ar: 'سلوكية' },
@@ -3576,6 +3579,16 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       '<div class="value"' + (color ? ' style="color:' + color + '"' : '') + '>' + value + '</div>' +
       '<div class="sub">' + (sub || '') + '</div></div>';
   }
+  /* Team Health on sample/empty data: a bare "0%" reads as broken/alarming, not
+   * calm. When no real load signal exists yet, show a neutral "no data" state
+   * instead of a misleading 0% (S1 — Calm UI). A real 0% with load is still shown. */
+  function teamHealthKpi(m) {
+    const t = WP.i18n.t;
+    const hasData = m.snaps.some(function (s) { return s.load > 0; });
+    if (!hasData) return kpi(t('teamHealth'), '—', t('noDataYet'), 'var(--text-muted)');
+    return kpi(t('teamHealth'), m.teamHealth + '%', t('healthyZone'), 'var(--state-balanced)');
+  }
+  function ofPeople(n) { return WP.i18n.t('ofPeople').replace('{n}', n); }
   function loadBar(pct) {
     const c = ui.stateColor(WP.capacity.stateForLoad(pct));
     return '<span class="bar"><i style="width:' + Math.min(100, pct) + '%;background:' + c + '"></i></span>';
@@ -3630,9 +3643,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       '<div class="ttl">' + t('navDashboard') + ' · ' + t('director') + '</div>' +
       '<h2 style="margin:2px 0 16px">' + t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + ui.esc(WP.i18n.name(viewer).split(' ')[0]) + '</h2>' +
       '<div class="metrics">' +
-        kpi(t('teamHealth'), m.teamHealth + '%', t('healthyZone'), 'var(--state-balanced)') +
-        kpi(t('available'), m.counts.available, t('availableFlag')) +
-        kpi(t('nearCapacity'), m.nearOrOver, t('nearCapacity')) +
+        teamHealthKpi(m) +
+        kpi(t('available'), m.counts.available, ofPeople(people.length)) +
+        kpi(t('nearCapacity'), m.nearOrOver, t('nearCapSub')) +
         kpi(t('earlyWarnings'), m.earlyWarnings, t('burnoutShort')) +
       '</div>' +
       '<div class="grid-2" style="align-items:start">' +
@@ -3680,9 +3693,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       '<div class="ttl">' + t('navDashboard') + ' · ' + (viewer.level === 'sr_manager' ? t('director') : t('manager')) + '</div>' +
       '<h2 style="margin:2px 0 16px">' + t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + ui.esc(WP.i18n.name(viewer).split(' ')[0]) + '</h2>' +
       '<div class="metrics">' +
-        kpi(t('teamHealth'), m.teamHealth + '%', t('healthyZone'), 'var(--state-balanced)') +
-        kpi(t('freeForWork'), m.counts.available, t('availableFlag'), 'var(--state-available)') +
-        kpi(t('nearCapacity'), m.nearOrOver, t('nearCapacity'), 'var(--state-overloaded)') +
+        teamHealthKpi(m) +
+        kpi(t('freeForWork'), m.counts.available, ofPeople(reports.length), 'var(--state-available)') +
+        kpi(t('nearCapacity'), m.nearOrOver, t('nearCapSub'), 'var(--state-overloaded)') +
         kpi(t('toDevelop'), develop.length, t('talent')) +
       '</div>' +
       '<div class="grid-2" style="align-items:start">' +
@@ -3724,7 +3737,14 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     else employee(root, viewer);
 
     root.querySelectorAll('[data-open]').forEach(function (el) {
-      el.onclick = function () { WP.setState({ route: 'profile', selectedId: el.dataset.open }); };
+      const open = function () { WP.setState({ route: 'profile', selectedId: el.dataset.open }); };
+      // keyboard-accessible: clickable rows are divs, so make them real controls (WCAG 2.2)
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('role', 'button');
+      const who = WP.access.byId(el.dataset.open);
+      if (who) el.setAttribute('aria-label', WP.i18n.t('openProfile') + ' — ' + WP.i18n.name(who));
+      el.onclick = open;
+      el.onkeydown = function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); open(); } };
     });
     root.querySelectorAll('[data-assign]').forEach(function (b) {
       b.onclick = function (e) { e.stopPropagation(); if (WP.ui.assignmentDrawer) WP.ui.assignmentDrawer.openRequest(); };
@@ -6212,10 +6232,19 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     // mandatory evaluation banner — follows a manager across every page until done
     renderEvalBanner();
 
-    // one gentle daily check-in pop-up after first sign-in (per session)
+    // Gentle daily check-in — at most ONCE PER DAY (not every load/session), and
+    // only after the dashboard has painted, so it never interrupts orientation
+    // (S3 — progressive disclosure / calm UI). Skip stays effortless.
     if (!WP._promptShown) {
       WP._promptShown = true;
-      setTimeout(function () { if (WP.ui.dailyPrompt) WP.ui.dailyPrompt.open(); }, 450);
+      const today = new Date().toISOString().slice(0, 10);
+      let last = null;
+      try { last = localStorage.getItem('tempo_checkin_prompt'); } catch (e) {}
+      const viewer = WP.viewer();
+      if (last !== today && viewer && viewer.id !== '__admin__' && WP.state.route === 'dashboard') {
+        try { localStorage.setItem('tempo_checkin_prompt', today); } catch (e) {}
+        setTimeout(function () { if (WP.ui.dailyPrompt) WP.ui.dailyPrompt.open(); }, 700);
+      }
     }
   };
 
