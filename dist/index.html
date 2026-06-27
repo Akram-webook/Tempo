@@ -1260,27 +1260,31 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .wbk-modal-card p { margin: 0; color: var(--text-muted); font-size: 14px; }
 @media (prefers-reduced-motion: reduce) { .wbk-tip, .wbk-toggle span::after { transition: none; } }
 
-/* ── Signature / credits bar — decorative authed-app footer (Wave 3 supporting drop).
-   Credit-only; no data, no logic. Tokens map to the WBK palette; gold is darkened in
+/* ── Signature / credits bar — a quiet authed-app footer (Wave 3 supporting drop, v2).
+   Credit-only; no data, no logic. Renders at the END of the scrolling content column
+   (inside .view-main, after #view) in normal flow — NOT fixed/sticky — and carries no
+   positive z-index, so the overlay host, drawers and modals (z-index 40+) always sit
+   ABOVE it. Slim + low-key: it reads as a signature, never a banner. Gold is darkened in
    light theme to keep the small role labels readable (WCAG AA). RTL reverses the row. */
-.sig-bar { display: flex; align-items: stretch; gap: 0; padding: 18px 26px;
+#sig-bar { position: relative; z-index: 0; }
+.sig-bar { display: flex; align-items: stretch; gap: 0; padding: 8px 20px; margin-top: 28px;
   border-top: 1px solid var(--border, rgba(255,255,255,.12));
   background: var(--bg, #09090B);
   font-family: var(--font-sans, system-ui, sans-serif); }
-.sig-dept { flex: 1.5; display: flex; align-items: center; font-size: 12px; letter-spacing: .2em;
+.sig-dept { flex: 1.5; display: flex; align-items: center; font-size: 11px; letter-spacing: .18em;
   text-transform: uppercase; color: var(--text-muted, #9b9ba3); font-weight: 500; }
-.sig-sep { width: 1px; background: var(--border, rgba(255,255,255,.12)); margin: 0 22px; }
+.sig-sep { width: 1px; background: var(--border, rgba(255,255,255,.12)); margin: 0 18px; }
 .sig-credit { flex: 1; text-align: center; padding: 0 6px; }
-.sig-role { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #c8a24a;
-  font-weight: 600; margin-bottom: 5px; }
+.sig-role { font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: #c8a24a;
+  font-weight: 600; margin-bottom: 3px; }
 [data-theme="light"] .sig-role { color: #6e5410; } /* darker gold for AA contrast on light bg */
-.sig-name { font-size: 17px; font-weight: 700; color: var(--text, #f4f4f5); }
+.sig-name { font-size: 13px; font-weight: 600; color: var(--text-secondary, var(--text-muted, #b4b4bb)); }
 .sig-name--accent { position: relative; display: inline-block; }
 .sig-name--accent::after { content: ""; position: absolute; left: 50%; transform: translateX(-50%);
-  bottom: -5px; width: 30px; height: 2px; border-radius: 2px; background: var(--brand, #ff2c79); }
+  bottom: -4px; width: 20px; height: 2px; border-radius: 2px; background: var(--brand, #ff2c79); }
 [dir="rtl"] .sig-bar { flex-direction: row-reverse; }
 @media (max-width: 640px) {
-  .sig-bar { flex-direction: column; gap: 14px; align-items: center; text-align: center; }
+  .sig-bar { flex-direction: column; gap: 10px; align-items: center; text-align: center; margin-top: 20px; }
   .sig-dept { flex: none; justify-content: center; }
   .sig-sep { display: none; }
 }
@@ -1311,9 +1315,8 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   <div class="shell">
     <aside class="sidebar" id="topbar"></aside>
     <div class="nav-backdrop" id="nav-backdrop"></div>
-    <main class="view-main"><div id="eval-banner" hidden></div><div id="view"></div></main>
+    <main class="view-main"><div id="eval-banner" hidden></div><div id="view"></div><footer id="sig-bar"></footer></main>
   </div>
-  <footer id="sig-bar"></footer>
   <div id="overlay-host"></div>
 
   <!-- Load order matters: data → core → ui → app.
