@@ -54,6 +54,13 @@ Observation period: measure adoption, usage, director + employee feedback, perfo
 unexpected behavior, support + feature requests. Directors need time to use it, trust it, and ask for
 changes. No major feature begins before reviewing these findings (Continuous Improvement, Article VIII).
 
+## Parallel work — worktree-per-builder (mandatory)
+When more than one builder/agent works the same wave at once, **each builder MUST run in its own
+`git worktree` on its own branch from the start** — never share a single checkout. Sharing a working
+directory lets one builder's branch switch revert another's in-flight edits to tracked shell files
+(nav/route, i18n, CSS). Keep cross-builder collisions to additive, clearly-fenced edits and expect a
+trivial rebase. (Permanent fix for the 2026-06-27 coordination Escape — see Failure Library.)
+
 ## Executive communication (each release)
 What's New · Why It Matters · Who Benefits · Expected Business Impact · What's Next. Keep leadership
 excited about the future without promising unrealistic timelines.
