@@ -42,6 +42,11 @@
       { id: 'daily',       routes: ['daily'],          icon: 'clipboard', label: t('dailyTasks') },
       { id: 'library',     routes: ['library'],        icon: 'grid',      label: t('navLibrary') },
     ];
+    // Wellbeing relief view — only for people who manage someone (line managers,
+    // directors, super-admin). Never shown to peers (guardrail, Constitution II).
+    if (WP.wellbeing && WP.wellbeing.canView(viewer)) {
+      nav.splice(4, 0, { id: 'wellbeing', routes: ['wellbeing'], icon: 'sprout', label: t('navWellbeing') });
+    }
     if (canManage) {
       nav.push({ id: 'permissions', routes: ['permissions'], icon: 'key',      label: t('permsTitle') });
       nav.push({ id: 'settings',    routes: ['settings'],    icon: 'settings', label: t('settings') });
@@ -184,6 +189,7 @@
     else if (WP.state.route === 'evaluation') WP.ui.evaluation.render(root);
     else if (WP.state.route === 'upward') WP.ui.upward.render(root);
     else if (WP.state.route === 'evaluations') WP.ui.evaluations.render(root);
+    else if (WP.state.route === 'wellbeing') WP.ui.wellbeing.render(root);
     else if (WP.state.route === 'me') WP.ui.me.render(root);
     else if (WP.state.route === 'library') WP.ui.wbkLibrary.render(root);
     else WP.ui.workloadMap.render(root);

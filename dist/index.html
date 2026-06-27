@@ -923,6 +923,23 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .ev-row .avatar { width: 34px; height: 34px; }
 .ev-meta { flex: 1; min-width: 0; }
 .ev-status { flex: none; }
+
+/* ---- Wellbeing Early-Warning (support view, manager-scoped) ---- */
+.wb-row { padding: 12px 0; border-bottom: 1px solid var(--border); }
+.wb-row:last-child { border-bottom: 0; }
+.wb-person { display: flex; align-items: center; gap: 10px; }
+.wb-person .avatar { width: 34px; height: 34px; flex: none; }
+.wb-meta { flex: 1; min-width: 0; }
+.wb-factors { margin: 8px 0 6px; padding-inline-start: 20px; color: var(--text); font-size: 13px; line-height: 1.6; }
+.wb-action { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+.wb-action .icn { flex: none; color: var(--state-available); }
+/* band chip = icon + label + colour together (never colour as the only cue — WCAG 2.2) */
+.wb-chip { flex: none; display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700;
+  border-radius: 999px; padding: 3px 9px; border: 1px solid transparent; }
+.wb-chip .icn { flex: none; }
+.wb-watch    { color: var(--state-near, #b8860b); background: var(--state-near-bg, rgba(246,177,0,.14)); border-color: rgba(246,177,0,.32); }
+.wb-atrisk   { color: #d2691e; background: rgba(210,105,30,.14); border-color: rgba(210,105,30,.34); }
+.wb-critical { color: var(--state-over, #c0392b); background: var(--state-over-bg, rgba(192,57,43,.13)); border-color: rgba(192,57,43,.34); }
 .prog { display: flex; height: 12px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
 .prog .pg-done { background: var(--state-available); height: 100%; }
 .prog .pg-prog { background: #1d58ff; height: 100%; }
@@ -2074,6 +2091,16 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     evalSynced:     { en: 'Synced',                                     ar: 'تمت المزامنة' },
     evalSavedLocal: { en: 'Saved locally — will sync when back online', ar: 'تم الحفظ محليًا — ستتم المزامنة عند عودة الاتصال' },
     evalLoadError:  { en: 'Couldn’t reach the server — showing local data', ar: 'تعذّر الوصول إلى الخادم — يتم عرض البيانات المحلية' },
+    navWellbeing:   { en: 'Wellbeing', ar: 'الرفاهية' },
+    wbTitle:        { en: 'Wellbeing — Early Warning', ar: 'الرفاهية — إنذار مبكر' },
+    wbSubtitle:     { en: 'Spot rising strain early, so you can give relief before it becomes burnout.', ar: 'اكتشف الضغط المتزايد مبكراً لتقدّم الدعم قبل أن يتحوّل إلى إرهاق.' },
+    wbFraming:      { en: 'A support signal for managers — not a performance score, and never about hours or surveillance.', ar: 'إشارة دعم للمديرين — ليست تقييم أداء، ولا تتعلق بالساعات أو المراقبة.' },
+    wbFlagged:      { en: 'People who may need relief', ar: 'أشخاص قد يحتاجون دعماً' },
+    wbSuggested:    { en: 'Suggested', ar: 'المقترح' },
+    wbEmptyTitle:   { en: 'No one is showing wellbeing risk right now', ar: 'لا أحد يُظهر مؤشّر خطر على الرفاهية حالياً' },
+    wbEmptyNote:    { en: 'That’s a good outcome — your team’s workload looks sustainable. Tempo will flag rising strain here early.', ar: 'هذه نتيجة جيدة — يبدو حِمل فريقك مستداماً. سيُنبّهك Tempo هنا مبكراً عند تزايد الضغط.' },
+    wbDenied:       { en: 'Wellbeing signals are visible only to a person’s manager, their director, and super-admin.', ar: 'مؤشّرات الرفاهية تظهر فقط لمدير الشخص ومديره الأعلى ومشرف النظام.' },
+    wbError:        { en: 'Couldn’t compute wellbeing signals right now.', ar: 'تعذّر حساب مؤشّرات الرفاهية حالياً.' },
     evalNote:       { en: 'Conduct items (punctuality, appearance) are low-weight and kept separate from capability. Pair with a self-assessment; not auto-tied to pay.', ar: 'بنود السلوك (الالتزام، المظهر) وزنها منخفض ومفصولة عن القدرة. تُقرن بتقييم ذاتي؛ ولا تُربط تلقائياً بالراتب.' },
     evalDenied:     { en: 'Only the employee’s line manager (or Director) can run this evaluation.', ar: 'فقط المدير المباشر للموظف (أو الدايركتر) يقدر يجري هذا التقييم.' },
     evaluateMyManager:{ en: 'Evaluate my manager', ar: 'تقييم مديري' },
@@ -3016,6 +3043,175 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     _recToRow: recToRow,        // exposed for tests
     _rowToRec: rowToRec,
     _resetImport: function () { importDone = false; }  // tests
+  };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
+ * Tempo — Wellbeing Early-Warning (core)   ·  SPEC: docs/SPEC-burnout-early-warning.md
+ * ------------------------------------------------------------
+ * A SUPPORT tool, not a score and NOT surveillance (Constitution Article II).
+ * Pure functions. No DOM. Rule-based and fully explainable (Article V): every
+ * flag lists the exact factors that triggered it and a suggested relief action.
+ *
+ * Decision it serves (Article IV): "Who is heading toward burnout, so a manager
+ * can give relief BEFORE it happens?" — redistribute work / check in / approve leave.
+ *
+ * Hard rules baked in:
+ *  - Inputs are WORKLOAD signals already in the system (capacity, schedule,
+ *    voluntary check-ins). NEVER clocked hours or activity tracking.
+ *  - If a signal's data doesn't exist, the factor is OMITTED and said so —
+ *    never fabricated.
+ *  - Audience gating lives in atRisk()/canView() via the existing access model;
+ *    risk is never peer-visible.
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+
+  /* Tunable, auditable config — ONE place so weights/thresholds are explainable
+   * and Phase-2 calibration is a config change, not a code change. */
+  var CONFIG = {
+    lookbackWeeks: 4,        // how many weeks of capacity history we read
+    overloadPct: 100,        // a week at/above this is "over capacity"
+    overloadMinWeeks: 2,     // need at least this many overloaded weeks to flag
+    risingDeltaPts: 15,      // recent-vs-earlier load jump that counts as a rising trend
+    checkinRatio: 0.6,       // weekDone/weekGoal below this = check-ins dropping
+    points: {
+      sustainedOverload: 2,  // per overloaded week, capped at 3 weeks' worth
+      risingTrend: 2,
+      scheduleClash: 2,      // overlapping / back-to-back events (capacity.burnoutSignal)
+      missedCheckins: 2
+    },
+    // bands evaluated high → low; a person below the lowest is NOT flagged (good!)
+    bands: [
+      { key: 'critical', min: 7 },
+      { key: 'atRisk',   min: 4 },
+      { key: 'watch',    min: 2 }
+    ]
+  };
+
+  function bandFor(score) {
+    for (var i = 0; i < CONFIG.bands.length; i++) if (score >= CONFIG.bands[i].min) return CONFIG.bands[i].key;
+    return null;
+  }
+
+  function actionFor(band) {
+    if (band === 'critical') return { en: 'Rebalance their workload now and discuss time off / relief.', ar: 'أعد توزيع أعماله الآن وناقش إجازة أو تخفيفاً عاجلاً.' };
+    if (band === 'atRisk')   return { en: 'Redistribute one project and schedule a 1:1 this week.', ar: 'انقل أحد المشاريع وحدد جلسة فردية هذا الأسبوع.' };
+    if (band === 'watch')    return { en: 'Keep an eye on their load; check in at your next 1:1.', ar: 'تابع حمله؛ اطمئن عليه في جلستكما القادمة.' };
+    return null;
+  }
+
+  function toISO(ref) {
+    if (!ref) ref = (WP.state && WP.state.refDate) || new Date().toISOString().slice(0, 10);
+    if (ref instanceof Date) return ref.toISOString().slice(0, 10);
+    return String(ref).slice(0, 10);
+  }
+  function shiftISO(refISO, days) {
+    var d = new Date(refISO + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
+  }
+  function avg(arr) { return arr.length ? arr.reduce(function (a, b) { return a + b; }, 0) / arr.length : 0; }
+
+  function weeklyLoads(person, refISO) {
+    var loads = [];
+    for (var i = 0; i < CONFIG.lookbackWeeks; i++) {
+      loads.push(WP.capacity.loadForPerson(person, 'week', shiftISO(refISO, -7 * i)));
+    }
+    return loads; // [0] = current week … older as index grows
+  }
+
+  /* Score a person object directly (testable without registering them). */
+  function scoreForPerson(person, ref) {
+    var factors = [], omitted = [], score = 0;
+    if (!person) return { id: null, band: null, score: 0, factors: factors, omitted: omitted, suggestedAction: null };
+    var refISO = toISO(ref);
+
+    // 1) Sustained overload (from the capacity engine — capacity, never hours)
+    var loads = weeklyLoads(person, refISO);
+    var overWeeks = loads.filter(function (l) { return l >= CONFIG.overloadPct; }).length;
+    if (overWeeks >= CONFIG.overloadMinWeeks) {
+      var pts = Math.min(overWeeks, 3) * CONFIG.points.sustainedOverload;
+      score += pts;
+      factors.push({ key: 'sustainedOverload', points: pts,
+        en: 'Over capacity ' + overWeeks + ' of the last ' + CONFIG.lookbackWeeks + ' weeks',
+        ar: 'فوق الطاقة ' + overWeeks + ' من آخر ' + CONFIG.lookbackWeeks + ' أسابيع' });
+    }
+
+    // 2) Rising trend (recent weeks heavier than earlier weeks)
+    var half = Math.floor(loads.length / 2);
+    if (half >= 1) {
+      var newer = avg(loads.slice(0, half)), older = avg(loads.slice(half));
+      if (newer - older >= CONFIG.risingDeltaPts) {
+        score += CONFIG.points.risingTrend;
+        factors.push({ key: 'risingTrend', points: CONFIG.points.risingTrend,
+          en: 'Workload trending up (' + Math.round(older) + '% → ' + Math.round(newer) + '%)',
+          ar: 'الحِمل في ارتفاع (' + Math.round(older) + '٪ ← ' + Math.round(newer) + '٪)' });
+      }
+    }
+
+    // 3) Schedule clash (overlapping / back-to-back events — existing signal)
+    if (WP.capacity.burnoutSignal(person)) {
+      score += CONFIG.points.scheduleClash;
+      factors.push({ key: 'scheduleClash', points: CONFIG.points.scheduleClash,
+        en: 'Back-to-back / overlapping events with no recovery gap',
+        ar: 'فعاليات متتالية أو متداخلة دون فترة تعافٍ' });
+    }
+
+    // 4) Check-in decline — ONLY when real voluntary check-in data exists (no fabrication)
+    var eng = (WP.engage && WP.engage.snapshot) ? WP.engage.snapshot()[person.id] : null;
+    if (eng && eng.weekGoal) {
+      if ((eng.weekDone || 0) / eng.weekGoal < CONFIG.checkinRatio) {
+        score += CONFIG.points.missedCheckins;
+        factors.push({ key: 'missedCheckins', points: CONFIG.points.missedCheckins,
+          en: 'Daily check-ins dropping (' + (eng.weekDone || 0) + '/' + eng.weekGoal + ' this week)',
+          ar: 'تراجع التحديثات اليومية (' + (eng.weekDone || 0) + '/' + eng.weekGoal + ' هذا الأسبوع)' });
+      }
+    } else {
+      omitted.push({ key: 'checkins', en: 'No check-in history yet — factor skipped', ar: 'لا يوجد سجل تحديثات بعد — تم تخطّي العامل' });
+    }
+
+    // 5) Recovery / leave — not tracked yet. Omit transparently (Article V); never invent it.
+    omitted.push({ key: 'recovery', en: 'Leave / time-off not tracked yet — factor skipped', ar: 'الإجازات غير مسجّلة بعد — تم تخطّي العامل' });
+
+    var band = bandFor(score);
+    return { id: person.id, band: band, score: score, factors: factors, omitted: omitted, suggestedAction: actionFor(band) };
+  }
+
+  function scoreFor(personId, ref) { return scoreForPerson(WP.access.byId(personId), ref); }
+
+  /* The people a viewer may see wellbeing for: their DIRECT reports (or, for a
+   * director/admin, everyone) — enforced by the existing canSeeSensitive gate,
+   * which returns true only for self / direct-manager / director. Peers => none.
+   * Self is excluded (this is a manager's relief view, not a self-check). */
+  function candidatesFor(viewer) {
+    if (!viewer) return [];
+    return WP.access.visiblePeople(viewer).filter(function (p) {
+      return p.id !== viewer.id && !p.tbc && WP.access.canSeeSensitive(viewer, p.id);
+    });
+  }
+
+  function canView(viewer) { return candidatesFor(viewer).length > 0; }
+
+  /* Flagged people in the viewer's scope, highest risk first. NEVER peer-visible. */
+  function atRisk(viewerId, ref) {
+    var viewer = WP.access.byId(viewerId);
+    if (!canView(viewer)) return [];
+    return candidatesFor(viewer)
+      .map(function (p) { return scoreForPerson(p, ref); })
+      .filter(function (r) { return r.band; })
+      .sort(function (a, b) { return b.score - a.score; });
+  }
+
+  WP.wellbeing = {
+    CONFIG: CONFIG,
+    bandFor: bandFor,
+    scoreFor: scoreFor,
+    scoreForPerson: scoreForPerson,
+    canView: canView,
+    atRisk: atRisk
   };
 })(window.WP = window.WP || {});
 
@@ -5277,6 +5473,94 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 </script>
   <script>
 /* ============================================================
+ * Tempo — Wellbeing Early-Warning (view)   ·  managers / directors / super-admin only
+ * ------------------------------------------------------------
+ * Support framing, never a ranking of "bad" people (Constitution II). Each flag
+ * shows WHY (factors) + a concrete relief action. Band is shown as a LABEL + icon
+ * + colour (never colour alone — WCAG 2.2). EN/AR, RTL, dark mode via tokens.
+ * Reads only WP.wellbeing (core); no business logic here.
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+  var ui = WP.ui;
+
+  var BAND_META = {
+    critical: { icon: 'flame',  cls: 'wb-critical', en: 'Critical', ar: 'حرج' },
+    atRisk:   { icon: 'alert',  cls: 'wb-atrisk',   en: 'At risk',  ar: 'معرّض للخطر' },
+    watch:    { icon: 'eye',    cls: 'wb-watch',    en: 'Watch',    ar: 'مراقبة' }
+  };
+
+  function bandChip(band, ar) {
+    var m = BAND_META[band]; if (!m) return '';
+    // label + icon + colour together (accessibility: never colour as the only cue)
+    return '<span class="wb-chip ' + m.cls + '">' + WP.ui.icon(m.icon, 13) + ' ' + (ar ? m.ar : m.en) + '</span>';
+  }
+
+  function render(root) {
+    var t = WP.i18n.t, ar = WP.state.lang === 'ar';
+    var viewer = WP.viewer();
+
+    // ---- audience gate (hard guardrail): managers of someone, directors, super-admin only ----
+    if (!viewer || !WP.wellbeing.canView(viewer)) {
+      root.innerHTML =
+        '<div class="ttl">' + t('navWellbeing') + '</div>' +
+        '<div class="section"><div class="sub">' + WP.ui.icon('lock', 14) + ' ' + t('wbDenied') + '</div></div>';
+      return;
+    }
+
+    var flagged;
+    try { flagged = WP.wellbeing.atRisk(viewer.id, WP.state.refDate); }
+    catch (e) {
+      root.innerHTML =
+        '<div class="ttl">' + t('navWellbeing') + '</div>' +
+        '<div class="sync-note offline">' + WP.ui.icon('alert', 14) + ' ' + t('wbError') + '</div>';
+      return;
+    }
+
+    var head =
+      '<div class="ttl">' + t('navWellbeing') + '</div>' +
+      '<div class="eval-head" style="margin-top:4px">' +
+        '<div><h2 style="margin:0 0 2px">' + t('wbTitle') + '</h2>' +
+          '<div class="ttl">' + t('wbSubtitle') + '</div></div>' +
+      '</div>' +
+      '<div class="disclaimer">' + WP.ui.icon('bulb', 13) + ' ' + t('wbFraming') + '</div>';
+
+    // ---- empty state is a GOOD outcome ----
+    if (!flagged.length) {
+      root.innerHTML = head +
+        '<div class="section"><div style="text-align:center;padding:28px 0">' +
+          '<div style="color:var(--state-available)">' + WP.ui.icon('check', 32) + '</div>' +
+          '<div style="font-weight:600;margin-top:8px">' + t('wbEmptyTitle') + '</div>' +
+          '<div class="sub">' + t('wbEmptyNote') + '</div></div></div>';
+      return;
+    }
+
+    var rows = flagged.map(function (r) {
+      var p = WP.access.byId(r.id); if (!p) return '';
+      var reasons = r.factors.map(function (f) {
+        return '<li>' + ui.esc(ar ? f.ar : f.en) + '</li>';
+      }).join('');
+      var action = r.suggestedAction ? (ar ? r.suggestedAction.ar : r.suggestedAction.en) : '';
+      return '<div class="wb-row">' +
+          '<div class="wb-person">' + ui.avatar(p, 'var(--brand)') +
+            '<div class="wb-meta"><div class="nm">' + ui.esc(WP.i18n.name(p)) + '</div>' +
+              '<div class="ttl">' + ui.esc(WP.i18n.title(p)) + '</div></div>' +
+            bandChip(r.band, ar) + '</div>' +
+          '<ul class="wb-factors">' + reasons + '</ul>' +
+          '<div class="wb-action">' + WP.ui.icon('sprout', 14) + ' <strong>' + t('wbSuggested') + ':</strong> ' + ui.esc(action) + '</div>' +
+        '</div>';
+    }).join('');
+
+    root.innerHTML = head +
+      '<div class="section"><h3>' + t('wbFlagged') + ' · ' + flagged.length + '</h3>' + rows + '</div>';
+  }
+
+  WP.ui.wellbeing = { render: render };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
  * Webook Workload — "My Progress" (the employee's daily home)
  * ------------------------------------------------------------
  * The healthy-engagement dashboard: small wins, gentle streak,
@@ -5773,6 +6057,11 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       { id: 'daily',       routes: ['daily'],          icon: 'clipboard', label: t('dailyTasks') },
       { id: 'library',     routes: ['library'],        icon: 'grid',      label: t('navLibrary') },
     ];
+    // Wellbeing relief view — only for people who manage someone (line managers,
+    // directors, super-admin). Never shown to peers (guardrail, Constitution II).
+    if (WP.wellbeing && WP.wellbeing.canView(viewer)) {
+      nav.splice(4, 0, { id: 'wellbeing', routes: ['wellbeing'], icon: 'sprout', label: t('navWellbeing') });
+    }
     if (canManage) {
       nav.push({ id: 'permissions', routes: ['permissions'], icon: 'key',      label: t('permsTitle') });
       nav.push({ id: 'settings',    routes: ['settings'],    icon: 'settings', label: t('settings') });
@@ -5915,6 +6204,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     else if (WP.state.route === 'evaluation') WP.ui.evaluation.render(root);
     else if (WP.state.route === 'upward') WP.ui.upward.render(root);
     else if (WP.state.route === 'evaluations') WP.ui.evaluations.render(root);
+    else if (WP.state.route === 'wellbeing') WP.ui.wellbeing.render(root);
     else if (WP.state.route === 'me') WP.ui.me.render(root);
     else if (WP.state.route === 'library') WP.ui.wbkLibrary.render(root);
     else WP.ui.workloadMap.render(root);
