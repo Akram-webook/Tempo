@@ -26,6 +26,17 @@ Tempo runs on **TAOS — the Tempo AI Operating System** (`/ai-os/`).
   (`ai-os/10-ai-agents/COUNCIL-OF-CRITICS.md`) — agents that try to BREAK it, not approve it.
 - Ground every standard in **`ai-os/REFERENCES.md`** (Google Eng Practices, SRE, Microsoft SDL,
   OWASP, WCAG 2.2, NN/g, DORA, Team Topologies, C4, Working Backwards) — official sources, not opinion.
+- **Every production issue is an Escape** (`ai-os/05-qa/ESCAPE-LEARNING.md`): ask "why did our system
+  let this through?", not "why did the AI err". Blameless — classify the gap, set maturity (L1–L4),
+  root-cause it, log it in the Failure Library, and close it only when a permanent test/rule prevents
+  recurrence. The metric that matters is a falling Escape Rate, not work completed.
+
+## Release discipline (drip, don't dump — `ai-os/08-release-management/RELEASE-STRATEGY.md`)
+Ship in small **Operations Waves** (Wave 3.001, 3.002, …), one primary feature per drop + polish + QA
++ known limits + success metrics. Every release answers "what's the single most valuable improvement
+right now?" **Approved ideas go to the backlog (`docs/IDEAS-BACKLOG.md` / master Google Sheet) — never
+built on sight.** Promote from Later → Now only through the feature-readiness gate. Observe after each
+release before starting the next. Quality over speed; the product is never "finished".
 
 ## How we work on this project (standing method — do this every task, don't wait to be asked)
 1. **Skills first.** Check available skills and apply the relevant ones — especially
