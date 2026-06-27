@@ -90,9 +90,13 @@
     return w ? Math.round((sum / w) * 10) / 10 : null; // /5
   }
 
+  function currentPeriod() {
+    var c = activeCycle();
+    return (c && c.name) ? c.name : '2025 Mid-Year';
+  }
   function ensure(personId) {
     if (!EVALUATIONS[personId]) {
-      EVALUATIONS[personId] = { period: '2025 Mid-Year', status: 'Not started', evaluatorId: null, scores: {}, feedback: {} };
+      EVALUATIONS[personId] = { period: currentPeriod(), status: 'Not started', evaluatorId: null, scores: {}, feedback: {} };
     }
     return EVALUATIONS[personId];
   }

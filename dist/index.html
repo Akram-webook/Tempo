@@ -1821,9 +1821,13 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     return w ? Math.round((sum / w) * 10) / 10 : null; // /5
   }
 
+  function currentPeriod() {
+    var c = activeCycle();
+    return (c && c.name) ? c.name : '2025 Mid-Year';
+  }
   function ensure(personId) {
     if (!EVALUATIONS[personId]) {
-      EVALUATIONS[personId] = { period: '2025 Mid-Year', status: 'Not started', evaluatorId: null, scores: {}, feedback: {} };
+      EVALUATIONS[personId] = { period: currentPeriod(), status: 'Not started', evaluatorId: null, scores: {}, feedback: {} };
     }
     return EVALUATIONS[personId];
   }
@@ -2086,6 +2090,8 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     currentProjects:{ en: 'Current projects',       ar: 'المشاريع الحالية' },
     noProjects:     { en: 'No active projects — available for an opportunity', ar: 'لا مشاريع نشطة — متاح لفرصة جديدة' },
     back:           { en: 'Back to map',            ar: 'العودة للخريطة' },
+    backToEvaluations:{ en: 'Back to evaluations',  ar: 'العودة للتقييمات' },
+    backToProfile:  { en: 'Back to profile',        ar: 'العودة للملف' },
     pressure:       { en: 'Pressure breakdown',     ar: 'تفصيل الضغط' },
     dailySummary:   { en: 'Daily summary (Slack #daily-checkin)', ar: 'الملخص اليومي (سلاك #daily-checkin)' },
     plan:           { en: 'Plan',                   ar: 'الخطة' },
@@ -2102,6 +2108,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     theme:          { en: 'Theme',                  ar: 'السمة' },
     lang:           { en: 'العربية',                ar: 'English' },
     healthyZone:    { en: 'in healthy zone (41–75%)', ar: 'في النطاق الصحي (٤١-٧٥٪)' },
+    healthyBandSplit:{ en: '{h} of {n} in healthy band (41–75%)', ar: '{h} من {n} في النطاق الصحي (٤١-٧٥٪)' },
     noDataYet:      { en: 'No data yet', ar: 'لا توجد بيانات بعد' },
     ofPeople:       { en: 'of {n} people', ar: 'من {n} أشخاص' },
     nearCapSub:     { en: 'at 76%+ load', ar: 'بحمل ٧٦٪ فأكثر' },
@@ -2129,6 +2136,8 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     epGaps:         { en: 'Gaps — no evidence on record (not filled in)', ar: 'فجوات — لا أدلة مسجّلة (لم تُملأ)' },
     epGapLine:      { en: 'No evidence captured for {c} this period', ar: 'لا توجد أدلة مسجّلة لـ {c} في هذه الفترة' },
     epNotEnough:    { en: 'Not enough evidence yet', ar: 'الأدلة غير كافية بعد' },
+    epLimited:      { en: 'Limited evidence so far', ar: 'أدلة محدودة حتى الآن' },
+    epLimitedNote:  { en: 'Here’s what’s on record — enough to start from, not a full picture. Add observations over time; don’t infer beyond it.', ar: 'هذا ما هو مُسجَّل — يكفي للبدء منه، لا صورة كاملة. أضِف ملاحظات مع الوقت، ولا تستنتج أبعد منها.' },
     epNotEnoughNote:{ en: 'Too little is on record to prepare a fair picture. Shown below is everything there is — add observations over time; don’t infer beyond it.', ar: 'المسجَّل أقل من أن يُكوّن صورة عادلة. في الأسفل كل ما هو متاح — أضِف ملاحظات مع الوقت، ولا تستنتج أبعد منها.' },
     epSource:       { en: 'Source', ar: 'المصدر' },
     epCount:        { en: '{n} sourced item(s)', ar: '{n} عنصر بمصدر' },
@@ -2803,6 +2812,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       snaps: snaps,
       counts: counts,
       teamHealth: Math.round((counts[WP.data.HEALTHY_STATE] / n) * 100),
+      healthyCount: counts[WP.data.HEALTHY_STATE],
       availablePct: Math.round((counts.available / n) * 100),
       nearOrOver: counts.near + counts.overloaded,
       earlyWarnings: warnings,
@@ -3929,11 +3939,25 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     return '<div class="avatar" style="--node-accent:' + accentVar + '">' + inner + '</div>';
   }
 
+  /* Honest provenance pill — shows "Sample data" while the app is running on
+   * seeded/mock numbers, so KPIs never read as live truth (trust signal). Hidden
+   * once a backend is connected AND synced (then the numbers are real). Shared so
+   * the badge stays consistent app-wide (dashboard, workload map, …). */
+  function provenanceNote() {
+    const t = WP.i18n.t;
+    const db = WP.db;
+    const live = db && db.usingBackend && db.usingBackend() && db.status && db.status.synced;
+    if (live) return '';
+    return '<div class="provenance-note" title="' + t('sampleDataHint') + '">' +
+      WP.ui.icon('alert', 13) + ' ' + t('sampleData') + '</div>';
+  }
+
   WP.ui = WP.ui || {};
   WP.ui.esc = esc;
   WP.ui.stateColor = stateColor;
   WP.ui.tierColor = tierColor;
   WP.ui.avatar = avatar;
+  WP.ui.provenanceNote = provenanceNote;
 })(window.WP = window.WP || {});
 
 </script>
@@ -4264,7 +4288,10 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     const t = WP.i18n.t;
     const hasData = m.snaps.some(function (s) { return s.load > 0; });
     if (!hasData) return kpi(t('teamHealth'), '—', t('noDataYet'), 'var(--text-muted)');
-    return kpi(t('teamHealth'), m.teamHealth + '%', t('healthyZone'), 'var(--state-balanced)');
+    // S3-3 — frame the headline as "{h} of {n} in healthy band" so a low/zero
+    // percentage reads as informative (band split) rather than an alarm.
+    const split = t('healthyBandSplit').replace('{h}', m.healthyCount).replace('{n}', m.size);
+    return kpi(t('teamHealth'), m.teamHealth + '%', split, 'var(--state-balanced)');
   }
   function ofPeople(n) { return WP.i18n.t('ofPeople').replace('{n}', n); }
   function loadBar(pct) {
@@ -4414,6 +4441,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     else if (lvl === 'sr_manager' || lvl === 'manager') leader(root, viewer);
     else employee(root, viewer);
 
+    // S3-2 — honest "Sample data" badge while KPIs are seeded, not live.
+    root.insertAdjacentHTML('afterbegin', WP.ui.provenanceNote());
+
     root.querySelectorAll('[data-open]').forEach(function (el) {
       const open = function () { WP.setState({ route: 'profile', selectedId: el.dataset.open }); };
       // keyboard-accessible: clickable rows are divs, so make them real controls (WCAG 2.2)
@@ -4470,9 +4500,10 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
              '<div class="value">' + value + '</div>' +
              '<div class="sub">' + sub + '</div></div>';
     }
-    return '<div class="provenance-note" title="' + t('sampleDataHint') + '">' + WP.ui.icon('alert', 13) + ' ' + t('sampleData') + '</div>' +
+    const healthSplit = t('healthyBandSplit').replace('{h}', m.healthyCount).replace('{n}', m.size);
+    return WP.ui.provenanceNote() +
       '<div class="metrics">' +
-      card(t('teamHealth'), m.teamHealth + '%', t('healthyZone')) +
+      card(t('teamHealth'), m.teamHealth + '%', healthSplit) +
       card(t('available'), m.counts.available, t('available')) +
       card(t('nearCapacity'), m.nearOrOver, t('nearCapacity')) +
       card(t('earlyWarnings'), m.earlyWarnings, t('burnoutFlag').split('—')[0]) +
@@ -5408,11 +5439,12 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     root.querySelectorAll('[data-tlq]').forEach(function (b) { b.onclick = function () { WP._tlQuarter = b.dataset.tlq; WP.setState({}); }; });
     root.querySelectorAll('[data-tlc]').forEach(function (b) { b.onclick = function () { WP._tlCategory = b.dataset.tlc; WP.setState({}); }; });
     const oe = root.querySelector('#open-eval');
-    if (oe) oe.onclick = function () { WP.setState({ route: 'evaluation' }); };
+    // S4-1 — opened from a profile → evaluation's back button returns to the profile.
+    if (oe) oe.onclick = function () { WP.setState({ route: 'evaluation', evalOrigin: 'profile' }); };
     const em = root.querySelector('#eval-mgr');
     if (em) em.onclick = function () { WP.setState({ route: 'upward', selectedId: p.managerId }); };
     const se = root.querySelector('#self-eval');
-    if (se) se.onclick = function () { WP.setState({ route: 'evaluation', selectedId: p.id }); };
+    if (se) se.onclick = function () { WP.setState({ route: 'evaluation', selectedId: p.id, evalOrigin: 'profile' }); };
   }
 
   WP.ui.peek = peek;
@@ -5927,14 +5959,20 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       '<div class="disclaimer">' + t('epIntro') + '</div>';
 
     // Sparse → say so plainly; still show whatever little is on record.
+    // S4-2 — when SOME sourced evidence exists, "Not enough evidence yet" reads as
+    // contradictory next to the items shown. Soften to "Limited evidence so far"
+    // so the banner and the listed evidence agree. Only a truly empty store keeps
+    // the firmer "Not enough evidence yet" line.
     if (!s.enough) {
+      var hasSome = s.sourcedCount > 0;
       var thin = s.sections.map(function (sec) {
         return '<div class="ep-cat"><div class="mini-label">' + catLabel(sec.category, t) + '</div>' +
           '<ul class="ep-list">' + sec.lines.map(function (l) { return lineHTML(l, t); }).join('') + '</ul></div>';
       }).join('');
       return head +
-        '<div class="ep-empty"><div class="ttl" style="font-weight:600">' + WP.ui.icon('clock', 14) + ' ' + t('epNotEnough') + '</div>' +
-          '<div class="ttl">' + t('epNotEnoughNote') + '</div></div>' +
+        '<div class="ep-empty"><div class="ttl" style="font-weight:600">' + WP.ui.icon('clock', 14) + ' ' +
+            (hasSome ? t('epLimited') : t('epNotEnough')) + '</div>' +
+          '<div class="ttl">' + (hasSome ? t('epLimitedNote') : t('epNotEnoughNote')) + '</div></div>' +
         thin +
         '<div class="disclaimer">' + t('epHuman') + '</div>';
     }
@@ -5966,13 +6004,25 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     const p = WP.access.byId(WP.state.selectedId);
     const viewer = WP.viewer();
     const selfMode = !!(viewer && p && viewer.id === p.id);
-    const back = function () { WP.setState({ route: selfMode ? 'evaluations' : 'profile' }); };
+    // S4-1 — the back button must match where the evaluation was opened from.
+    // Self-assessments and anything launched from the Evaluations hub return there;
+    // an evaluation opened from a person's profile returns to that profile.
+    const fromEval = selfMode || WP.state.evalOrigin === 'evaluations';
+    const backRoute = fromEval ? 'evaluations' : 'profile';
+    const backLabel = fromEval ? t('backToEvaluations') : t('backToProfile');
+    const back = function () { WP.setState({ route: backRoute }); };
     if (!p || (!selfMode && !canEvaluate(viewer, p.id))) {
-      root.innerHTML = '<button class="btn" id="back" style="margin-bottom:16px"><span class="ar ar-left"></span> ' + t('back') + '</button>' +
+      root.innerHTML = '<button class="btn" id="back" style="margin-bottom:16px"><span class="ar ar-left"></span> ' + backLabel + '</button>' +
         '<div class="section"><div class="sub">' + WP.ui.icon('lock',14) + ' ' + t('evalDenied') + '</div></div>';
       root.querySelector('#back').onclick = back; return;
     }
+    // S3-1 — the evaluation belongs to the cycle the user opened it from (the
+    // active cycle from the hub, or an explicitly selected one), not a stale
+    // hardcoded period. Resolve it and show THAT cycle in the header.
+    const cycle = WP.evaluation.cycles().find(function (c) { return c.id === WP.state.selectedCycle; })
+      || WP.evaluation.activeCycle();
     const ev = selfMode ? WP.evaluation.ensureSelf(p.id) : WP.evaluation.ensure(p.id);
+    const periodLabel = (cycle && cycle.name) ? cycle.name : ev.period;
     const selfCmp = selfMode ? null : WP.data.SELF[p.id]; // manager sees the employee's self-rating beside theirs
     const score = WP.evaluation.overall(ev);
     const evaluator = ev.evaluatorId ? WP.access.byId(ev.evaluatorId) : null;
@@ -6004,9 +6054,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     }).join('');
 
     root.innerHTML =
-      '<button class="btn" id="back" style="margin-bottom:14px"><span class="ar ar-left"></span> ' + t('back') + '</button>' +
+      '<button class="btn" id="back" style="margin-bottom:14px"><span class="ar ar-left"></span> ' + backLabel + '</button>' +
       '<div class="eval-head">' +
-        '<div><div class="ttl">' + t('performance') + ' · ' + ui.esc(ev.period) + '</div>' +
+        '<div><div class="ttl">' + t('performance') + ' · ' + ui.esc(periodLabel) + '</div>' +
           '<h2 style="margin:2px 0">' + (selfMode ? t('selfAssessment') : t('evaluation')) + ' — ' + ui.esc(WP.i18n.name(p)) + '</h2>' +
           '<div class="ttl">' + ui.esc(WP.i18n.title(p)) +
             (evaluator ? ' · ' + t('evaluator') + ': ' + ui.esc(WP.i18n.name(evaluator)) : '') + '</div></div>' +
@@ -6271,14 +6321,19 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 
       '<div class="section"><h3>' + t('employees') + ' · ' + scope.length + '</h3>' + (rows || '<div class="sub">—</div>') + '</div>';
 
+    // S3-1 + S4-1 — open THIS cycle's evaluation, and remember we came from the hub
+    // so the evaluation's back button returns here ("Back to evaluations").
+    const openEval = function (id) {
+      WP.setState({ route: 'evaluation', selectedId: id, selectedCycle: cycle.id, evalOrigin: 'evaluations' });
+    };
     root.querySelectorAll('[data-eval]').forEach(function (el) {
-      el.onclick = function () { WP.setState({ route: 'evaluation', selectedId: el.dataset.eval }); };
+      el.onclick = function () { openEval(el.dataset.eval); };
     });
     root.querySelectorAll('[data-open]').forEach(function (el) {
-      el.onclick = function () { WP.setState({ route: 'evaluation', selectedId: el.dataset.open }); };
+      el.onclick = function () { openEval(el.dataset.open); };
     });
     const selfTask = root.querySelector('[data-self]');
-    if (selfTask) selfTask.onclick = function () { WP.setState({ route: 'evaluation', selectedId: viewer.id }); };
+    if (selfTask) selfTask.onclick = function () { openEval(viewer.id); };
     root.querySelector('#cycle').onchange = function (e) { WP.evaluation.setActiveCycle(e.target.value); WP.setState({}); };
     const nc = root.querySelector('#new-cycle');
     if (nc) nc.onclick = function () {

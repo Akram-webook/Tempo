@@ -305,11 +305,12 @@
     root.querySelectorAll('[data-tlq]').forEach(function (b) { b.onclick = function () { WP._tlQuarter = b.dataset.tlq; WP.setState({}); }; });
     root.querySelectorAll('[data-tlc]').forEach(function (b) { b.onclick = function () { WP._tlCategory = b.dataset.tlc; WP.setState({}); }; });
     const oe = root.querySelector('#open-eval');
-    if (oe) oe.onclick = function () { WP.setState({ route: 'evaluation' }); };
+    // S4-1 — opened from a profile → evaluation's back button returns to the profile.
+    if (oe) oe.onclick = function () { WP.setState({ route: 'evaluation', evalOrigin: 'profile' }); };
     const em = root.querySelector('#eval-mgr');
     if (em) em.onclick = function () { WP.setState({ route: 'upward', selectedId: p.managerId }); };
     const se = root.querySelector('#self-eval');
-    if (se) se.onclick = function () { WP.setState({ route: 'evaluation', selectedId: p.id }); };
+    if (se) se.onclick = function () { WP.setState({ route: 'evaluation', selectedId: p.id, evalOrigin: 'profile' }); };
   }
 
   WP.ui.peek = peek;

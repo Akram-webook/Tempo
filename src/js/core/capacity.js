@@ -151,6 +151,7 @@
       snaps: snaps,
       counts: counts,
       teamHealth: Math.round((counts[WP.data.HEALTHY_STATE] / n) * 100),
+      healthyCount: counts[WP.data.HEALTHY_STATE],
       availablePct: Math.round((counts.available / n) * 100),
       nearOrOver: counts.near + counts.overloaded,
       earlyWarnings: warnings,

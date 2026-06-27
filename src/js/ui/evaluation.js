@@ -42,14 +42,20 @@
       '<div class="disclaimer">' + t('epIntro') + '</div>';
 
     // Sparse → say so plainly; still show whatever little is on record.
+    // S4-2 — when SOME sourced evidence exists, "Not enough evidence yet" reads as
+    // contradictory next to the items shown. Soften to "Limited evidence so far"
+    // so the banner and the listed evidence agree. Only a truly empty store keeps
+    // the firmer "Not enough evidence yet" line.
     if (!s.enough) {
+      var hasSome = s.sourcedCount > 0;
       var thin = s.sections.map(function (sec) {
         return '<div class="ep-cat"><div class="mini-label">' + catLabel(sec.category, t) + '</div>' +
           '<ul class="ep-list">' + sec.lines.map(function (l) { return lineHTML(l, t); }).join('') + '</ul></div>';
       }).join('');
       return head +
-        '<div class="ep-empty"><div class="ttl" style="font-weight:600">' + WP.ui.icon('clock', 14) + ' ' + t('epNotEnough') + '</div>' +
-          '<div class="ttl">' + t('epNotEnoughNote') + '</div></div>' +
+        '<div class="ep-empty"><div class="ttl" style="font-weight:600">' + WP.ui.icon('clock', 14) + ' ' +
+            (hasSome ? t('epLimited') : t('epNotEnough')) + '</div>' +
+          '<div class="ttl">' + (hasSome ? t('epLimitedNote') : t('epNotEnoughNote')) + '</div></div>' +
         thin +
         '<div class="disclaimer">' + t('epHuman') + '</div>';
     }
@@ -81,13 +87,25 @@
     const p = WP.access.byId(WP.state.selectedId);
     const viewer = WP.viewer();
     const selfMode = !!(viewer && p && viewer.id === p.id);
-    const back = function () { WP.setState({ route: selfMode ? 'evaluations' : 'profile' }); };
+    // S4-1 — the back button must match where the evaluation was opened from.
+    // Self-assessments and anything launched from the Evaluations hub return there;
+    // an evaluation opened from a person's profile returns to that profile.
+    const fromEval = selfMode || WP.state.evalOrigin === 'evaluations';
+    const backRoute = fromEval ? 'evaluations' : 'profile';
+    const backLabel = fromEval ? t('backToEvaluations') : t('backToProfile');
+    const back = function () { WP.setState({ route: backRoute }); };
     if (!p || (!selfMode && !canEvaluate(viewer, p.id))) {
-      root.innerHTML = '<button class="btn" id="back" style="margin-bottom:16px"><span class="ar ar-left"></span> ' + t('back') + '</button>' +
+      root.innerHTML = '<button class="btn" id="back" style="margin-bottom:16px"><span class="ar ar-left"></span> ' + backLabel + '</button>' +
         '<div class="section"><div class="sub">' + WP.ui.icon('lock',14) + ' ' + t('evalDenied') + '</div></div>';
       root.querySelector('#back').onclick = back; return;
     }
+    // S3-1 — the evaluation belongs to the cycle the user opened it from (the
+    // active cycle from the hub, or an explicitly selected one), not a stale
+    // hardcoded period. Resolve it and show THAT cycle in the header.
+    const cycle = WP.evaluation.cycles().find(function (c) { return c.id === WP.state.selectedCycle; })
+      || WP.evaluation.activeCycle();
     const ev = selfMode ? WP.evaluation.ensureSelf(p.id) : WP.evaluation.ensure(p.id);
+    const periodLabel = (cycle && cycle.name) ? cycle.name : ev.period;
     const selfCmp = selfMode ? null : WP.data.SELF[p.id]; // manager sees the employee's self-rating beside theirs
     const score = WP.evaluation.overall(ev);
     const evaluator = ev.evaluatorId ? WP.access.byId(ev.evaluatorId) : null;
@@ -119,9 +137,9 @@
     }).join('');
 
     root.innerHTML =
-      '<button class="btn" id="back" style="margin-bottom:14px"><span class="ar ar-left"></span> ' + t('back') + '</button>' +
+      '<button class="btn" id="back" style="margin-bottom:14px"><span class="ar ar-left"></span> ' + backLabel + '</button>' +
       '<div class="eval-head">' +
-        '<div><div class="ttl">' + t('performance') + ' · ' + ui.esc(ev.period) + '</div>' +
+        '<div><div class="ttl">' + t('performance') + ' · ' + ui.esc(periodLabel) + '</div>' +
           '<h2 style="margin:2px 0">' + (selfMode ? t('selfAssessment') : t('evaluation')) + ' — ' + ui.esc(WP.i18n.name(p)) + '</h2>' +
           '<div class="ttl">' + ui.esc(WP.i18n.title(p)) +
             (evaluator ? ' · ' + t('evaluator') + ': ' + ui.esc(WP.i18n.name(evaluator)) : '') + '</div></div>' +

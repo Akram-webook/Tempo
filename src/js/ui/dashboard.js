@@ -20,7 +20,10 @@
     const t = WP.i18n.t;
     const hasData = m.snaps.some(function (s) { return s.load > 0; });
     if (!hasData) return kpi(t('teamHealth'), '—', t('noDataYet'), 'var(--text-muted)');
-    return kpi(t('teamHealth'), m.teamHealth + '%', t('healthyZone'), 'var(--state-balanced)');
+    // S3-3 — frame the headline as "{h} of {n} in healthy band" so a low/zero
+    // percentage reads as informative (band split) rather than an alarm.
+    const split = t('healthyBandSplit').replace('{h}', m.healthyCount).replace('{n}', m.size);
+    return kpi(t('teamHealth'), m.teamHealth + '%', split, 'var(--state-balanced)');
   }
   function ofPeople(n) { return WP.i18n.t('ofPeople').replace('{n}', n); }
   function loadBar(pct) {
@@ -169,6 +172,9 @@
     if (lvl === 'director' || lvl === 'admin') director(root, viewer);
     else if (lvl === 'sr_manager' || lvl === 'manager') leader(root, viewer);
     else employee(root, viewer);
+
+    // S3-2 — honest "Sample data" badge while KPIs are seeded, not live.
+    root.insertAdjacentHTML('afterbegin', WP.ui.provenanceNote());
 
     root.querySelectorAll('[data-open]').forEach(function (el) {
       const open = function () { WP.setState({ route: 'profile', selectedId: el.dataset.open }); };

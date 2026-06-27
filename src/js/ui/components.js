@@ -29,9 +29,23 @@
     return '<div class="avatar" style="--node-accent:' + accentVar + '">' + inner + '</div>';
   }
 
+  /* Honest provenance pill — shows "Sample data" while the app is running on
+   * seeded/mock numbers, so KPIs never read as live truth (trust signal). Hidden
+   * once a backend is connected AND synced (then the numbers are real). Shared so
+   * the badge stays consistent app-wide (dashboard, workload map, …). */
+  function provenanceNote() {
+    const t = WP.i18n.t;
+    const db = WP.db;
+    const live = db && db.usingBackend && db.usingBackend() && db.status && db.status.synced;
+    if (live) return '';
+    return '<div class="provenance-note" title="' + t('sampleDataHint') + '">' +
+      WP.ui.icon('alert', 13) + ' ' + t('sampleData') + '</div>';
+  }
+
   WP.ui = WP.ui || {};
   WP.ui.esc = esc;
   WP.ui.stateColor = stateColor;
   WP.ui.tierColor = tierColor;
   WP.ui.avatar = avatar;
+  WP.ui.provenanceNote = provenanceNote;
 })(window.WP = window.WP || {});

@@ -31,9 +31,10 @@
              '<div class="value">' + value + '</div>' +
              '<div class="sub">' + sub + '</div></div>';
     }
-    return '<div class="provenance-note" title="' + t('sampleDataHint') + '">' + WP.ui.icon('alert', 13) + ' ' + t('sampleData') + '</div>' +
+    const healthSplit = t('healthyBandSplit').replace('{h}', m.healthyCount).replace('{n}', m.size);
+    return WP.ui.provenanceNote() +
       '<div class="metrics">' +
-      card(t('teamHealth'), m.teamHealth + '%', t('healthyZone')) +
+      card(t('teamHealth'), m.teamHealth + '%', healthSplit) +
       card(t('available'), m.counts.available, t('available')) +
       card(t('nearCapacity'), m.nearOrOver, t('nearCapacity')) +
       card(t('earlyWarnings'), m.earlyWarnings, t('burnoutFlag').split('—')[0]) +

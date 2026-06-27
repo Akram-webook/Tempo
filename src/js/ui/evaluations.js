@@ -113,14 +113,19 @@
 
       '<div class="section"><h3>' + t('employees') + ' · ' + scope.length + '</h3>' + (rows || '<div class="sub">—</div>') + '</div>';
 
+    // S3-1 + S4-1 — open THIS cycle's evaluation, and remember we came from the hub
+    // so the evaluation's back button returns here ("Back to evaluations").
+    const openEval = function (id) {
+      WP.setState({ route: 'evaluation', selectedId: id, selectedCycle: cycle.id, evalOrigin: 'evaluations' });
+    };
     root.querySelectorAll('[data-eval]').forEach(function (el) {
-      el.onclick = function () { WP.setState({ route: 'evaluation', selectedId: el.dataset.eval }); };
+      el.onclick = function () { openEval(el.dataset.eval); };
     });
     root.querySelectorAll('[data-open]').forEach(function (el) {
-      el.onclick = function () { WP.setState({ route: 'evaluation', selectedId: el.dataset.open }); };
+      el.onclick = function () { openEval(el.dataset.open); };
     });
     const selfTask = root.querySelector('[data-self]');
-    if (selfTask) selfTask.onclick = function () { WP.setState({ route: 'evaluation', selectedId: viewer.id }); };
+    if (selfTask) selfTask.onclick = function () { openEval(viewer.id); };
     root.querySelector('#cycle').onchange = function (e) { WP.evaluation.setActiveCycle(e.target.value); WP.setState({}); };
     const nc = root.querySelector('#new-cycle');
     if (nc) nc.onclick = function () {
