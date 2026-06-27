@@ -18,6 +18,7 @@ happens only through the feature-readiness gate. Columns mirror the sheet so the
 | F-007 | Promotion / Org Intelligence + Executive Dashboard | 5 | Talent + capability strategy | Later | Med | Evidence-based, anonymized |
 | F-008 | Real source integrations (Slack/KPIs/recognition) | 5 | Auto-collect evidence | Later | Low | Feeds the event store |
 | F-009 | Escape-metrics dashboard (Escape Rate by dept) | — | Track quality maturity | Later | Low | From ESCAPE-LEARNING |
+| F-010 | Promote a real `--text-secondary` token to tokens.css | plat | Reusable receding-text colour (DRY design tokens) | Backlog | Low | Surfaced by Signature Bar v2 (#15); currently falls back to `--text-muted` |
 
 How an idea flows: captured here as "Idea" → reviewed (TAOS gate + Council of Critics) → "Approved" →
 promoted to "Next"/"Now" only when it's the single most valuable thing → built → "Shipped" → observed.
