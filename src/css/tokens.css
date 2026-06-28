@@ -1,12 +1,24 @@
 /* ============================================================
- * Tempo — DESIGN TOKENS  (real WOK v2.0 Light/Dark)
+ * Tempo — DESIGN TOKENS  ·  WBK PRO library V3  (single source of truth)
  * ------------------------------------------------------------
- * Values below are mapped directly from the WOK v2.0 token files
- * (🌞 Light / 🌚 Dark). WOK token name is noted in a comment next
- * to each. To re-sync later, keep the variable NAMES, swap values.
+ * Re-baselined from Figma "🧱 WBK PRO library V3" (file pzAVvF8ygDHNwdNUsdwik2)
+ * via get_variable_defs on the figma_dev@webook.com seat. V3's canonical
+ * base is LIGHT: navy Content-Primary #071437 on pure white #FFFFFF.
+ * Every value carries its V3 variable name in a comment. To re-sync later,
+ * keep the variable NAMES, swap the values.
+ *
+ * RECONCILE NOTES (Wave 1):
+ *  · Radius re-mapped by VALUE, not name. V3 radius-lg=8 / radius-xl=12.
+ *    Our historic --radius-lg(12px) consumers keep 12px (they now equal V3
+ *    radius-xl) so nothing silently shrinks; new --radius-md(6px) added.
+ *  · V3 has no 18px type step — historic --fs-l(18) kept only as a
+ *    deprecated alias; V3 components use the Label / Body / Heading scales.
+ *  · Semantic states are now EXACT V3: Positive=Success #17C653,
+ *    Negative=Danger #f8285a (active #d81a48, bg #ffeef3). Notice has no
+ *    dedicated V3 token yet — #fcc800 retained as a documented carry-over.
  * ========================================================== */
 
-/* Mona Sans — official variable font (incl. WIDTH axis 75–125 for "Expanded") */
+/* Mona Sans — kept as a display fallback only (V3 UI/display font is Gellix). */
 @font-face {
   font-family: "Mona Sans";
   src: url("https://cdn.jsdelivr.net/gh/github/mona-sans@2.0.27/fonts/webfonts/Mona-Sans.woff2") format("woff2-variations");
@@ -18,93 +30,137 @@
 
 :root,
 [data-theme="light"] {
-  /* surfaces / backgrounds */
-  --bg:            #E6E8EE; /* Bg-Secondary */
-  --surface:       #FCFCFC; /* Surface-Base / Bg-Primary */
-  --surface-2:     #F5F5F6; /* Surface-L2 */
-  --border:        #CFD4E1; /* Border-Tertiary / Surface-L3 */
+  /* surfaces / backgrounds — V3 light base */
+  --bg:            #F1F1F4; /* Bg-Secondary */
+  --surface:       #FFFFFF; /* Bg-Primary / Surface-Base */
+  --surface-1:     #F9F9F9; /* Surface-L1 */
+  --surface-2:     #F1F1F4; /* Surface-L2 */
+  --surface-3:     #DBDFE9; /* Surface-L3 */
+  --border:        #DBDFE9; /* Border-Tertiary (default hairline) */
+  --border-secondary:#99A1B7; /* Border-Secondary (stronger) */
+  --border-primary: #18181B; /* Border-Primary (strongest) */
 
   /* text / content */
-  --text:          #18181B; /* Content-Primary */
-  --text-muted:    #5C6270; /* darkened from WOK Content-Secondary (#8B8E9A) for readable contrast */
+  --text:          #071437; /* Content-Primary (navy) */
+  --text-muted:    #78829D; /* Content-Secondary */
+  --text-tertiary: #99A1B7; /* Content-Tertiary */
+  --text-disabled: rgba(7,20,55,.30); /* Content-Disabled (#0714374D) */
 
   /* brand (Webook magenta) */
-  --brand:         #FF2C79; /* Content-Brand / Bg-Brand */
-  --brand-contrast:#FCFCFC; /* Content-Light-Fixed */
+  --brand:         #FF2C79; /* Bg-Brand / Content-Brand / Border-Brand */
+  --brand-contrast:#F9F9F9; /* CTA text · Content-Primary-Inverse */
+  --link:          #FF2C79; /* Content-Link */
+  --brand-disabled-bg: #FFD4E4; /* Bg-Brand-Disabled */
 
-  /* capacity states — mapped to WOK semantic colors */
-  --state-available:  #17C653; /* Content-Success  (green = room to grow) */
-  --state-balanced:   #F6B100; /* Content-Warning  (yellow = healthy zone) */
-  --state-near:       #FF7F29; /* Brand 6 (orange) (pre-warning) */
-  --state-overloaded: #F8285A; /* Content-Danger   (red = soft-locked) */
+  /* inverse — Primary button (navy) + on-dark content */
+  --inverse-bg:    #071437; /* Bg-Primary-Inverse / Surface-Base-Inverse */
+  --inverse-text:  #F9F9F9; /* Content-Primary-Inverse */
+  --inverse-text-2:#C4CADA; /* Content-Secondary-Inverse */
 
-  /* tinted state backgrounds (20% WOK fills) */
+  /* capacity states — Tempo workload semantics (kept; available aligns to Success) */
+  --state-available:  #17C653; /* Success (green = room to grow) */
+  --state-balanced:   #F6B100; /* Warning (yellow = healthy zone) */
+  --state-near:       #FF7F29; /* Orange (pre-warning) */
+  --state-overloaded: #F8285A; /* Danger (red = soft-locked) */
   --state-available-bg:  rgba(23,198,83,.16);
   --state-near-bg:       rgba(255,127,41,.16);
   --state-overloaded-bg: rgba(248,40,90,.16);
 
-  --shadow: 0 1px 3px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.06);
-  --radius: 8px;     /* WBK DS · UI Radius-M (default) */
-  --radius-sm: 4px;  /* WBK DS · Radius-S */
-  --radius-lg: 12px; /* WBK DS · UI Radius-L (PIN box, large fields) */
-  --radius-xl: 16px; /* WBK DS · Containers Radius-XL */
-
-  /* spacing scale — WBK DS · UI Elements/Gaps + Paddings (2/4/8/12/16) */
-  --sp-1: 2px;  --sp-2: 4px;  --sp-3: 8px;  --sp-4: 12px;  --sp-5: 16px;
-
-  /* type scale — WBK DS · Body-S 14 / Body-M 16 / Label-L 18 */
-  --fs-s: 14px; --fs-m: 16px; --fs-l: 18px;
-
-  /* semantic status content + tinted bg — EXACT WBK DS · Content/States values
-     (confirmed from the DS variable defs; supersedes the Wave-1 capacity-state
-     proxy so booking-label / alert colours are pixel-exact to the DS). */
-  --state-notice:      #fcc800; /* Content-Notice    */
-  --state-positive:    #22c55e; /* Content-Positive  */
-  --state-negative:    #ff6c6c; /* Content-Negative  */
+  /* semantic status — EXACT WBK PRO V3 values (Content/States) */
+  --state-positive:        #17C653; /* Success */
+  --state-negative:        #F8285A; /* Content-Danger */
+  --state-negative-active: #D81A48; /* Content-Danger-Active */
+  --state-notice:          #FCC800; /* no dedicated V3 token yet — carry-over */
+  --state-positive-bg: color-mix(in srgb, var(--state-positive) 14%, transparent);
+  --state-negative-bg: #FFEEF3; /* Bg-Danger (exact) */
   --state-notice-bg:   color-mix(in srgb, var(--state-notice) 16%, transparent);
-  --state-positive-bg: color-mix(in srgb, var(--state-positive) 16%, transparent);
-  --state-negative-bg: color-mix(in srgb, var(--state-negative) 16%, transparent);
+
+  --shadow: 0 4px 12px rgba(0,0,0,.07); /* DropShadow Light */
+
+  /* radius — V3 scale (re-mapped by value, see header note) */
+  --radius-sm: 4px;  /* radius-sm */
+  --radius-md: 6px;  /* radius-md */
+  --radius:    8px;  /* radius-lg (default) */
+  --radius-lg: 12px; /* V3 radius-xl — historic name kept at 12 (no shrink) */
+  --radius-xl: 16px; /* Tempo extension (V3 container radius tops at 12) */
+
+  /* spacing — V3 UI Paddings/Gaps (2/4/8/12/16/20) + Container/Section (24) */
+  --sp-1: 2px;  --sp-2: 4px;  --sp-3: 8px;  --sp-4: 12px;  --sp-5: 16px;
+  --sp-6: 20px; /* Padding-2xl */  --sp-7: 24px; /* Container-H / Gap-3xl / Section-H */
+
+  /* type — V3 Gellix scale. Label/Body/Heading named steps. */
+  --fs-label-xl: 20px; --lh-label-xl: 24px; /* button label */
+  --fs-label-l:  16px; --lh-label-l:  20px;
+  --fs-label-m:  14px; --lh-label-m:  20px;
+  --fs-label-s:  12px; --lh-label-s:  16px;
+  --fs-label-xs: 10px; --lh-label-xs: 12px;
+  --fs-body-l:   16px; --lh-body-l:   24px;
+  --fs-body-m:   14px; --lh-body-m:   20px;
+  --fs-body-s:   12px; --lh-body-s:   16px;
+  --fs-body-xs:  10px; --lh-body-xs:  12px;
+  --fs-h1: 40px; --lh-h1: 48px;
+  --fs-h2: 32px; --lh-h2: 40px;
+  --fs-h3: 28px; --lh-h3: 36px;
+  --fs-h4: 24px; --lh-h4: 32px;
+  --fs-h5: 20px; --lh-h5: 28px;
+  --fw-medium: 450; /* Font Weights/Medium */
+  /* legacy aliases — kept for back-compat; V3 components use the scale above */
+  --fs-s: 14px; --fs-m: 16px; --fs-l: 18px; /* deprecated (no 18px step in V3) */
 
   /* custom scrollbar (slim, floating, theme-aware) */
   --scrollbar-thumb:       rgba(16,24,40,.20);
   --scrollbar-thumb-hover: rgba(16,24,40,.38);
 
-  /* typography — single cohesive family covering Arabic + Latin so
-     nothing shifts on the EN⇄AR toggle. (No font ships in the WOK
-     token files; this is the chosen default — swap if Webook has an
-     official brand font.) */
-  --font-sans:    "Figtree", "IBM Plex Sans Arabic", -apple-system, "Segoe UI", system-ui, sans-serif;
-  --font-ar:      "IBM Plex Sans Arabic", "Figtree", -apple-system, system-ui, sans-serif;
-  /* WBK DS titles = Gellix; Mona Sans / Figtree fall back if Gellix isn't hosted */
+  /* typography — V3 UI/display = Gellix; Figtree + IBM Plex Arabic fall back so
+     nothing shifts on the EN⇄AR toggle. AR keeps IBM Plex Sans Arabic. */
+  --font-sans:    "Gellix", "Figtree", "IBM Plex Sans Arabic", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-ar:      "IBM Plex Sans Arabic", "Gellix", "Figtree", -apple-system, system-ui, sans-serif;
   --font-display: "Gellix", "Mona Sans", "Figtree", "IBM Plex Sans Arabic", system-ui, sans-serif;
 }
 
 [data-theme="dark"] {
-  --bg:            #09090B; /* WBK DS · Surface-Base */
+  /* dark theme — Tempo mapping of the V3 light system */
+  --bg:            #09090B; /* Surface-Base */
   --surface:       #18181B; /* Surface-L1 */
-  --surface-2:     #27272A; /* WBK DS · Surface-L2 / Bg-Secondary */
-  --border:        #FFFFFF1A; /* WBK DS · Border-Tertiary (white 10%) */
+  --surface-1:     #1F1F23;
+  --surface-2:     #27272A; /* Surface-L2 / Bg-Secondary */
+  --surface-3:     #3F3F46;
+  --border:        #FFFFFF1A; /* Border-Tertiary (white 10%) */
+  --border-secondary:#FFFFFF2E;
+  --border-primary: #FFFFFF;
 
-  --text:          #E4E4E7; /* WBK DS · Content-Primary */
-  --text-muted:    #A1A1AA; /* WBK DS · Content-Secondary */
+  --text:          #E4E4E7; /* Content-Primary */
+  --text-muted:    #A1A1AA; /* Content-Secondary */
+  --text-tertiary: #71717A; /* Content-Tertiary */
+  --text-disabled: rgba(255,255,255,.32);
 
-  --brand:         #FF2C79; /* Content-Brand */
-  --brand-contrast:#FCFCFC;
+  --brand:         #FF2C79;
+  --brand-contrast:#F9F9F9;
+  --link:          #FF2C79;
+  --brand-disabled-bg: #4A1428;
+
+  --inverse-bg:    #F9F9F9; /* inverse flips on dark */
+  --inverse-text:  #071437;
+  --inverse-text-2:#3F3F46;
 
   --state-available:  #17C653;
   --state-balanced:   #F6B100;
   --state-near:       #FF7F29;
   --state-overloaded: #F8285A;
-
   --state-available-bg:  rgba(23,198,83,.20);
   --state-near-bg:       rgba(255,127,41,.20);
   --state-overloaded-bg: rgba(248,40,90,.20);
 
-  --shadow: 0 1px 3px rgba(0,0,0,.5);
-  --radius: 8px;     /* WBK DS · UI Radius-M (default) */
-  --radius-sm: 4px;  /* WBK DS · Radius-S */
+  --state-positive:        #17C653;
+  --state-negative:        #F8285A;
+  --state-negative-active: #D81A48;
+  --state-notice:          #FCC800;
+  --state-positive-bg: color-mix(in srgb, var(--state-positive) 22%, transparent);
+  --state-negative-bg: color-mix(in srgb, var(--state-negative) 22%, transparent);
+  --state-notice-bg:   color-mix(in srgb, var(--state-notice) 22%, transparent);
 
-  /* custom scrollbar — subtle light-on-dark so it disappears until needed */
+  --shadow: 0 4px 12px rgba(0,0,0,.5);
+
   --scrollbar-thumb:       rgba(255,255,255,.16);
   --scrollbar-thumb-hover: rgba(255,255,255,.30);
 }

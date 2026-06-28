@@ -22,35 +22,112 @@ body {
  * Tokens live in tokens.css; these classes apply the DS button/chip/badge/toast/banner
  * specs so any new UI matches Webook. Radius 8/4, Figtree, brand #ff2c79.
  * ========================================================== */
+/* Button — WBK PRO V3 (nodes 4297-31626 / 5035-7365). Gellix, radius-xl 12,
+   four intents (CTA / Primary / Secondary / Tertiary) × four sizes (xL/L/M/S)
+   × states (normal / hover / active / animating / disabled). Icon slots via gap. */
 .wbk-btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
-  padding: 8px 12px; border-radius: var(--radius); border: 1px solid transparent;
-  font-family: var(--font-sans); font-weight: 700; font-size: 14px; line-height: 20px;
-  cursor: pointer; white-space: nowrap; transition: filter .15s ease, background-color .15s ease, border-color .15s ease;
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2);
+  padding: var(--sp-4) var(--sp-5); border-radius: var(--radius-lg); border: 1px solid transparent;
+  font-family: var(--font-sans); font-weight: 600;
+  font-size: var(--fs-label-l); line-height: var(--lh-label-l);
+  cursor: pointer; white-space: nowrap; user-select: none;
+  transition: filter .15s ease, background-color .15s ease, border-color .15s ease, color .15s ease;
 }
-.wbk-btn--primary   { background: var(--brand); color: var(--brand-contrast); }
-.wbk-btn--primary:hover { filter: brightness(1.05); }
-.wbk-btn--secondary { background: var(--surface-2); color: var(--text); border-color: var(--border); }
-.wbk-btn--secondary:hover { border-color: var(--text-muted); }
-.wbk-btn--ghost     { background: transparent; color: var(--text); }
-.wbk-btn--ghost:hover { background: var(--surface-2); }
-.wbk-btn:disabled, .wbk-btn[aria-disabled="true"] { opacity: .4; pointer-events: none; }
-.wbk-btn--lg { padding: 12px 16px; font-size: 16px; line-height: 24px; }
+.wbk-btn .icn, .wbk-btn svg { flex: none; }
+/* sizes */
+.wbk-btn--xl { padding: var(--sp-5) var(--sp-6); font-size: var(--fs-label-xl); line-height: var(--lh-label-xl); }
+.wbk-btn--lg { padding: var(--sp-4) var(--sp-5); font-size: var(--fs-label-l); line-height: var(--lh-label-l); }
+.wbk-btn--md { padding: var(--sp-3) var(--sp-4); font-size: var(--fs-label-m); line-height: var(--lh-label-m); }
+.wbk-btn--sm { padding: var(--sp-2) var(--sp-3); font-size: var(--fs-label-s); line-height: var(--lh-label-s); border-radius: var(--radius); }
+/* intents */
+.wbk-btn--cta       { background: var(--brand); color: var(--brand-contrast); }
+.wbk-btn--cta:hover { filter: brightness(1.05); }
+.wbk-btn--cta:active { filter: brightness(.92); }
+.wbk-btn--primary       { background: var(--inverse-bg); color: var(--inverse-text); }
+.wbk-btn--primary:hover { filter: brightness(1.12); }
+.wbk-btn--primary:active { filter: brightness(.9); }
+.wbk-btn--secondary       { background: var(--surface); color: var(--text); border-color: var(--border); }
+.wbk-btn--secondary:hover { border-color: var(--border-secondary); background: var(--surface-1); }
+.wbk-btn--secondary:active { background: var(--surface-2); }
+.wbk-btn--tertiary, .wbk-btn--ghost { background: transparent; color: var(--text); }
+.wbk-btn--tertiary:hover, .wbk-btn--ghost:hover { background: var(--surface-2); }
+.wbk-btn--tertiary:active, .wbk-btn--ghost:active { background: var(--surface-3); }
+.wbk-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
+/* disabled — brand intents fade to Bg-Brand-Disabled; others go flat */
+.wbk-btn:disabled, .wbk-btn[aria-disabled="true"] { cursor: not-allowed; }
+.wbk-btn--cta:disabled, .wbk-btn--cta[aria-disabled="true"],
+.wbk-btn--primary:disabled, .wbk-btn--primary[aria-disabled="true"] { background: var(--brand-disabled-bg); color: var(--surface); filter: none; }
+.wbk-btn--secondary:disabled, .wbk-btn--tertiary:disabled, .wbk-btn--ghost:disabled,
+.wbk-btn--secondary[aria-disabled="true"], .wbk-btn--tertiary[aria-disabled="true"], .wbk-btn--ghost[aria-disabled="true"] { color: var(--text-disabled); border-color: var(--border); background: transparent; }
+/* animating — inline spinner; respects reduced-motion */
+.wbk-btn.is-animating { pointer-events: none; }
+.wbk-btn.is-animating .wbk-btn-spin {
+  inline-size: 1em; block-size: 1em; border-radius: 999px; flex: none;
+  border: 2px solid currentColor; border-right-color: transparent; animation: wbk-spin .6s linear infinite;
+}
+@keyframes wbk-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .wbk-btn.is-animating .wbk-btn-spin { animation: none; } }
+/* Button group — segmented row of buttons sharing one border (radius collapses inner corners) */
+.wbk-btngroup { display: inline-flex; }
+.wbk-btngroup .wbk-btn { border-radius: 0; }
+.wbk-btngroup .wbk-btn:first-child { border-start-start-radius: var(--radius-lg); border-end-start-radius: var(--radius-lg); }
+.wbk-btngroup .wbk-btn:last-child  { border-start-end-radius: var(--radius-lg); border-end-end-radius: var(--radius-lg); }
+.wbk-btngroup .wbk-btn + .wbk-btn { margin-inline-start: -1px; }
+
+/* Link — Content-Link brand, underline on hover/focus, RTL-safe */
+.wbk-link {
+  color: var(--link); font-family: var(--font-sans); font-weight: 500;
+  text-decoration: none; cursor: pointer; border-radius: var(--radius-sm);
+  display: inline-flex; align-items: center; gap: var(--sp-1);
+}
+.wbk-link:hover { text-decoration: underline; }
+.wbk-link:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
+.wbk-link .icn, .wbk-link svg { flex: none; }
 
 .wbk-chip {
-  display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 999px;
-  font-family: var(--font-sans); font-weight: 500; font-size: 14px; line-height: 20px;
+  display: inline-flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4); border-radius: 999px;
+  font-family: var(--font-sans); font-weight: 500; font-size: var(--fs-label-m); line-height: var(--lh-label-m);
   background: var(--surface-2); color: var(--text); border: 1px solid var(--border); cursor: pointer;
   transition: background-color .15s ease, color .15s ease, border-color .15s ease;
 }
+.wbk-chip:hover { border-color: var(--border-secondary); }
 .wbk-chip[aria-selected="true"], .wbk-chip.is-selected { background: var(--brand); color: var(--brand-contrast); border-color: transparent; }
+.wbk-chip:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
+
+/* Input + Field — WBK PRO V3 (nodes 4368-31655 / 4373-35455). Label-M label,
+   radius-lg 8, Border-Tertiary default → Border-Brand on focus, semantic error. */
+.wbk-field { display: inline-flex; flex-direction: column; gap: var(--sp-2); inline-size: 100%; }
+.wbk-field-label { font-family: var(--font-sans); font-weight: 500; font-size: var(--fs-label-m); line-height: var(--lh-label-m); color: var(--text); }
+.wbk-field-label .wbk-req { color: var(--state-negative); margin-inline-start: 2px; }
+.wbk-input {
+  inline-size: 100%; box-sizing: border-box; padding: var(--sp-4) var(--sp-5);
+  font-family: var(--font-sans); font-size: var(--fs-body-l); line-height: var(--lh-body-l); color: var(--text);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.wbk-input::placeholder { color: var(--text-tertiary); }
+.wbk-input:hover { border-color: var(--border-secondary); }
+.wbk-input:focus-visible { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 22%, transparent); }
+.wbk-input:disabled { background: var(--surface-2); color: var(--text-disabled); cursor: not-allowed; }
+.wbk-field.is-error .wbk-input { border-color: var(--state-negative); }
+.wbk-field.is-error .wbk-input:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--state-negative) 22%, transparent); }
+.wbk-field-hint { font-size: var(--fs-body-s); line-height: var(--lh-body-s); color: var(--text-muted); }
+.wbk-field.is-error .wbk-field-hint { color: var(--state-negative); }
+
+/* Rich text (node 4368-31744) — body copy block on the V3 scale */
+.wbk-rich { font-family: var(--font-sans); font-size: var(--fs-body-m); line-height: var(--lh-body-m); color: var(--text); }
+.wbk-rich h3 { font-size: var(--fs-h5); line-height: var(--lh-h5); font-weight: 600; margin: 0 0 var(--sp-3); color: var(--text); }
+.wbk-rich p { margin: 0 0 var(--sp-4); color: var(--text-muted); }
+.wbk-rich a { color: var(--link); text-decoration: none; }
+.wbk-rich a:hover { text-decoration: underline; }
+.wbk-rich strong { font-weight: 700; color: var(--text); }
 
 /* PIN code input (WBK DS · node 2053-12021) — Figtree 18/24 medium, Radius-L 12,
    gap 12, brand active border, semantic error state. Logical props → RTL-safe. */
 .wbk-pin { display: inline-flex; gap: var(--sp-4); direction: ltr; }
 .wbk-pin input {
   inline-size: 48px; block-size: 56px; text-align: center; box-sizing: border-box;
-  font-family: var(--font-sans); font-size: var(--fs-l); line-height: 24px; font-weight: 500;
+  font-family: var(--font-sans); font-size: var(--fs-label-xl); line-height: var(--lh-label-xl); font-weight: 500;
   font-variant-numeric: tabular-nums; color: var(--text);
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
   transition: border-color .15s ease, box-shadow .15s ease;

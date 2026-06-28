@@ -45,20 +45,53 @@
     const t = WP.i18n.t;
     const people = WP.data.PEOPLE.filter(function (p) { return p.photo; }).slice(0, 4).map(function (p) { return p.id; });
 
-    const buttons = sec('Buttons',
-      '<div class="wbk-row">' +
-        '<button class="btn primary">Primary</button>' +
-        '<button class="btn">Secondary</button>' +
-        '<button class="wbk-btn wbk-btn--ghost">Ghost</button>' +
-        '<button class="btn primary" disabled>Disabled</button>' +
-        '<button class="wbk-btn wbk-btn--primary wbk-btn--lg">Large</button>' +
-        '<button class="btn icon-btn" aria-label="Add">' + ic('plus', 16) + '</button>' +
-      '</div>' +
-      '<div class="wbk-row" style="margin-top:10px">' +
-        '<button class="wbk-applepay"></button>' +
-        '<button class="wbk-applepay wbk-applepay--book">Book with</button>' +
+    const intents = [['cta', t('btnCta')], ['primary', t('btnPrimary')], ['secondary', t('btnSecondary')], ['tertiary', t('btnTertiary')]];
+    const btnRow = function (mod, withState) {
+      return '<div class="wbk-row" style="align-items:center;margin-bottom:8px">' +
+        intents.map(function (it) {
+          return '<button class="wbk-btn wbk-btn--' + it[0] + (mod ? ' wbk-btn--' + mod : '') + '">' + ic('plus', 16) + it[1] + '</button>';
+        }).join('') +
+        (withState ?
+          '<button class="wbk-btn wbk-btn--cta" disabled>' + t('btnDisabled') + '</button>' +
+          '<button class="wbk-btn wbk-btn--primary is-animating">' + t('btnAnimating') + '<span class="wbk-btn-spin"></span></button>'
+        : '') +
+      '</div>';
+    };
+    const buttons = sec('Button',
+      btnRow('xl', false) + btnRow('lg', false) + btnRow('md', false) + btnRow('sm', false) +
+      btnRow('lg', true),
+      'CTA / Primary / Secondary / Tertiary · xL / L / M / S · normal / hover / active / animating / disabled');
+
+    const btngroup = sec('Button group',
+      '<div class="wbk-btngroup">' +
+        '<button class="wbk-btn wbk-btn--secondary wbk-btn--md">' + ic('grid', 16) + t('bgDay') + '</button>' +
+        '<button class="wbk-btn wbk-btn--secondary wbk-btn--md">' + t('bgWeek') + '</button>' +
+        '<button class="wbk-btn wbk-btn--secondary wbk-btn--md">' + t('bgMonth') + '</button>' +
+      '</div>');
+
+    const link = sec('Link',
+      '<div class="wbk-row" style="align-items:center;gap:20px">' +
+        '<a class="wbk-link" href="#" onclick="return false">' + t('linkLearn') + ' ' + ic('arrowRight', 14) + '</a>' +
+        '<a class="wbk-link" href="#" onclick="return false">' + ic('eye', 14) + ' ' + t('linkView') + '</a>' +
+      '</div>');
+
+    const inputs = sec('Input',
+      '<div style="display:flex;flex-direction:column;gap:14px;max-width:360px">' +
+        '<label class="wbk-field"><span class="wbk-field-label">' + t('inEmail') + '</span>' +
+          '<input class="wbk-input" type="email" placeholder="name@webook.com" />' +
+          '<span class="wbk-field-hint">' + t('inEmailHint') + '</span></label>' +
+        '<label class="wbk-field is-error"><span class="wbk-field-label">' + t('inName') + '<span class="wbk-req">*</span></span>' +
+          '<input class="wbk-input" value="" placeholder="' + t('inNamePh') + '" />' +
+          '<span class="wbk-field-hint">' + t('inNameErr') + '</span></label>' +
+        '<label class="wbk-field"><span class="wbk-field-label">' + t('inDisabled') + '</span>' +
+          '<input class="wbk-input" value="Read-only" disabled /></label>' +
       '</div>',
-      'Primary / Secondary / Ghost / Disabled / Large / Icon');
+      'Default · focus · error · disabled');
+
+    const richtext = sec('Rich text',
+      '<div class="wbk-rich" style="max-width:520px"><h3>' + t('rtTitle') + '</h3>' +
+        '<p>' + t('rtBody') + '</p>' +
+        '<p><a href="#" onclick="return false">' + t('rtLink') + '</a></p></div>');
 
     const chips = sec('Chips (button group)',
       '<div class="wbk-row" id="wbk-chips">' +
@@ -243,7 +276,7 @@
           '<p>Every component from the WBK Design System, live on the WBK tokens.</p></div>' +
           '<img class="wbk-lib-logo" src="src/assets/' + (WP.state.theme === 'dark' ? 'wbk-white.svg' : 'wbk-pink.svg') + '" alt="WBK" /></header>' +
         '<div class="wbk-grid">' +
-          buttons + chips + segmented + stepper + slider + choice + badges + blabel + progress +
+          buttons + btngroup + link + inputs + richtext + chips + segmented + stepper + slider + choice + badges + blabel + progress +
           avatars + tabs + toasts + banners + tooltip + dialog + countdown + datepick + pin +
           breadcrumb + uploader + tiles + price + media + bubble + mappin + ticket + dock + card +
         '</div>' +

@@ -50,11 +50,44 @@ try{
   // map pin uses .wbk-mappin (must NOT collide with the PIN-code .wbk-pin atom)
   assert(!view.querySelector('.wbk-mappin.wbk-pin'),'map pin and PIN-code atom use distinct classes');
 
-  // exact WBK DS semantic values now live in tokens (no longer the capacity-state proxy)
+  // exact WBK PRO V3 token values (re-baselined in Wave 1)
   const tk=fs.readFileSync(path.join(root,'src/css/tokens.css'),'utf8');
-  assert(/--state-positive:\s*#22c55e/i.test(tk),'Content-Positive wired to exact DS #22c55e');
-  assert(/--state-negative:\s*#ff6c6c/i.test(tk),'Content-Negative wired to exact DS #ff6c6c');
-  assert(/--state-notice:\s*#fcc800/i.test(tk),'Content-Notice wired to exact DS #fcc800');
+  assert(/--text:\s*#071437/i.test(tk),'V3 Content-Primary navy #071437 wired (light base)');
+  assert(/--surface:\s*#FFFFFF/i.test(tk),'V3 Bg-Primary pure white #FFFFFF wired');
+  assert(/--text-muted:\s*#78829D/i.test(tk),'V3 Content-Secondary #78829D wired');
+  assert(/--state-positive:\s*#17C653/i.test(tk),'V3 Success (Positive) #17C653 wired');
+  assert(/--state-negative:\s*#F8285A/i.test(tk),'V3 Content-Danger (Negative) #F8285A wired');
+  assert(/--state-negative-active:\s*#D81A48/i.test(tk),'V3 Content-Danger-Active #D81A48 wired');
+  assert(/--state-negative-bg:\s*#FFEEF3/i.test(tk),'V3 Bg-Danger #FFEEF3 wired (exact)');
+  assert(/--inverse-bg:\s*#071437/i.test(tk),'V3 Bg-Primary-Inverse #071437 wired (Primary button)');
+  assert(/--brand:\s*#FF2C79/i.test(tk),'V3 Bg-Brand #FF2C79 wired (CTA)');
+  assert(/--brand-disabled-bg:\s*#FFD4E4/i.test(tk),'V3 Bg-Brand-Disabled #FFD4E4 wired');
+  assert(/--radius-md:\s*6px/i.test(tk),'V3 radius-md 6px added');
+  assert(/--radius-lg:\s*12px/i.test(tk),'historic radius-lg kept at 12px (no silent shrink → V3 radius-xl)');
+  assert(/--fs-label-xl:\s*20px/i.test(tk),'V3 Label-XL 20px (button label) wired');
+  assert(/--state-notice:\s*#FCC800/i.test(tk),'Notice #FCC800 retained (no dedicated V3 token)');
+
+  // NEW Wave-1 atom — Button matrix: four intents × sizes × states
+  ['cta','primary','secondary','tertiary'].forEach(function(m){
+    assert(view.querySelector('.wbk-btn--'+m),'button intent .wbk-btn--'+m+' renders');
+  });
+  ['xl','lg','md','sm'].forEach(function(s){
+    assert(view.querySelector('.wbk-btn--'+s),'button size .wbk-btn--'+s+' renders');
+  });
+  assert(view.querySelector('.wbk-btn:disabled'),'button disabled state renders');
+  assert(view.querySelector('.wbk-btn.is-animating .wbk-btn-spin'),'button animating state renders a spinner');
+  assert(view.querySelector('.wbk-btn--cta svg'),'buttons carry an SVG icon slot (no emoji)');
+  // Button group, Link, Input/Field, Rich text
+  assert(view.querySelector('.wbk-btngroup .wbk-btn'),'button group renders');
+  assert(view.querySelector('.wbk-link'),'link atom renders');
+  assert(view.querySelector('.wbk-input') && view.querySelector('.wbk-field-label'),'input + field label render');
+  assert(view.querySelector('.wbk-field.is-error .wbk-input'),'input error state renders');
+  assert(view.querySelector('.wbk-input:disabled'),'input disabled state renders');
+  assert(view.querySelector('.wbk-rich h3') && view.querySelector('.wbk-rich p'),'rich-text block renders');
+  // V3 button CSS maps to tokens, never pasted hex
+  const appcssAtom=fs.readFileSync(path.join(root,'src/css/app.css'),'utf8');
+  const btnBlock=appcssAtom.slice(appcssAtom.indexOf('.wbk-btn {'),appcssAtom.indexOf('.wbk-link {'));
+  assert(!/#071437|#ff2c79|#f9f9f9|#ffd4e4/i.test(btnBlock),'button styles use tokens, not pasted V3 hex');
 
   // NEW atom — PIN code: 6 boxes per group, numeric, accessible labels, error variant present
   const pinGroups=view.querySelectorAll('.wbk-pin');
@@ -92,14 +125,11 @@ try{
   assert(window.document.getElementById('view').querySelector('.wbk-blabel'),'components still mount under RTL');
 
   // EN+AR strings exist for the new labels
+  const i18nKeys=['pinCode','blConfirmed','blPending','blSoldOut','blDraft','bcHome','bcEvents','bcTickets','uploadCta','uploadHint','ticketGeneral','ticketVip','mapRestaurant','mapHotel','chatRecv','chatSent','btnCta','btnPrimary','btnSecondary','btnTertiary','btnDisabled','btnAnimating','bgDay','bgWeek','bgMonth','linkLearn','linkView','inEmail','inEmailHint','inName','inNamePh','inNameErr','inDisabled','rtTitle','rtBody','rtLink'];
   WP.state.lang='en';
-  ['pinCode','blConfirmed','blPending','blSoldOut','blDraft','bcHome','bcEvents','bcTickets','uploadCta','uploadHint','ticketGeneral','ticketVip','mapRestaurant','mapHotel','chatRecv','chatSent'].forEach(function(k){
-    assert(WP.i18n.t(k) && WP.i18n.t(k)!==k,'i18n EN key present: '+k);
-  });
+  i18nKeys.forEach(function(k){ assert(WP.i18n.t(k) && WP.i18n.t(k)!==k,'i18n EN key present: '+k); });
   WP.state.lang='ar';
-  ['pinCode','blConfirmed','blPending','blSoldOut','blDraft','bcHome','bcEvents','bcTickets','uploadCta','uploadHint','ticketGeneral','ticketVip','mapRestaurant','mapHotel','chatRecv','chatSent'].forEach(function(k){
-    assert(WP.i18n.t(k) && WP.i18n.t(k)!==k,'i18n AR key present: '+k);
-  });
+  i18nKeys.forEach(function(k){ assert(WP.i18n.t(k) && WP.i18n.t(k)!==k,'i18n AR key present: '+k); });
 }catch(e){errors.push('[run] '+e.message+'\n'+e.stack);}
 if(errors.length){console.log('FAIL\n'+errors.join('\n'));process.exit(1);}
 console.log('PASS — WBK atoms + molecules: gallery mounts clean; PIN, booking label, breadcrumb, uploader, tile (single-select), price, media, chat bubble, map pin, ticket stepper (clamp-at-0), actions/dock all render; exact DS semantic tokens wired; RTL flips; EN+AR strings present.');

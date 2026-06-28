@@ -13,14 +13,26 @@
   <!-- DESIGN LAYER (swap this file when Claude Design output is ready) -->
   <style>
 /* ============================================================
- * Tempo — DESIGN TOKENS  (real WOK v2.0 Light/Dark)
+ * Tempo — DESIGN TOKENS  ·  WBK PRO library V3  (single source of truth)
  * ------------------------------------------------------------
- * Values below are mapped directly from the WOK v2.0 token files
- * (🌞 Light / 🌚 Dark). WOK token name is noted in a comment next
- * to each. To re-sync later, keep the variable NAMES, swap values.
+ * Re-baselined from Figma "🧱 WBK PRO library V3" (file pzAVvF8ygDHNwdNUsdwik2)
+ * via get_variable_defs on the figma_dev@webook.com seat. V3's canonical
+ * base is LIGHT: navy Content-Primary #071437 on pure white #FFFFFF.
+ * Every value carries its V3 variable name in a comment. To re-sync later,
+ * keep the variable NAMES, swap the values.
+ *
+ * RECONCILE NOTES (Wave 1):
+ *  · Radius re-mapped by VALUE, not name. V3 radius-lg=8 / radius-xl=12.
+ *    Our historic --radius-lg(12px) consumers keep 12px (they now equal V3
+ *    radius-xl) so nothing silently shrinks; new --radius-md(6px) added.
+ *  · V3 has no 18px type step — historic --fs-l(18) kept only as a
+ *    deprecated alias; V3 components use the Label / Body / Heading scales.
+ *  · Semantic states are now EXACT V3: Positive=Success #17C653,
+ *    Negative=Danger #f8285a (active #d81a48, bg #ffeef3). Notice has no
+ *    dedicated V3 token yet — #fcc800 retained as a documented carry-over.
  * ========================================================== */
 
-/* Mona Sans — official variable font (incl. WIDTH axis 75–125 for "Expanded") */
+/* Mona Sans — kept as a display fallback only (V3 UI/display font is Gellix). */
 @font-face {
   font-family: "Mona Sans";
   src: url("https://cdn.jsdelivr.net/gh/github/mona-sans@2.0.27/fonts/webfonts/Mona-Sans.woff2") format("woff2-variations");
@@ -32,93 +44,137 @@
 
 :root,
 [data-theme="light"] {
-  /* surfaces / backgrounds */
-  --bg:            #E6E8EE; /* Bg-Secondary */
-  --surface:       #FCFCFC; /* Surface-Base / Bg-Primary */
-  --surface-2:     #F5F5F6; /* Surface-L2 */
-  --border:        #CFD4E1; /* Border-Tertiary / Surface-L3 */
+  /* surfaces / backgrounds — V3 light base */
+  --bg:            #F1F1F4; /* Bg-Secondary */
+  --surface:       #FFFFFF; /* Bg-Primary / Surface-Base */
+  --surface-1:     #F9F9F9; /* Surface-L1 */
+  --surface-2:     #F1F1F4; /* Surface-L2 */
+  --surface-3:     #DBDFE9; /* Surface-L3 */
+  --border:        #DBDFE9; /* Border-Tertiary (default hairline) */
+  --border-secondary:#99A1B7; /* Border-Secondary (stronger) */
+  --border-primary: #18181B; /* Border-Primary (strongest) */
 
   /* text / content */
-  --text:          #18181B; /* Content-Primary */
-  --text-muted:    #5C6270; /* darkened from WOK Content-Secondary (#8B8E9A) for readable contrast */
+  --text:          #071437; /* Content-Primary (navy) */
+  --text-muted:    #78829D; /* Content-Secondary */
+  --text-tertiary: #99A1B7; /* Content-Tertiary */
+  --text-disabled: rgba(7,20,55,.30); /* Content-Disabled (#0714374D) */
 
   /* brand (Webook magenta) */
-  --brand:         #FF2C79; /* Content-Brand / Bg-Brand */
-  --brand-contrast:#FCFCFC; /* Content-Light-Fixed */
+  --brand:         #FF2C79; /* Bg-Brand / Content-Brand / Border-Brand */
+  --brand-contrast:#F9F9F9; /* CTA text · Content-Primary-Inverse */
+  --link:          #FF2C79; /* Content-Link */
+  --brand-disabled-bg: #FFD4E4; /* Bg-Brand-Disabled */
 
-  /* capacity states — mapped to WOK semantic colors */
-  --state-available:  #17C653; /* Content-Success  (green = room to grow) */
-  --state-balanced:   #F6B100; /* Content-Warning  (yellow = healthy zone) */
-  --state-near:       #FF7F29; /* Brand 6 (orange) (pre-warning) */
-  --state-overloaded: #F8285A; /* Content-Danger   (red = soft-locked) */
+  /* inverse — Primary button (navy) + on-dark content */
+  --inverse-bg:    #071437; /* Bg-Primary-Inverse / Surface-Base-Inverse */
+  --inverse-text:  #F9F9F9; /* Content-Primary-Inverse */
+  --inverse-text-2:#C4CADA; /* Content-Secondary-Inverse */
 
-  /* tinted state backgrounds (20% WOK fills) */
+  /* capacity states — Tempo workload semantics (kept; available aligns to Success) */
+  --state-available:  #17C653; /* Success (green = room to grow) */
+  --state-balanced:   #F6B100; /* Warning (yellow = healthy zone) */
+  --state-near:       #FF7F29; /* Orange (pre-warning) */
+  --state-overloaded: #F8285A; /* Danger (red = soft-locked) */
   --state-available-bg:  rgba(23,198,83,.16);
   --state-near-bg:       rgba(255,127,41,.16);
   --state-overloaded-bg: rgba(248,40,90,.16);
 
-  --shadow: 0 1px 3px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.06);
-  --radius: 8px;     /* WBK DS · UI Radius-M (default) */
-  --radius-sm: 4px;  /* WBK DS · Radius-S */
-  --radius-lg: 12px; /* WBK DS · UI Radius-L (PIN box, large fields) */
-  --radius-xl: 16px; /* WBK DS · Containers Radius-XL */
-
-  /* spacing scale — WBK DS · UI Elements/Gaps + Paddings (2/4/8/12/16) */
-  --sp-1: 2px;  --sp-2: 4px;  --sp-3: 8px;  --sp-4: 12px;  --sp-5: 16px;
-
-  /* type scale — WBK DS · Body-S 14 / Body-M 16 / Label-L 18 */
-  --fs-s: 14px; --fs-m: 16px; --fs-l: 18px;
-
-  /* semantic status content + tinted bg — EXACT WBK DS · Content/States values
-     (confirmed from the DS variable defs; supersedes the Wave-1 capacity-state
-     proxy so booking-label / alert colours are pixel-exact to the DS). */
-  --state-notice:      #fcc800; /* Content-Notice    */
-  --state-positive:    #22c55e; /* Content-Positive  */
-  --state-negative:    #ff6c6c; /* Content-Negative  */
+  /* semantic status — EXACT WBK PRO V3 values (Content/States) */
+  --state-positive:        #17C653; /* Success */
+  --state-negative:        #F8285A; /* Content-Danger */
+  --state-negative-active: #D81A48; /* Content-Danger-Active */
+  --state-notice:          #FCC800; /* no dedicated V3 token yet — carry-over */
+  --state-positive-bg: color-mix(in srgb, var(--state-positive) 14%, transparent);
+  --state-negative-bg: #FFEEF3; /* Bg-Danger (exact) */
   --state-notice-bg:   color-mix(in srgb, var(--state-notice) 16%, transparent);
-  --state-positive-bg: color-mix(in srgb, var(--state-positive) 16%, transparent);
-  --state-negative-bg: color-mix(in srgb, var(--state-negative) 16%, transparent);
+
+  --shadow: 0 4px 12px rgba(0,0,0,.07); /* DropShadow Light */
+
+  /* radius — V3 scale (re-mapped by value, see header note) */
+  --radius-sm: 4px;  /* radius-sm */
+  --radius-md: 6px;  /* radius-md */
+  --radius:    8px;  /* radius-lg (default) */
+  --radius-lg: 12px; /* V3 radius-xl — historic name kept at 12 (no shrink) */
+  --radius-xl: 16px; /* Tempo extension (V3 container radius tops at 12) */
+
+  /* spacing — V3 UI Paddings/Gaps (2/4/8/12/16/20) + Container/Section (24) */
+  --sp-1: 2px;  --sp-2: 4px;  --sp-3: 8px;  --sp-4: 12px;  --sp-5: 16px;
+  --sp-6: 20px; /* Padding-2xl */  --sp-7: 24px; /* Container-H / Gap-3xl / Section-H */
+
+  /* type — V3 Gellix scale. Label/Body/Heading named steps. */
+  --fs-label-xl: 20px; --lh-label-xl: 24px; /* button label */
+  --fs-label-l:  16px; --lh-label-l:  20px;
+  --fs-label-m:  14px; --lh-label-m:  20px;
+  --fs-label-s:  12px; --lh-label-s:  16px;
+  --fs-label-xs: 10px; --lh-label-xs: 12px;
+  --fs-body-l:   16px; --lh-body-l:   24px;
+  --fs-body-m:   14px; --lh-body-m:   20px;
+  --fs-body-s:   12px; --lh-body-s:   16px;
+  --fs-body-xs:  10px; --lh-body-xs:  12px;
+  --fs-h1: 40px; --lh-h1: 48px;
+  --fs-h2: 32px; --lh-h2: 40px;
+  --fs-h3: 28px; --lh-h3: 36px;
+  --fs-h4: 24px; --lh-h4: 32px;
+  --fs-h5: 20px; --lh-h5: 28px;
+  --fw-medium: 450; /* Font Weights/Medium */
+  /* legacy aliases — kept for back-compat; V3 components use the scale above */
+  --fs-s: 14px; --fs-m: 16px; --fs-l: 18px; /* deprecated (no 18px step in V3) */
 
   /* custom scrollbar (slim, floating, theme-aware) */
   --scrollbar-thumb:       rgba(16,24,40,.20);
   --scrollbar-thumb-hover: rgba(16,24,40,.38);
 
-  /* typography — single cohesive family covering Arabic + Latin so
-     nothing shifts on the EN⇄AR toggle. (No font ships in the WOK
-     token files; this is the chosen default — swap if Webook has an
-     official brand font.) */
-  --font-sans:    "Figtree", "IBM Plex Sans Arabic", -apple-system, "Segoe UI", system-ui, sans-serif;
-  --font-ar:      "IBM Plex Sans Arabic", "Figtree", -apple-system, system-ui, sans-serif;
-  /* WBK DS titles = Gellix; Mona Sans / Figtree fall back if Gellix isn't hosted */
+  /* typography — V3 UI/display = Gellix; Figtree + IBM Plex Arabic fall back so
+     nothing shifts on the EN⇄AR toggle. AR keeps IBM Plex Sans Arabic. */
+  --font-sans:    "Gellix", "Figtree", "IBM Plex Sans Arabic", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-ar:      "IBM Plex Sans Arabic", "Gellix", "Figtree", -apple-system, system-ui, sans-serif;
   --font-display: "Gellix", "Mona Sans", "Figtree", "IBM Plex Sans Arabic", system-ui, sans-serif;
 }
 
 [data-theme="dark"] {
-  --bg:            #09090B; /* WBK DS · Surface-Base */
+  /* dark theme — Tempo mapping of the V3 light system */
+  --bg:            #09090B; /* Surface-Base */
   --surface:       #18181B; /* Surface-L1 */
-  --surface-2:     #27272A; /* WBK DS · Surface-L2 / Bg-Secondary */
-  --border:        #FFFFFF1A; /* WBK DS · Border-Tertiary (white 10%) */
+  --surface-1:     #1F1F23;
+  --surface-2:     #27272A; /* Surface-L2 / Bg-Secondary */
+  --surface-3:     #3F3F46;
+  --border:        #FFFFFF1A; /* Border-Tertiary (white 10%) */
+  --border-secondary:#FFFFFF2E;
+  --border-primary: #FFFFFF;
 
-  --text:          #E4E4E7; /* WBK DS · Content-Primary */
-  --text-muted:    #A1A1AA; /* WBK DS · Content-Secondary */
+  --text:          #E4E4E7; /* Content-Primary */
+  --text-muted:    #A1A1AA; /* Content-Secondary */
+  --text-tertiary: #71717A; /* Content-Tertiary */
+  --text-disabled: rgba(255,255,255,.32);
 
-  --brand:         #FF2C79; /* Content-Brand */
-  --brand-contrast:#FCFCFC;
+  --brand:         #FF2C79;
+  --brand-contrast:#F9F9F9;
+  --link:          #FF2C79;
+  --brand-disabled-bg: #4A1428;
+
+  --inverse-bg:    #F9F9F9; /* inverse flips on dark */
+  --inverse-text:  #071437;
+  --inverse-text-2:#3F3F46;
 
   --state-available:  #17C653;
   --state-balanced:   #F6B100;
   --state-near:       #FF7F29;
   --state-overloaded: #F8285A;
-
   --state-available-bg:  rgba(23,198,83,.20);
   --state-near-bg:       rgba(255,127,41,.20);
   --state-overloaded-bg: rgba(248,40,90,.20);
 
-  --shadow: 0 1px 3px rgba(0,0,0,.5);
-  --radius: 8px;     /* WBK DS · UI Radius-M (default) */
-  --radius-sm: 4px;  /* WBK DS · Radius-S */
+  --state-positive:        #17C653;
+  --state-negative:        #F8285A;
+  --state-negative-active: #D81A48;
+  --state-notice:          #FCC800;
+  --state-positive-bg: color-mix(in srgb, var(--state-positive) 22%, transparent);
+  --state-negative-bg: color-mix(in srgb, var(--state-negative) 22%, transparent);
+  --state-notice-bg:   color-mix(in srgb, var(--state-notice) 22%, transparent);
 
-  /* custom scrollbar — subtle light-on-dark so it disappears until needed */
+  --shadow: 0 4px 12px rgba(0,0,0,.5);
+
   --scrollbar-thumb:       rgba(255,255,255,.16);
   --scrollbar-thumb-hover: rgba(255,255,255,.30);
 }
@@ -149,35 +205,112 @@ body {
  * Tokens live in tokens.css; these classes apply the DS button/chip/badge/toast/banner
  * specs so any new UI matches Webook. Radius 8/4, Figtree, brand #ff2c79.
  * ========================================================== */
+/* Button — WBK PRO V3 (nodes 4297-31626 / 5035-7365). Gellix, radius-xl 12,
+   four intents (CTA / Primary / Secondary / Tertiary) × four sizes (xL/L/M/S)
+   × states (normal / hover / active / animating / disabled). Icon slots via gap. */
 .wbk-btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
-  padding: 8px 12px; border-radius: var(--radius); border: 1px solid transparent;
-  font-family: var(--font-sans); font-weight: 700; font-size: 14px; line-height: 20px;
-  cursor: pointer; white-space: nowrap; transition: filter .15s ease, background-color .15s ease, border-color .15s ease;
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2);
+  padding: var(--sp-4) var(--sp-5); border-radius: var(--radius-lg); border: 1px solid transparent;
+  font-family: var(--font-sans); font-weight: 600;
+  font-size: var(--fs-label-l); line-height: var(--lh-label-l);
+  cursor: pointer; white-space: nowrap; user-select: none;
+  transition: filter .15s ease, background-color .15s ease, border-color .15s ease, color .15s ease;
 }
-.wbk-btn--primary   { background: var(--brand); color: var(--brand-contrast); }
-.wbk-btn--primary:hover { filter: brightness(1.05); }
-.wbk-btn--secondary { background: var(--surface-2); color: var(--text); border-color: var(--border); }
-.wbk-btn--secondary:hover { border-color: var(--text-muted); }
-.wbk-btn--ghost     { background: transparent; color: var(--text); }
-.wbk-btn--ghost:hover { background: var(--surface-2); }
-.wbk-btn:disabled, .wbk-btn[aria-disabled="true"] { opacity: .4; pointer-events: none; }
-.wbk-btn--lg { padding: 12px 16px; font-size: 16px; line-height: 24px; }
+.wbk-btn .icn, .wbk-btn svg { flex: none; }
+/* sizes */
+.wbk-btn--xl { padding: var(--sp-5) var(--sp-6); font-size: var(--fs-label-xl); line-height: var(--lh-label-xl); }
+.wbk-btn--lg { padding: var(--sp-4) var(--sp-5); font-size: var(--fs-label-l); line-height: var(--lh-label-l); }
+.wbk-btn--md { padding: var(--sp-3) var(--sp-4); font-size: var(--fs-label-m); line-height: var(--lh-label-m); }
+.wbk-btn--sm { padding: var(--sp-2) var(--sp-3); font-size: var(--fs-label-s); line-height: var(--lh-label-s); border-radius: var(--radius); }
+/* intents */
+.wbk-btn--cta       { background: var(--brand); color: var(--brand-contrast); }
+.wbk-btn--cta:hover { filter: brightness(1.05); }
+.wbk-btn--cta:active { filter: brightness(.92); }
+.wbk-btn--primary       { background: var(--inverse-bg); color: var(--inverse-text); }
+.wbk-btn--primary:hover { filter: brightness(1.12); }
+.wbk-btn--primary:active { filter: brightness(.9); }
+.wbk-btn--secondary       { background: var(--surface); color: var(--text); border-color: var(--border); }
+.wbk-btn--secondary:hover { border-color: var(--border-secondary); background: var(--surface-1); }
+.wbk-btn--secondary:active { background: var(--surface-2); }
+.wbk-btn--tertiary, .wbk-btn--ghost { background: transparent; color: var(--text); }
+.wbk-btn--tertiary:hover, .wbk-btn--ghost:hover { background: var(--surface-2); }
+.wbk-btn--tertiary:active, .wbk-btn--ghost:active { background: var(--surface-3); }
+.wbk-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
+/* disabled — brand intents fade to Bg-Brand-Disabled; others go flat */
+.wbk-btn:disabled, .wbk-btn[aria-disabled="true"] { cursor: not-allowed; }
+.wbk-btn--cta:disabled, .wbk-btn--cta[aria-disabled="true"],
+.wbk-btn--primary:disabled, .wbk-btn--primary[aria-disabled="true"] { background: var(--brand-disabled-bg); color: var(--surface); filter: none; }
+.wbk-btn--secondary:disabled, .wbk-btn--tertiary:disabled, .wbk-btn--ghost:disabled,
+.wbk-btn--secondary[aria-disabled="true"], .wbk-btn--tertiary[aria-disabled="true"], .wbk-btn--ghost[aria-disabled="true"] { color: var(--text-disabled); border-color: var(--border); background: transparent; }
+/* animating — inline spinner; respects reduced-motion */
+.wbk-btn.is-animating { pointer-events: none; }
+.wbk-btn.is-animating .wbk-btn-spin {
+  inline-size: 1em; block-size: 1em; border-radius: 999px; flex: none;
+  border: 2px solid currentColor; border-right-color: transparent; animation: wbk-spin .6s linear infinite;
+}
+@keyframes wbk-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .wbk-btn.is-animating .wbk-btn-spin { animation: none; } }
+/* Button group — segmented row of buttons sharing one border (radius collapses inner corners) */
+.wbk-btngroup { display: inline-flex; }
+.wbk-btngroup .wbk-btn { border-radius: 0; }
+.wbk-btngroup .wbk-btn:first-child { border-start-start-radius: var(--radius-lg); border-end-start-radius: var(--radius-lg); }
+.wbk-btngroup .wbk-btn:last-child  { border-start-end-radius: var(--radius-lg); border-end-end-radius: var(--radius-lg); }
+.wbk-btngroup .wbk-btn + .wbk-btn { margin-inline-start: -1px; }
+
+/* Link — Content-Link brand, underline on hover/focus, RTL-safe */
+.wbk-link {
+  color: var(--link); font-family: var(--font-sans); font-weight: 500;
+  text-decoration: none; cursor: pointer; border-radius: var(--radius-sm);
+  display: inline-flex; align-items: center; gap: var(--sp-1);
+}
+.wbk-link:hover { text-decoration: underline; }
+.wbk-link:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
+.wbk-link .icn, .wbk-link svg { flex: none; }
 
 .wbk-chip {
-  display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 999px;
-  font-family: var(--font-sans); font-weight: 500; font-size: 14px; line-height: 20px;
+  display: inline-flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4); border-radius: 999px;
+  font-family: var(--font-sans); font-weight: 500; font-size: var(--fs-label-m); line-height: var(--lh-label-m);
   background: var(--surface-2); color: var(--text); border: 1px solid var(--border); cursor: pointer;
   transition: background-color .15s ease, color .15s ease, border-color .15s ease;
 }
+.wbk-chip:hover { border-color: var(--border-secondary); }
 .wbk-chip[aria-selected="true"], .wbk-chip.is-selected { background: var(--brand); color: var(--brand-contrast); border-color: transparent; }
+.wbk-chip:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
+
+/* Input + Field — WBK PRO V3 (nodes 4368-31655 / 4373-35455). Label-M label,
+   radius-lg 8, Border-Tertiary default → Border-Brand on focus, semantic error. */
+.wbk-field { display: inline-flex; flex-direction: column; gap: var(--sp-2); inline-size: 100%; }
+.wbk-field-label { font-family: var(--font-sans); font-weight: 500; font-size: var(--fs-label-m); line-height: var(--lh-label-m); color: var(--text); }
+.wbk-field-label .wbk-req { color: var(--state-negative); margin-inline-start: 2px; }
+.wbk-input {
+  inline-size: 100%; box-sizing: border-box; padding: var(--sp-4) var(--sp-5);
+  font-family: var(--font-sans); font-size: var(--fs-body-l); line-height: var(--lh-body-l); color: var(--text);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.wbk-input::placeholder { color: var(--text-tertiary); }
+.wbk-input:hover { border-color: var(--border-secondary); }
+.wbk-input:focus-visible { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 22%, transparent); }
+.wbk-input:disabled { background: var(--surface-2); color: var(--text-disabled); cursor: not-allowed; }
+.wbk-field.is-error .wbk-input { border-color: var(--state-negative); }
+.wbk-field.is-error .wbk-input:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--state-negative) 22%, transparent); }
+.wbk-field-hint { font-size: var(--fs-body-s); line-height: var(--lh-body-s); color: var(--text-muted); }
+.wbk-field.is-error .wbk-field-hint { color: var(--state-negative); }
+
+/* Rich text (node 4368-31744) — body copy block on the V3 scale */
+.wbk-rich { font-family: var(--font-sans); font-size: var(--fs-body-m); line-height: var(--lh-body-m); color: var(--text); }
+.wbk-rich h3 { font-size: var(--fs-h5); line-height: var(--lh-h5); font-weight: 600; margin: 0 0 var(--sp-3); color: var(--text); }
+.wbk-rich p { margin: 0 0 var(--sp-4); color: var(--text-muted); }
+.wbk-rich a { color: var(--link); text-decoration: none; }
+.wbk-rich a:hover { text-decoration: underline; }
+.wbk-rich strong { font-weight: 700; color: var(--text); }
 
 /* PIN code input (WBK DS · node 2053-12021) — Figtree 18/24 medium, Radius-L 12,
    gap 12, brand active border, semantic error state. Logical props → RTL-safe. */
 .wbk-pin { display: inline-flex; gap: var(--sp-4); direction: ltr; }
 .wbk-pin input {
   inline-size: 48px; block-size: 56px; text-align: center; box-sizing: border-box;
-  font-family: var(--font-sans); font-size: var(--fs-l); line-height: 24px; font-weight: 500;
+  font-family: var(--font-sans); font-size: var(--fs-label-xl); line-height: var(--lh-label-xl); font-weight: 500;
   font-variant-numeric: tabular-nums; color: var(--text);
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
   transition: border-color .15s ease, box-shadow .15s ease;
@@ -2214,6 +2347,26 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     mapHotel:       { en: 'Hotel',                  ar: 'فندق' },
     chatRecv:       { en: 'Are tickets still available?', ar: 'هل التذاكر متاحة؟' },
     chatSent:       { en: 'Yes — a few left!',      ar: 'نعم — تبقّى القليل!' },
+    btnCta:         { en: 'CTA',                    ar: 'إجراء رئيسي' },
+    btnPrimary:     { en: 'Primary',               ar: 'أساسي' },
+    btnSecondary:   { en: 'Secondary',             ar: 'ثانوي' },
+    btnTertiary:    { en: 'Tertiary',              ar: 'ثالثي' },
+    btnDisabled:    { en: 'Disabled',              ar: 'معطّل' },
+    btnAnimating:   { en: 'Working…',              ar: 'جارٍ…' },
+    bgDay:          { en: 'Day',                    ar: 'يوم' },
+    bgWeek:         { en: 'Week',                   ar: 'أسبوع' },
+    bgMonth:        { en: 'Month',                  ar: 'شهر' },
+    linkLearn:      { en: 'Learn more',             ar: 'اعرف المزيد' },
+    linkView:       { en: 'View details',           ar: 'عرض التفاصيل' },
+    inEmail:        { en: 'Email',                  ar: 'البريد الإلكتروني' },
+    inEmailHint:    { en: 'We’ll send a sign-in link.', ar: 'سنرسل رابط تسجيل الدخول.' },
+    inName:         { en: 'Full name',              ar: 'الاسم الكامل' },
+    inNamePh:       { en: 'e.g. Sara Al-Otaibi',    ar: 'مثال: سارة العتيبي' },
+    inNameErr:      { en: 'This field is required.', ar: 'هذا الحقل مطلوب.' },
+    inDisabled:     { en: 'Reference ID',           ar: 'رقم المرجع' },
+    rtTitle:        { en: 'About this event',       ar: 'عن هذه الفعالية' },
+    rtBody:         { en: 'A rich-text block on the V3 type scale — body copy in Content-Secondary with inline emphasis and links.', ar: 'كتلة نص منسّق على مقياس V3 — نص أساسي بلون المحتوى الثانوي مع تشديد وروابط ضمنية.' },
+    rtLink:         { en: 'Read the full programme', ar: 'اقرأ البرنامج كاملًا' },
     sampleDataHint: { en: 'Demo numbers — not yet wired to live data', ar: 'أرقام تجريبية — غير مرتبطة ببيانات حية بعد' },
     reviewsDue:     { en: 'reviews due',            ar: 'تقييمات مطلوبة' },
     reviewNow:      { en: 'Review now',             ar: 'ابدأ الآن' },
@@ -7457,20 +7610,53 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     const t = WP.i18n.t;
     const people = WP.data.PEOPLE.filter(function (p) { return p.photo; }).slice(0, 4).map(function (p) { return p.id; });
 
-    const buttons = sec('Buttons',
-      '<div class="wbk-row">' +
-        '<button class="btn primary">Primary</button>' +
-        '<button class="btn">Secondary</button>' +
-        '<button class="wbk-btn wbk-btn--ghost">Ghost</button>' +
-        '<button class="btn primary" disabled>Disabled</button>' +
-        '<button class="wbk-btn wbk-btn--primary wbk-btn--lg">Large</button>' +
-        '<button class="btn icon-btn" aria-label="Add">' + ic('plus', 16) + '</button>' +
-      '</div>' +
-      '<div class="wbk-row" style="margin-top:10px">' +
-        '<button class="wbk-applepay"></button>' +
-        '<button class="wbk-applepay wbk-applepay--book">Book with</button>' +
+    const intents = [['cta', t('btnCta')], ['primary', t('btnPrimary')], ['secondary', t('btnSecondary')], ['tertiary', t('btnTertiary')]];
+    const btnRow = function (mod, withState) {
+      return '<div class="wbk-row" style="align-items:center;margin-bottom:8px">' +
+        intents.map(function (it) {
+          return '<button class="wbk-btn wbk-btn--' + it[0] + (mod ? ' wbk-btn--' + mod : '') + '">' + ic('plus', 16) + it[1] + '</button>';
+        }).join('') +
+        (withState ?
+          '<button class="wbk-btn wbk-btn--cta" disabled>' + t('btnDisabled') + '</button>' +
+          '<button class="wbk-btn wbk-btn--primary is-animating">' + t('btnAnimating') + '<span class="wbk-btn-spin"></span></button>'
+        : '') +
+      '</div>';
+    };
+    const buttons = sec('Button',
+      btnRow('xl', false) + btnRow('lg', false) + btnRow('md', false) + btnRow('sm', false) +
+      btnRow('lg', true),
+      'CTA / Primary / Secondary / Tertiary · xL / L / M / S · normal / hover / active / animating / disabled');
+
+    const btngroup = sec('Button group',
+      '<div class="wbk-btngroup">' +
+        '<button class="wbk-btn wbk-btn--secondary wbk-btn--md">' + ic('grid', 16) + t('bgDay') + '</button>' +
+        '<button class="wbk-btn wbk-btn--secondary wbk-btn--md">' + t('bgWeek') + '</button>' +
+        '<button class="wbk-btn wbk-btn--secondary wbk-btn--md">' + t('bgMonth') + '</button>' +
+      '</div>');
+
+    const link = sec('Link',
+      '<div class="wbk-row" style="align-items:center;gap:20px">' +
+        '<a class="wbk-link" href="#" onclick="return false">' + t('linkLearn') + ' ' + ic('arrowRight', 14) + '</a>' +
+        '<a class="wbk-link" href="#" onclick="return false">' + ic('eye', 14) + ' ' + t('linkView') + '</a>' +
+      '</div>');
+
+    const inputs = sec('Input',
+      '<div style="display:flex;flex-direction:column;gap:14px;max-width:360px">' +
+        '<label class="wbk-field"><span class="wbk-field-label">' + t('inEmail') + '</span>' +
+          '<input class="wbk-input" type="email" placeholder="name@webook.com" />' +
+          '<span class="wbk-field-hint">' + t('inEmailHint') + '</span></label>' +
+        '<label class="wbk-field is-error"><span class="wbk-field-label">' + t('inName') + '<span class="wbk-req">*</span></span>' +
+          '<input class="wbk-input" value="" placeholder="' + t('inNamePh') + '" />' +
+          '<span class="wbk-field-hint">' + t('inNameErr') + '</span></label>' +
+        '<label class="wbk-field"><span class="wbk-field-label">' + t('inDisabled') + '</span>' +
+          '<input class="wbk-input" value="Read-only" disabled /></label>' +
       '</div>',
-      'Primary / Secondary / Ghost / Disabled / Large / Icon');
+      'Default · focus · error · disabled');
+
+    const richtext = sec('Rich text',
+      '<div class="wbk-rich" style="max-width:520px"><h3>' + t('rtTitle') + '</h3>' +
+        '<p>' + t('rtBody') + '</p>' +
+        '<p><a href="#" onclick="return false">' + t('rtLink') + '</a></p></div>');
 
     const chips = sec('Chips (button group)',
       '<div class="wbk-row" id="wbk-chips">' +
@@ -7655,7 +7841,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
           '<p>Every component from the WBK Design System, live on the WBK tokens.</p></div>' +
           '<img class="wbk-lib-logo" src="' + (WP.state.theme === 'dark' ? 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAxOS4wLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiDQoJIHZpZXdCb3g9IjE1OCAzNTYgNzY0IDM2OCIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgMTA4MCAxMDgwOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPg0KCS5zdDB7ZmlsbDojRkZGRkZGO30NCjwvc3R5bGU+DQo8cG9seWdvbiBpZD0iWE1MSURfODJfIiBjbGFzcz0ic3QwIiBwb2ludHM9IjI0OSw2NDguNCAyNzAuMyw2NDguNCAyNDguNyw3MTAuNCAyMzIsNzEwLjQgMjIwLjcsNjcyLjIgMjA5LjksNzEwLjQgMTkzLjIsNzEwLjQgDQoJMTcxLDY0OC40IDE5Mi4zLDY0OC40IDIwMi41LDY4My45IDIxMi43LDY0OC40IDIyOC41LDY0OC40IDIzOC44LDY4My45ICIvPg0KPHBhdGggaWQ9IlhNTElEXzc5XyIgY2xhc3M9InN0MCIgZD0iTTMxOCw2NzMuNmMtMC4zLTYuMS01LjctMTAuMi0xMi44LTEwLjJjLTUuOCwwLTExLjYsMi44LTEzLjYsMTAuMkgzMTh6IE0zMzcuMyw2ODUuMmgtNDUuNQ0KCWMxLjksNiw3LDkuNywxNC41LDkuN2M1LjgsMCwxMS44LTIuNywxNS43LTYuNGwxMC4xLDEyLjhDMzI2LDcwNy45LDMxNS4zLDcxMiwzMDUsNzEyYy0xOS43LDAtMzMuNS0xMy42LTMzLjUtMzIuNA0KCWMwLTIwLjIsMTUuNS0zMi44LDMzLjQtMzIuOGMxNy44LDAsMzIuNywxMi41LDMyLjcsMzEuNEMzMzcuNSw2NzkuOSwzMzcuNCw2ODIuMSwzMzcuMyw2ODUuMiIvPg0KPHBhdGggaWQ9IlhNTElEXzc2XyIgY2xhc3M9InN0MCIgZD0iTTM5NS43LDY3OS4zYzAtNy44LTYuNi0xNC40LTE0LjQtMTQuNGMtNy40LDAtMTQuNCw2LjQtMTQuNCwxNC40YzAsOCw2LjgsMTQuNSwxNC40LDE0LjUNCglDMzg5LjEsNjkzLjgsMzk1LjcsNjg3LjIsMzk1LjcsNjc5LjMgTTQxNS43LDY3OS4zYzAsMjAuMS0xNC42LDMyLjctMzAuMiwzMi43Yy02LjQsMC0xNC42LTIuNS0xOS4xLTguNXY2LjloLTE5Ljd2LTg2LjJoMTkuN3YzMC45DQoJYzQuNS01LjgsMTIuOC04LjQsMTkuMS04LjRDNDAxLjEsNjQ2LjgsNDE1LjcsNjU5LjMsNDE1LjcsNjc5LjMiLz4NCjxwYXRoIGlkPSJYTUxJRF83M18iIGNsYXNzPSJzdDAiIGQ9Ik00NjksNjc5LjVjMC04LjUtNi4xLTE0LjUtMTMuNy0xNC41Yy03LjYsMC0xMy43LDYtMTMuNywxNC41YzAsOC41LDYuMSwxNC40LDEzLjcsMTQuNA0KCUM0NjIuOSw2OTMuOCw0NjksNjg4LDQ2OSw2NzkuNSBNNDIxLjcsNjc5LjVjMC0xOS43LDE1LjktMzIuNywzMy42LTMyLjdjMTcuNywwLDMzLjgsMTMsMzMuOCwzMi43QzQ4OSw2OTksNDczLDcxMiw0NTUuMyw3MTINCglDNDM3LjYsNzEyLDQyMS43LDY5OSw0MjEuNyw2NzkuNSIvPg0KPHBhdGggaWQ9IlhNTElEXzcwXyIgY2xhc3M9InN0MCIgZD0iTTU0Mi4yLDY3OS41YzAtOC41LTYuMS0xNC41LTEzLjctMTQuNWMtNy42LDAtMTMuNyw2LTEzLjcsMTQuNWMwLDguNSw2LjEsMTQuNCwxMy43LDE0LjQNCglDNTM2LjEsNjkzLjgsNTQyLjIsNjg4LDU0Mi4yLDY3OS41IE00OTQuOSw2NzkuNWMwLTE5LjcsMTUuOS0zMi43LDMzLjYtMzIuN2MxNy43LDAsMzMuOCwxMywzMy44LDMyLjdjMCwxOS41LTE2LjEsMzIuNi0zMy44LDMyLjYNCglDNTEwLjgsNzEyLDQ5NC45LDY5OSw0OTQuOSw2NzkuNSIvPg0KPHBvbHlnb24gaWQ9IlhNTElEXzY3XyIgY2xhc3M9InN0MCIgcG9pbnRzPSI2MzQuNCw3MTAuNCA2MTAuNSw3MTAuNCA1OTEuNCw2ODUuMiA1OTEuNCw3MTAuNCA1NzEuNyw3MTAuNCA1NzEuNyw2MjQuMyA1OTEuNCw2MjQuMyANCgk1OTEuNCw2NjUuOCA2MDQuNyw2NDguNCA2MjkuNCw2NDguNCA2MDYsNjc1LjkgIi8+DQo8cGF0aCBpZD0iWE1MSURfNjZfIiBjbGFzcz0ic3QwIiBkPSJNNjM1LjgsNjk5LjhjMC02LjYsNS40LTExLjYsMTItMTEuNmM2LjYsMCwxMi4yLDQuOSwxMi4yLDExLjZjMCw2LjktNS42LDExLjgtMTIuMiwxMS44DQoJQzY0MS4yLDcxMS42LDYzNS44LDcwNi43LDYzNS44LDY5OS44Ii8+DQo8cGF0aCBpZD0iWE1MSURfNjVfIiBjbGFzcz0ic3QwIiBkPSJNNjY2LjksNjc5LjJjMC0xOS43LDE2LjItMzIuNCwzNC4zLTMyLjRjMTIsMCwyMS4xLDUuOCwyNy4xLDE0LjZMNzEzLDY3MQ0KCWMtMi40LTMuNy03LjQtNi0xMS43LTZjLTksMC0xNC40LDYuNS0xNC40LDE0LjJjMCw3LjgsNS4zLDE0LjYsMTQuNCwxNC42YzQuMywwLDkuMy0yLjMsMTEuNy02bDE1LjMsOS42DQoJYy02LDguOC0xNS4xLDE0LjYtMjcuMSwxNC42QzY4My4xLDcxMiw2NjYuOSw2OTguOSw2NjYuOSw2NzkuMiIvPg0KPHBhdGggaWQ9IlhNTElEXzYyXyIgY2xhc3M9InN0MCIgZD0iTTc3OS42LDY3OS41YzAtOC41LTYuMS0xNC41LTEzLjctMTQuNWMtNy42LDAtMTMuNyw2LTEzLjcsMTQuNWMwLDguNSw2LjEsMTQuNCwxMy43LDE0LjQNCglDNzczLjQsNjkzLjgsNzc5LjYsNjg4LDc3OS42LDY3OS41IE03MzIuMiw2NzkuNWMwLTE5LjcsMTUuOS0zMi43LDMzLjYtMzIuN2MxNy43LDAsMzMuOCwxMywzMy44LDMyLjdjMCwxOS41LTE2LjEsMzIuNi0zMy44LDMyLjYNCglDNzQ4LjIsNzEyLDczMi4yLDY5OSw3MzIuMiw2NzkuNSIvPg0KPHBhdGggaWQ9IlhNTElEXzYxXyIgY2xhc3M9InN0MCIgZD0iTTkwOSw2NzcuMXYzMy40aC0xOS43di0zMi44YzAtOS42LTQuOC0xMi42LTkuOC0xMi42Yy02LjEsMC0xMC42LDQuMy0xMC42LDE1LjF2MzAuM2gtMTkuN1Y2NzgNCgljMC05LjYtNC44LTEzLTkuNy0xM2MtNS4zLDAtMTAuOCwyLjctMTAuOCwxM3YzMi40aC0xOS43di02Mi4xaDE5Ljd2OS44YzIuNC03LjgsMTAuOS0xMS40LDE2LjctMTEuNGM5LjIsMCwxNS45LDQuNCwxOS43LDExLjgNCgljNC4zLTguMiwxMy44LTExLjgsMjAuMy0xMS44QzkwMSw2NDYuOCw5MDksNjU4LjEsOTA5LDY3Ny4xIi8+DQo8cGF0aCBpZD0iWE1MSURfNjBfIiBjbGFzcz0ic3QwIiBkPSJNNjMwLjMsNDY0LjRsLTIwLjUsMTEuOGMtMi4zLDEuMy0yLjMsNC42LDAsNmwyMC41LDExLjhsMjMuOSwxMy44YzEuMSwwLjYsMS43LDEuOCwxLjcsM3Y1My4xDQoJYzAsMS4yLTAuNywyLjQtMS43LDNsLTM5LjcsMjIuOWMtMC41LDAuMy0xLjEsMC41LTEuNywwLjVINDI3LjVjLTEuOSwwLTMuNC0xLjUtMy40LTMuNFYzNzEuNWMwLTEuOSwxLjUtMy40LDMuNC0zLjRoMTg1LjINCgljMC42LDAsMS4yLDAuMiwxLjcsMC41bDM5LjcsMjIuOWMxLjEsMC42LDEuNywxLjcsMS43LDN2NTMuMWMwLDEuMi0wLjcsMi40LTEuNywzTDYzMC4zLDQ2NC40eiIvPg0KPHBhdGggaWQ9IlhNTElEXzU5XyIgY2xhc3M9InN0MCIgZD0iTTg3OC4yLDQ2MC44bC0yNi43LDE1LjRjLTIuMywxLjMtMi4zLDQuNiwwLDZsMjYuNywxNS40bDMwLjEsMTcuNGMxLjEsMC42LDEuNywxLjcsMS43LDN2NjguOQ0KCWMwLDEuOS0xLjUsMy40LTMuNCwzLjRoLTg2LjFjLTEuMiwwLTIuNC0wLjctMy0xLjdsLTExLjItMTkuNGwtOS4yLTE1LjljLTEuMy0yLjMtNC42LTIuMy02LDBsLTIwLjQsMzUuM2MtMC42LDEuMS0xLjcsMS43LTMsMS43DQoJaC04Ni4xYy0xLjksMC0zLjQtMS41LTMuNC0zLjRWMzcxLjVjMC0xLjksMS41LTMuNCwzLjQtMy40aDg2LjFjMS4yLDAsMi40LDAuNywzLDEuN2wyMC40LDM1LjNjMS4zLDIuMyw0LjYsMi4zLDYsMGwyMC40LTM1LjMNCgljMC42LTEuMSwxLjgtMS43LDMtMS43aDg2LjFjMS45LDAsMy40LDEuNSwzLjQsMy40djY4LjljMCwxLjItMC43LDIuNC0xLjcsM0w4NzguMiw0NjAuOHoiLz4NCjxwYXRoIGlkPSJYTUxJRF81OF8iIGNsYXNzPSJzdDAiIGQ9Ik00MDIuMywzNzEuNXYyMTUuM2MwLDEuOS0xLjUsMy40LTMuNCwzLjRoLTg2LjFjLTEuMiwwLTIuNC0wLjctMy0xLjdsLTIwLjQtMzUuMw0KCWMtMS4zLTIuMy00LjYtMi4zLTYsMGwtMjAuNCwzNS4zYy0wLjYsMS4xLTEuNywxLjctMywxLjdIMTc0Yy0xLjksMC0zLjQtMS41LTMuNC0zLjRWMzcxLjVjMC0xLjksMS41LTMuNCwzLjQtMy40aDQyLjkNCgljMS4yLDAsMi40LDAuNywzLDEuN2wxNy4zLDMwbDE1LjQsMjYuN2MxLjMsMi4zLDQuNiwyLjMsNiwwbDI1LTQzLjNjMS4zLTIuMyw0LjYtMi4zLDYsMGwyNSw0My4zYzEuMywyLjMsNC42LDIuMyw2LDBsMTUuNC0yNi43DQoJbDE3LjMtMzBjMC42LTEuMSwxLjgtMS43LDMtMS43aDQyLjlDNDAwLjgsMzY4LjEsNDAyLjMsMzY5LjYsNDAyLjMsMzcxLjUiLz4NCjwvc3ZnPg0K' : 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjE1OCAzNTYgNzY0IDM2OCI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5jbHMtMSB7CiAgICAgICAgZmlsbDogI2ZmMmI3ODsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPHBvbHlnb24gY2xhc3M9ImNscy0xIiBwb2ludHM9IjI0OS4wMSA2NDguMzcgMjcwLjI3IDY0OC4zNyAyNDguNzUgNzEwLjQ0IDIzMiA3MTAuNDQgMjIwLjcgNjcyLjE2IDIwOS45NCA3MTAuNDQgMTkzLjE5IDcxMC40NCAxNzEgNjQ4LjM3IDE5Mi4yNiA2NDguMzcgMjAyLjUgNjgzLjg2IDIxMi43MyA2NDguMzcgMjI4LjU0IDY0OC4zNyAyMzguNzggNjgzLjg2IDI0OS4wMSA2NDguMzciLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0zMTcuOTksNjczLjYzYy0uMjYtNi4xMi01LjcxLTEwLjI0LTEyLjc2LTEwLjI0LTUuODUsMC0xMS41NiwyLjc5LTEzLjU2LDEwLjI0aDI2LjMxWk0zMzcuMjYsNjg1LjE5aC00NS40NWMxLjg2LDUuOTgsNy4wNCw5LjcsMTQuNDgsOS43LDUuODUsMCwxMS44My0yLjY2LDE1LjY4LTYuMzhsMTAuMSwxMi43NmMtNi4xMSw2LjY0LTE2Ljc1LDEwLjc2LTI3LjExLDEwLjc2LTE5LjY3LDAtMzMuNDktMTMuNTYtMzMuNDktMzIuNDMsMC0yMC4yLDE1LjU1LTMyLjgzLDMzLjM2LTMyLjgzczMyLjY5LDEyLjQ5LDMyLjY5LDMxLjM3YzAsMS43My0uMTMsMy45OS0uMjYsNy4wNCIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTM5NS43Myw2NzkuMzRjMC03Ljg0LTYuNjUtMTQuMzUtMTQuMzUtMTQuMzVzLTE0LjM1LDYuMzgtMTQuMzUsMTQuMzUsNi43OCwxNC40OCwxNC4zNSwxNC40OCwxNC4zNS02LjY0LDE0LjM1LTE0LjQ4TTQxNS42Nyw2NzkuMzRjMCwyMC4wNy0xNC42MiwzMi42OS0zMC4xNywzMi42OS02LjM4LDAtMTQuNjItMi41Mi0xOS4xNC04LjUxdjYuOTFoLTE5LjY3di04Ni4xOGgxOS42N3YzMC44OWM0LjUyLTUuODUsMTIuNzYtOC4zNywxOS4xNC04LjM3LDE1LjU1LDAsMzAuMTcsMTIuNDksMzAuMTcsMzIuNTYiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik00NjguOTcsNjc5LjQ3YzAtOC41MS02LjExLTE0LjQ4LTEzLjY5LTE0LjQ4cy0xMy42OSw1Ljk4LTEzLjY5LDE0LjQ4LDYuMTEsMTQuMzUsMTMuNjksMTQuMzUsMTMuNjktNS44NSwxMy42OS0xNC4zNU00MjEuNjUsNjc5LjQ3YzAtMTkuNjcsMTUuOTUtMzIuNjksMzMuNjItMzIuNjlzMzMuNzYsMTMuMDMsMzMuNzYsMzIuNjktMTYuMDgsMzIuNTYtMzMuNzYsMzIuNTYtMzMuNjItMTMuMDItMzMuNjItMzIuNTYiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik01NDIuMTksNjc5LjQ3YzAtOC41MS02LjExLTE0LjQ4LTEzLjY5LTE0LjQ4cy0xMy42OSw1Ljk4LTEzLjY5LDE0LjQ4LDYuMTEsMTQuMzUsMTMuNjksMTQuMzUsMTMuNjktNS44NSwxMy42OS0xNC4zNU00OTQuODgsNjc5LjQ3YzAtMTkuNjcsMTUuOTUtMzIuNjksMzMuNjItMzIuNjlzMzMuNzYsMTMuMDMsMzMuNzYsMzIuNjktMTYuMDgsMzIuNTYtMzMuNzYsMzIuNTYtMzMuNjItMTMuMDItMzMuNjItMzIuNTYiLz4KICA8cG9seWdvbiBjbGFzcz0iY2xzLTEiIHBvaW50cz0iNjM0LjQzIDcxMC40NCA2MTAuNSA3MTAuNDQgNTkxLjM3IDY4NS4xOSA1OTEuMzcgNzEwLjQ0IDU3MS43IDcxMC40NCA1NzEuNyA2MjQuMjYgNTkxLjM3IDYyNC4yNiA1OTEuMzcgNjY1Ljc5IDYwNC42NiA2NDguMzggNjI5LjM4IDY0OC4zOCA2MDUuOTkgNjc1Ljg4IDYzNC40MyA3MTAuNDQiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik02MzUuNzYsNjk5LjgxYzAtNi42NSw1LjQ1LTExLjU2LDExLjk2LTExLjU2czEyLjIyLDQuOTIsMTIuMjIsMTEuNTYtNS41OCwxMS44My0xMi4yMiwxMS44My0xMS45Ni00LjkyLTExLjk2LTExLjgzIi8+CiAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNjY2Ljg2LDY3OS4yMWMwLTE5LjY3LDE2LjIxLTMyLjQzLDM0LjI5LTMyLjQzLDExLjk2LDAsMjEuMTMsNS44NSwyNy4xMSwxNC42MmwtMTUuMjgsOS41N2MtMi4zOS0zLjcyLTcuNDQtNS45OC0xMS43LTUuOTgtOS4wMywwLTE0LjM1LDYuNTEtMTQuMzUsMTQuMjJzNS4zMiwxNC42MiwxNC4zNSwxNC42MmM0LjI1LDAsOS4zMS0yLjI2LDExLjctNS45OGwxNS4yOCw5LjU3Yy01Ljk4LDguNzctMTUuMTUsMTQuNjItMjcuMTEsMTQuNjItMTguMDgsMC0zNC4yOS0xMy4xNS0zNC4yOS0zMi44MyIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTc3OS41Niw2NzkuNDdjMC04LjUxLTYuMTEtMTQuNDgtMTMuNjktMTQuNDhzLTEzLjY5LDUuOTgtMTMuNjksMTQuNDgsNi4xMSwxNC4zNSwxMy42OSwxNC4zNSwxMy42OS01Ljg1LDEzLjY5LTE0LjM1TTczMi4yNCw2NzkuNDdjMC0xOS42NywxNS45NS0zMi42OSwzMy42Mi0zMi42OXMzMy43NiwxMy4wMywzMy43NiwzMi42OS0xNi4wOCwzMi41Ni0zMy43NiwzMi41Ni0zMy42Mi0xMy4wMi0zMy42Mi0zMi41NiIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTkwOSw2NzcuMDh2MzMuMzZoLTE5LjY3di0zMi44M2MwLTkuNTctNC43OC0xMi42Mi05LjgzLTEyLjYyLTYuMTEsMC0xMC42Myw0LjI1LTEwLjYzLDE1LjE1djMwLjNoLTE5LjY3di0zMi40M2MwLTkuNTctNC43OC0xMy4wMi05LjctMTMuMDItNS4zMiwwLTEwLjc3LDIuNjYtMTAuNzcsMTMuMDJ2MzIuNDNoLTE5LjY3di02Mi4wNmgxOS42N3Y5LjgzYzIuMzktNy44NCwxMC45LTExLjQzLDE2Ljc1LTExLjQzLDkuMTcsMCwxNS45NSw0LjM5LDE5LjY3LDExLjgzLDQuMjUtOC4yNCwxMy44Mi0xMS44MywyMC4zMy0xMS44MywxNS41NSwwLDIzLjUyLDExLjMsMjMuNTIsMzAuMyIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTYzMC4yOSw0NjQuMzdsLTIwLjQ2LDExLjgxYy0yLjI5LDEuMzItMi4yOSw0LjYzLDAsNS45NWwyMC40NiwxMS44MiwyMy45LDEzLjhjMS4wNi42MSwxLjcyLDEuNzUsMS43MiwyLjk4djUzLjE0YzAsMS4yMy0uNjYsMi4zNi0xLjcyLDIuOTdsLTM5LjY4LDIyLjkyYy0uNTIuMy0xLjEyLjQ2LTEuNzIuNDZoLTE4NS4yNGMtMS45LDAtMy40NC0xLjU0LTMuNDQtMy40NHYtMjE1LjI0YzAtMS45LDEuNTQtMy40NCwzLjQ0LTMuNDRoMTg1LjI0Yy42LDAsMS4yLjE2LDEuNzIuNDZsMzkuNjgsMjIuOTFjMS4wNi42MSwxLjcyLDEuNzUsMS43MiwyLjk4djUzLjE0YzAsMS4yMy0uNjYsMi4zNi0xLjcyLDIuOTdsLTIzLjksMTMuOFoiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik04NzguMTksNDYwLjhsLTI2LjY1LDE1LjM4Yy0yLjI5LDEuMzItMi4yOSw0LjYzLDAsNS45NWwyNi42NSwxNS4zOCwzMC4wOCwxNy4zN2MxLjA2LjYxLDEuNzIsMS43NSwxLjcyLDIuOTh2NjguOTFjMCwxLjktMS41NCwzLjQ0LTMuNDQsMy40NGgtODYuMTJjLTEuMjMsMC0yLjM2LS42Ni0yLjk4LTEuNzJsLTExLjE4LTE5LjM4LTkuMjEtMTUuOTVjLTEuMzItMi4yOS00LjYzLTIuMjktNS45NSwwbC0yMC40LDM1LjMyYy0uNjEsMS4wNi0xLjc1LDEuNzItMi45OCwxLjcyaC04Ni4xMWMtMS45LDAtMy40NC0xLjU0LTMuNDQtMy40NHYtMjE1LjI0YzAtMS45LDEuNTQtMy40NCwzLjQ0LTMuNDRoODYuMTFjMS4yMywwLDIuMzYuNjYsMi45OCwxLjcybDIwLjQsMzUuMzJjMS4zMiwyLjI5LDQuNjMsMi4yOSw1Ljk1LDBsMjAuMzktMzUuMzJjLjYxLTEuMDYsMS43NS0xLjcyLDIuOTgtMS43Mmg4Ni4xMmMxLjksMCwzLjQ0LDEuNTQsMy40NCwzLjQ0djY4LjkyYzAsMS4yMy0uNjYsMi4zNi0xLjcyLDIuOTdsLTMwLjA4LDE3LjM3WiIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTQwMi4zMSwzNzEuNTN2MjE1LjI1YzAsMS45LTEuNTQsMy40NC0zLjQ0LDMuNDRoLTg2LjFjLTEuMjMsMC0yLjM2LS42Ni0yLjk4LTEuNzJsLTIwLjQxLTM1LjM0Yy0xLjMyLTIuMjktNC42My0yLjI5LTUuOTUsMGwtMjAuMzgsMzUuMzNjLS42MSwxLjA2LTEuNzUsMS43Mi0yLjk4LDEuNzJoLTg2LjEyYy0xLjksMC0zLjQ0LTEuNTQtMy40NC0zLjQ0di0yMTUuMjVjMC0xLjksMS41NC0zLjQ0LDMuNDQtMy40NGg0Mi44NWMxLjIzLDAsMi4zNi42NiwyLjk4LDEuNzJsMTcuMzEsMjkuOTksMTUuNDIsMjYuN2MxLjMyLDIuMjksNC42MywyLjI5LDUuOTUsMGwyNC45OC00My4yN2MxLjMyLTIuMjksNC42My0yLjI5LDUuOTUsMGwyNC45OCw0My4yN2MxLjMyLDIuMjksNC42MywyLjI5LDUuOTUsMGwxNS40LTI2LjcsMTcuMzEtMjkuOTljLjYxLTEuMDYsMS43NS0xLjcyLDIuOTgtMS43Mmg0Mi44NWMxLjksMCwzLjQ0LDEuNTQsMy40NCwzLjQ0Ii8+Cjwvc3ZnPg==') + '" alt="WBK" /></header>' +
         '<div class="wbk-grid">' +
-          buttons + chips + segmented + stepper + slider + choice + badges + blabel + progress +
+          buttons + btngroup + link + inputs + richtext + chips + segmented + stepper + slider + choice + badges + blabel + progress +
           avatars + tabs + toasts + banners + tooltip + dialog + countdown + datepick + pin +
           breadcrumb + uploader + tiles + price + media + bubble + mappin + ticket + dock + card +
         '</div>' +
