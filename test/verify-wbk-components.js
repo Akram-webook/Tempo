@@ -24,6 +24,38 @@ try{
     assert(view.querySelector('.'+c),'component class .'+c+' mounts');
   });
 
+  // Wave 2 molecules all mount
+  ['wbk-bc','wbk-upload','wbk-tile','wbk-price','wbk-media','wbk-bubble','wbk-mappin','wbk-ticket','wbk-actions','wbk-dock'].forEach(function(c){
+    assert(view.querySelector('.'+c),'Wave-2 molecule .'+c+' mounts');
+  });
+  // breadcrumb: current page is non-link + marked for AT, has separators
+  assert(view.querySelector('.wbk-bc [aria-current="page"]'),'breadcrumb marks the current page');
+  assert(view.querySelector('.wbk-bc a'),'breadcrumb has links');
+  assert(view.querySelector('.wbk-bc-sep'),'breadcrumb has separators');
+  // chat bubble: both directions present
+  assert(view.querySelector('.wbk-bubble--sent') && view.querySelector('.wbk-bubble--recv'),'chat bubble has sent + received variants');
+  // tile: single-select — clicking a second tile moves the selection
+  const tlist=view.querySelectorAll('#wbk-tiles .wbk-tile');
+  assert(tlist.length>=2,'tiles render');
+  tlist[1].onclick();
+  assert(tlist[1].getAttribute('aria-pressed')==='true' && tlist[0].getAttribute('aria-pressed')==='false','tile is single-select');
+  // ticket stepper: increment + clamp-at-zero disabling the minus button
+  const vipRow=view.querySelector('.wbk-ticket[data-ticket="vip"]');
+  const vipV=vipRow.querySelector('.wbk-qty-v'); const vipMinus=vipRow.querySelector('[data-q="-1"]');
+  assert(vipV.textContent==='0' && vipMinus.disabled,'ticket qty starts at 0 with minus disabled');
+  vipRow.querySelector('[data-q="1"]').onclick();
+  assert(vipV.textContent==='1' && !vipMinus.disabled,'ticket qty increments and re-enables minus');
+  vipRow.querySelector('[data-q="-1"]').onclick();
+  assert(vipV.textContent==='0' && vipMinus.disabled,'ticket qty clamps at 0 and re-disables minus');
+  // map pin uses .wbk-mappin (must NOT collide with the PIN-code .wbk-pin atom)
+  assert(!view.querySelector('.wbk-mappin.wbk-pin'),'map pin and PIN-code atom use distinct classes');
+
+  // exact WBK DS semantic values now live in tokens (no longer the capacity-state proxy)
+  const tk=fs.readFileSync(path.join(root,'src/css/tokens.css'),'utf8');
+  assert(/--state-positive:\s*#22c55e/i.test(tk),'Content-Positive wired to exact DS #22c55e');
+  assert(/--state-negative:\s*#ff6c6c/i.test(tk),'Content-Negative wired to exact DS #ff6c6c');
+  assert(/--state-notice:\s*#fcc800/i.test(tk),'Content-Notice wired to exact DS #fcc800');
+
   // NEW atom — PIN code: 6 boxes per group, numeric, accessible labels, error variant present
   const pinGroups=view.querySelectorAll('.wbk-pin');
   assert(pinGroups.length>=2,'PIN renders default + error groups');
@@ -61,14 +93,14 @@ try{
 
   // EN+AR strings exist for the new labels
   WP.state.lang='en';
-  ['pinCode','blConfirmed','blPending','blSoldOut','blDraft'].forEach(function(k){
+  ['pinCode','blConfirmed','blPending','blSoldOut','blDraft','bcHome','bcEvents','bcTickets','uploadCta','uploadHint','ticketGeneral','ticketVip','mapRestaurant','mapHotel','chatRecv','chatSent'].forEach(function(k){
     assert(WP.i18n.t(k) && WP.i18n.t(k)!==k,'i18n EN key present: '+k);
   });
   WP.state.lang='ar';
-  ['pinCode','blConfirmed','blPending','blSoldOut','blDraft'].forEach(function(k){
+  ['pinCode','blConfirmed','blPending','blSoldOut','blDraft','bcHome','bcEvents','bcTickets','uploadCta','uploadHint','ticketGeneral','ticketVip','mapRestaurant','mapHotel','chatRecv','chatSent'].forEach(function(k){
     assert(WP.i18n.t(k) && WP.i18n.t(k)!==k,'i18n AR key present: '+k);
   });
 }catch(e){errors.push('[run] '+e.message+'\n'+e.stack);}
 if(errors.length){console.log('FAIL\n'+errors.join('\n'));process.exit(1);}
-console.log('PASS — WBK atoms: gallery mounts clean, PIN input (auto-advance + error + a11y) and Booking label (icon-backed status) render, tokens resolve, RTL flips, EN+AR strings present.');
+console.log('PASS — WBK atoms + molecules: gallery mounts clean; PIN, booking label, breadcrumb, uploader, tile (single-select), price, media, chat bubble, map pin, ticket stepper (clamp-at-0), actions/dock all render; exact DS semantic tokens wired; RTL flips; EN+AR strings present.');
 process.exit(0);

@@ -74,6 +74,93 @@ body {
 .wbk-blabel--positive { color: var(--state-positive); background: color-mix(in srgb, var(--state-positive) 14%, transparent); border-color: color-mix(in srgb, var(--state-positive) 30%, transparent); }
 .wbk-blabel--negative { color: var(--state-negative); background: color-mix(in srgb, var(--state-negative) 14%, transparent); border-color: color-mix(in srgb, var(--state-negative) 30%, transparent); }
 
+/* ============================================================
+ * WBK DS — Wave 2 (molecules). All on tokens; logical props → RTL-safe.
+ * ========================================================== */
+
+/* Breadcrumb (node 2038-5315) — Link-S 14/20/600, tertiary separators,
+   current page is non-link. Chevron uses a logical glyph so RTL mirrors. */
+.wbk-bc { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2); font-size: var(--fs-s); line-height: 20px; }
+.wbk-bc a { color: var(--text-muted); font-weight: 600; text-decoration: none; border-radius: var(--radius-sm); }
+.wbk-bc a:hover { color: var(--text); text-decoration: underline; }
+.wbk-bc .wbk-bc-sep { color: var(--text-muted); display: inline-flex; }
+[dir="rtl"] .wbk-bc-sep svg { transform: scaleX(-1); }
+.wbk-bc [aria-current="page"] { color: var(--text); font-weight: 600; }
+
+/* File uploader (node 3185-2677) — dropzone with idle/hover/uploading/error. */
+.wbk-upload {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-3);
+  padding: var(--sp-5) var(--sp-4); text-align: center; cursor: pointer;
+  border: 1px dashed var(--border); border-radius: var(--radius-lg); background: var(--surface-2);
+  color: var(--text-muted); transition: border-color .15s ease, background-color .15s ease;
+}
+.wbk-upload:hover, .wbk-upload:focus-visible { border-color: var(--brand); background: var(--surface); outline: none; }
+.wbk-upload .wbk-upload-t { color: var(--text); font-weight: 600; font-size: var(--fs-s); }
+.wbk-upload .wbk-upload-h { font-size: 12px; }
+.wbk-upload.is-error { border-color: var(--state-negative); color: var(--state-negative); }
+
+/* Tile (node 2065-49753) — selectable icon + label square. */
+.wbk-tile {
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-3);
+  inline-size: 104px; block-size: 104px; padding: var(--sp-4); cursor: pointer; text-align: center;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  color: var(--text); font-size: var(--fs-s); font-weight: 500; transition: border-color .15s ease, background-color .15s ease;
+}
+.wbk-tile:hover { border-color: var(--text-muted); }
+.wbk-tile[aria-pressed="true"], .wbk-tile.is-selected { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 8%, transparent); }
+.wbk-tile:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* Price / wallet amount (node 2060-15446) — tabular figures, currency + value. */
+.wbk-price { display: inline-flex; align-items: baseline; gap: var(--sp-2); font-variant-numeric: tabular-nums; color: var(--text); }
+.wbk-price .wbk-price-v { font-family: var(--font-display); font-weight: 700; font-size: 28px; line-height: 36px; }
+.wbk-price .wbk-price-c { font-size: var(--fs-s); font-weight: 600; color: var(--text-muted); }
+.wbk-price.is-sm .wbk-price-v { font-size: var(--fs-m); line-height: 24px; }
+.wbk-price del { color: var(--text-muted); font-size: var(--fs-s); font-weight: 400; }
+
+/* Media (node 2053-20120) — fixed aspect ratio with a graceful placeholder. */
+.wbk-media { position: relative; inline-size: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius-lg); overflow: hidden;
+  background: var(--surface-2); display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
+.wbk-media img { inline-size: 100%; block-size: 100%; object-fit: cover; display: block; }
+.wbk-media.is-square { aspect-ratio: 1 / 1; }
+
+/* Chat message bubble (node 4326-2854) — sent (brand, end) vs received (start). */
+.wbk-bubble { max-inline-size: 80%; padding: var(--sp-3) var(--sp-4); border-radius: var(--radius-lg); font-size: var(--fs-s); line-height: 20px;
+  inline-size: fit-content; word-break: break-word; }
+.wbk-bubble--recv { background: var(--surface-2); color: var(--text); border-end-start-radius: var(--radius-sm); margin-inline-end: auto; }
+.wbk-bubble--sent { background: var(--brand); color: var(--brand-contrast); border-end-end-radius: var(--radius-sm); margin-inline-start: auto; }
+.wbk-bubble-time { display: block; margin-block-start: var(--sp-1); font-size: 11px; opacity: .7; }
+
+/* Map pin (nodes 6817-34991 / 6816-34234) — restaurant / hotel markers.
+   Named .wbk-mappin to avoid clashing with the PIN-code .wbk-pin atom. */
+.wbk-mappin { display: inline-flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); border-radius: 999px;
+  background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: var(--shadow);
+  font-size: 12px; font-weight: 600; white-space: nowrap; }
+.wbk-mappin svg { color: var(--brand); flex: none; }
+.wbk-mappin.is-active { background: var(--brand); color: var(--brand-contrast); border-color: transparent; }
+.wbk-mappin.is-active svg { color: var(--brand-contrast); }
+
+/* Ticket selector (node 2061-36975) — name + price with a quantity stepper. */
+.wbk-ticket { display: flex; align-items: center; gap: var(--sp-4); padding: var(--sp-4) 0; border-block-end: 1px solid var(--border); }
+.wbk-ticket:last-child { border-block-end: 0; }
+.wbk-ticket-m { flex: 1; min-inline-size: 0; }
+.wbk-ticket-m .nm { font-weight: 600; font-size: var(--fs-s); color: var(--text); }
+.wbk-ticket-m .px { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.wbk-qty { display: inline-flex; align-items: center; gap: var(--sp-3); }
+.wbk-qty button { inline-size: 28px; block-size: 28px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.wbk-qty button:hover:not(:disabled) { border-color: var(--brand); color: var(--brand); }
+.wbk-qty button:disabled { opacity: .4; cursor: not-allowed; }
+.wbk-qty .wbk-qty-v { min-inline-size: 18px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+/* Actions bar / button dock (nodes 2061-24126 / 4398-34377) — footer action row;
+   dock pairs a running total with the primary CTA (mobile checkout pattern). */
+.wbk-actions { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-4); border-radius: var(--radius-lg);
+  background: var(--surface); border: 1px solid var(--border); }
+.wbk-actions .wbk-actions-end { margin-inline-start: auto; display: inline-flex; gap: var(--sp-3); }
+.wbk-dock { display: flex; align-items: center; gap: var(--sp-4); padding: var(--sp-4); border-radius: var(--radius-lg);
+  background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); }
+.wbk-dock .btn.primary, .wbk-dock .wbk-btn--primary { margin-inline-start: auto; }
+
 /* status palette for toasts / system banners (pair with an icon, never color alone) */
 .wbk-toast, .wbk-banner {
   display: flex; align-items: center; gap: 8px; font-family: var(--font-sans); font-size: 14px; color: var(--text);

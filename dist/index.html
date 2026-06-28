@@ -61,6 +61,7 @@
   --radius: 8px;     /* WBK DS · UI Radius-M (default) */
   --radius-sm: 4px;  /* WBK DS · Radius-S */
   --radius-lg: 12px; /* WBK DS · UI Radius-L (PIN box, large fields) */
+  --radius-xl: 16px; /* WBK DS · Containers Radius-XL */
 
   /* spacing scale — WBK DS · UI Elements/Gaps + Paddings (2/4/8/12/16) */
   --sp-1: 2px;  --sp-2: 4px;  --sp-3: 8px;  --sp-4: 12px;  --sp-5: 16px;
@@ -68,12 +69,15 @@
   /* type scale — WBK DS · Body-S 14 / Body-M 16 / Label-L 18 */
   --fs-s: 14px; --fs-m: 16px; --fs-l: 18px;
 
-  /* semantic status content (WBK DS · Content/States) — mapped to the nearest
-     existing capacity-state tokens so the palette stays single-sourced.
-     Figma: Notice #fcc800 · Positive #22c55e · Negative #ff6c6c. */
-  --state-notice:   var(--state-balanced);   /* amber  */
-  --state-positive: var(--state-available);  /* green  */
-  --state-negative: var(--state-overloaded); /* red    */
+  /* semantic status content + tinted bg — EXACT WBK DS · Content/States values
+     (confirmed from the DS variable defs; supersedes the Wave-1 capacity-state
+     proxy so booking-label / alert colours are pixel-exact to the DS). */
+  --state-notice:      #fcc800; /* Content-Notice    */
+  --state-positive:    #22c55e; /* Content-Positive  */
+  --state-negative:    #ff6c6c; /* Content-Negative  */
+  --state-notice-bg:   color-mix(in srgb, var(--state-notice) 16%, transparent);
+  --state-positive-bg: color-mix(in srgb, var(--state-positive) 16%, transparent);
+  --state-negative-bg: color-mix(in srgb, var(--state-negative) 16%, transparent);
 
   /* custom scrollbar (slim, floating, theme-aware) */
   --scrollbar-thumb:       rgba(16,24,40,.20);
@@ -196,6 +200,93 @@ body {
 .wbk-blabel--notice   { color: var(--state-notice);   background: color-mix(in srgb, var(--state-notice) 14%, transparent);   border-color: color-mix(in srgb, var(--state-notice) 30%, transparent); }
 .wbk-blabel--positive { color: var(--state-positive); background: color-mix(in srgb, var(--state-positive) 14%, transparent); border-color: color-mix(in srgb, var(--state-positive) 30%, transparent); }
 .wbk-blabel--negative { color: var(--state-negative); background: color-mix(in srgb, var(--state-negative) 14%, transparent); border-color: color-mix(in srgb, var(--state-negative) 30%, transparent); }
+
+/* ============================================================
+ * WBK DS — Wave 2 (molecules). All on tokens; logical props → RTL-safe.
+ * ========================================================== */
+
+/* Breadcrumb (node 2038-5315) — Link-S 14/20/600, tertiary separators,
+   current page is non-link. Chevron uses a logical glyph so RTL mirrors. */
+.wbk-bc { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2); font-size: var(--fs-s); line-height: 20px; }
+.wbk-bc a { color: var(--text-muted); font-weight: 600; text-decoration: none; border-radius: var(--radius-sm); }
+.wbk-bc a:hover { color: var(--text); text-decoration: underline; }
+.wbk-bc .wbk-bc-sep { color: var(--text-muted); display: inline-flex; }
+[dir="rtl"] .wbk-bc-sep svg { transform: scaleX(-1); }
+.wbk-bc [aria-current="page"] { color: var(--text); font-weight: 600; }
+
+/* File uploader (node 3185-2677) — dropzone with idle/hover/uploading/error. */
+.wbk-upload {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-3);
+  padding: var(--sp-5) var(--sp-4); text-align: center; cursor: pointer;
+  border: 1px dashed var(--border); border-radius: var(--radius-lg); background: var(--surface-2);
+  color: var(--text-muted); transition: border-color .15s ease, background-color .15s ease;
+}
+.wbk-upload:hover, .wbk-upload:focus-visible { border-color: var(--brand); background: var(--surface); outline: none; }
+.wbk-upload .wbk-upload-t { color: var(--text); font-weight: 600; font-size: var(--fs-s); }
+.wbk-upload .wbk-upload-h { font-size: 12px; }
+.wbk-upload.is-error { border-color: var(--state-negative); color: var(--state-negative); }
+
+/* Tile (node 2065-49753) — selectable icon + label square. */
+.wbk-tile {
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-3);
+  inline-size: 104px; block-size: 104px; padding: var(--sp-4); cursor: pointer; text-align: center;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  color: var(--text); font-size: var(--fs-s); font-weight: 500; transition: border-color .15s ease, background-color .15s ease;
+}
+.wbk-tile:hover { border-color: var(--text-muted); }
+.wbk-tile[aria-pressed="true"], .wbk-tile.is-selected { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 8%, transparent); }
+.wbk-tile:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* Price / wallet amount (node 2060-15446) — tabular figures, currency + value. */
+.wbk-price { display: inline-flex; align-items: baseline; gap: var(--sp-2); font-variant-numeric: tabular-nums; color: var(--text); }
+.wbk-price .wbk-price-v { font-family: var(--font-display); font-weight: 700; font-size: 28px; line-height: 36px; }
+.wbk-price .wbk-price-c { font-size: var(--fs-s); font-weight: 600; color: var(--text-muted); }
+.wbk-price.is-sm .wbk-price-v { font-size: var(--fs-m); line-height: 24px; }
+.wbk-price del { color: var(--text-muted); font-size: var(--fs-s); font-weight: 400; }
+
+/* Media (node 2053-20120) — fixed aspect ratio with a graceful placeholder. */
+.wbk-media { position: relative; inline-size: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius-lg); overflow: hidden;
+  background: var(--surface-2); display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
+.wbk-media img { inline-size: 100%; block-size: 100%; object-fit: cover; display: block; }
+.wbk-media.is-square { aspect-ratio: 1 / 1; }
+
+/* Chat message bubble (node 4326-2854) — sent (brand, end) vs received (start). */
+.wbk-bubble { max-inline-size: 80%; padding: var(--sp-3) var(--sp-4); border-radius: var(--radius-lg); font-size: var(--fs-s); line-height: 20px;
+  inline-size: fit-content; word-break: break-word; }
+.wbk-bubble--recv { background: var(--surface-2); color: var(--text); border-end-start-radius: var(--radius-sm); margin-inline-end: auto; }
+.wbk-bubble--sent { background: var(--brand); color: var(--brand-contrast); border-end-end-radius: var(--radius-sm); margin-inline-start: auto; }
+.wbk-bubble-time { display: block; margin-block-start: var(--sp-1); font-size: 11px; opacity: .7; }
+
+/* Map pin (nodes 6817-34991 / 6816-34234) — restaurant / hotel markers.
+   Named .wbk-mappin to avoid clashing with the PIN-code .wbk-pin atom. */
+.wbk-mappin { display: inline-flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); border-radius: 999px;
+  background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: var(--shadow);
+  font-size: 12px; font-weight: 600; white-space: nowrap; }
+.wbk-mappin svg { color: var(--brand); flex: none; }
+.wbk-mappin.is-active { background: var(--brand); color: var(--brand-contrast); border-color: transparent; }
+.wbk-mappin.is-active svg { color: var(--brand-contrast); }
+
+/* Ticket selector (node 2061-36975) — name + price with a quantity stepper. */
+.wbk-ticket { display: flex; align-items: center; gap: var(--sp-4); padding: var(--sp-4) 0; border-block-end: 1px solid var(--border); }
+.wbk-ticket:last-child { border-block-end: 0; }
+.wbk-ticket-m { flex: 1; min-inline-size: 0; }
+.wbk-ticket-m .nm { font-weight: 600; font-size: var(--fs-s); color: var(--text); }
+.wbk-ticket-m .px { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.wbk-qty { display: inline-flex; align-items: center; gap: var(--sp-3); }
+.wbk-qty button { inline-size: 28px; block-size: 28px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.wbk-qty button:hover:not(:disabled) { border-color: var(--brand); color: var(--brand); }
+.wbk-qty button:disabled { opacity: .4; cursor: not-allowed; }
+.wbk-qty .wbk-qty-v { min-inline-size: 18px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+/* Actions bar / button dock (nodes 2061-24126 / 4398-34377) — footer action row;
+   dock pairs a running total with the primary CTA (mobile checkout pattern). */
+.wbk-actions { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-4); border-radius: var(--radius-lg);
+  background: var(--surface); border: 1px solid var(--border); }
+.wbk-actions .wbk-actions-end { margin-inline-start: auto; display: inline-flex; gap: var(--sp-3); }
+.wbk-dock { display: flex; align-items: center; gap: var(--sp-4); padding: var(--sp-4); border-radius: var(--radius-lg);
+  background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); }
+.wbk-dock .btn.primary, .wbk-dock .wbk-btn--primary { margin-inline-start: auto; }
 
 /* status palette for toasts / system banners (pair with an icon, never color alone) */
 .wbk-toast, .wbk-banner {
@@ -2112,6 +2203,17 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     blPending:      { en: 'Pending',                ar: 'قيد الانتظار' },
     blSoldOut:      { en: 'Sold out',               ar: 'نفدت التذاكر' },
     blDraft:        { en: 'Draft',                  ar: 'مسودة' },
+    bcHome:         { en: 'Home',                   ar: 'الرئيسية' },
+    bcEvents:       { en: 'Events',                 ar: 'الفعاليات' },
+    bcTickets:      { en: 'Tickets',                ar: 'التذاكر' },
+    uploadCta:      { en: 'Drag a file here or browse', ar: 'اسحب ملفًا هنا أو تصفّح' },
+    uploadHint:     { en: 'PNG or PDF · up to 10MB', ar: 'PNG أو PDF · حتى ١٠ ميغابايت' },
+    ticketGeneral:  { en: 'General admission',      ar: 'دخول عام' },
+    ticketVip:      { en: 'VIP',                    ar: 'كبار الشخصيات' },
+    mapRestaurant:  { en: 'Restaurant',             ar: 'مطعم' },
+    mapHotel:       { en: 'Hotel',                  ar: 'فندق' },
+    chatRecv:       { en: 'Are tickets still available?', ar: 'هل التذاكر متاحة؟' },
+    chatSent:       { en: 'Yes — a few left!',      ar: 'نعم — تبقّى القليل!' },
     sampleDataHint: { en: 'Demo numbers — not yet wired to live data', ar: 'أرقام تجريبية — غير مرتبطة ببيانات حية بعد' },
     reviewsDue:     { en: 'reviews due',            ar: 'تقييمات مطلوبة' },
     reviewNow:      { en: 'Review now',             ar: 'ابدأ الآن' },
@@ -6975,6 +7077,64 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
         '<span class="wbk-blabel">' + ic('pencil', 14) + t('blDraft') + '</span>' +
       '</div>', 'node 2064-46940');
 
+    // ---- Wave 2 molecules ----
+    const sep = '<span class="wbk-bc-sep" aria-hidden="true">' + ic('chevR', 14) + '</span>';
+    const breadcrumb = sec('Breadcrumb',
+      '<nav class="wbk-bc" aria-label="Breadcrumb"><a href="#">' + t('bcHome') + '</a>' + sep +
+        '<a href="#">' + t('bcEvents') + '</a>' + sep +
+        '<span aria-current="page">' + t('bcTickets') + '</span></nav>', 'node 2038-5315');
+
+    const uploader = sec('File uploader',
+      '<div class="wbk-upload" tabindex="0" role="button">' + ic('arrowUp', 22) +
+        '<div class="wbk-upload-t">' + t('uploadCta') + '</div>' +
+        '<div class="wbk-upload-h">' + t('uploadHint') + '</div></div>', 'node 3185-2677');
+
+    const tiles = sec('Tile',
+      '<div class="wbk-row" id="wbk-tiles">' +
+        '<button class="wbk-tile is-selected" aria-pressed="true">' + ic('flame', 24) + t('bcEvents') + '</button>' +
+        '<button class="wbk-tile" aria-pressed="false">' + ic('star', 24) + t('ticketVip') + '</button>' +
+        '<button class="wbk-tile" aria-pressed="false">' + ic('users', 24) + t('ticketGeneral') + '</button>' +
+      '</div>', 'node 2065-49753');
+
+    const price = sec('Price · Wallet amount',
+      '<div class="wbk-row" style="align-items:baseline;gap:20px">' +
+        '<span class="wbk-price"><span class="wbk-price-v">210.75</span><span class="wbk-price-c">SAR</span></span>' +
+        '<span class="wbk-price is-sm"><del>260.00</del><span class="wbk-price-v">199.00</span><span class="wbk-price-c">SAR</span></span>' +
+        '<span class="wbk-price">' + ic('wallet', 18) + '<span class="wbk-price-v">1,240</span><span class="wbk-price-c">SAR</span></span>' +
+      '</div>', 'node 2060-15446');
+
+    const media = sec('Media',
+      '<div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">' +
+        '<div class="wbk-media">' + ic('eye', 26) + '</div>' +
+        '<div class="wbk-media is-square">' + ic('star', 26) + '</div></div>', 'node 2053-20120');
+
+    const bubble = sec('Chat message bubble',
+      '<div style="display:flex;flex-direction:column;gap:8px">' +
+        '<div class="wbk-bubble wbk-bubble--recv">' + ui.esc(t('chatRecv')) + '<span class="wbk-bubble-time">09:24</span></div>' +
+        '<div class="wbk-bubble wbk-bubble--sent">' + ui.esc(t('chatSent')) + '<span class="wbk-bubble-time">09:25</span></div>' +
+      '</div>', 'node 4326-2854');
+
+    const mappin = sec('Map pin',
+      '<div class="wbk-row">' +
+        '<span class="wbk-mappin is-active">' + ic('target', 14) + t('mapRestaurant') + ' · 210 SAR</span>' +
+        '<span class="wbk-mappin">' + ic('target', 14) + t('mapHotel') + ' · 480 SAR</span>' +
+      '</div>', 'nodes 6817-34991 / 6816-34234');
+
+    const ticketRow = function (name, px, qty, id) {
+      return '<div class="wbk-ticket" data-ticket="' + id + '"><div class="wbk-ticket-m"><div class="nm">' + name + '</div><div class="px">' + px + ' SAR</div></div>' +
+        '<div class="wbk-qty"><button data-q="-1" aria-label="Decrease"' + (qty <= 0 ? ' disabled' : '') + '>' + ic('minus', 14) + '</button>' +
+        '<span class="wbk-qty-v">' + qty + '</span>' +
+        '<button data-q="1" aria-label="Increase">' + ic('plus', 14) + '</button></div></div>';
+    };
+    const ticket = sec('Ticket selector',
+      '<div id="wbk-tickets">' + ticketRow(t('ticketGeneral'), '150', 1, 'ga') + ticketRow(t('ticketVip'), '420', 0, 'vip') + '</div>', 'node 2061-36975');
+
+    const dock = sec('Actions bar · Button dock',
+      '<div class="wbk-actions"><button class="btn">Cancel</button>' +
+        '<span class="wbk-actions-end"><button class="btn">Save draft</button><button class="btn primary">Publish</button></span></div>' +
+      '<div class="wbk-dock" style="margin-top:10px"><span class="wbk-price is-sm"><span class="wbk-price-v">570</span><span class="wbk-price-c">SAR</span></span>' +
+        '<button class="btn primary">Checkout</button></div>', 'nodes 2061-24126 / 4398-34377');
+
     const card = sec('Card · List item · Section heading',
       '<div class="wbk-card">' +
         '<div class="wbk-card-media">' + ic('users', 26) + '</div>' +
@@ -6994,7 +7154,8 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
           '<img class="wbk-lib-logo" src="' + (WP.state.theme === 'dark' ? 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAxOS4wLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiDQoJIHZpZXdCb3g9IjE1OCAzNTYgNzY0IDM2OCIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgMTA4MCAxMDgwOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPg0KCS5zdDB7ZmlsbDojRkZGRkZGO30NCjwvc3R5bGU+DQo8cG9seWdvbiBpZD0iWE1MSURfODJfIiBjbGFzcz0ic3QwIiBwb2ludHM9IjI0OSw2NDguNCAyNzAuMyw2NDguNCAyNDguNyw3MTAuNCAyMzIsNzEwLjQgMjIwLjcsNjcyLjIgMjA5LjksNzEwLjQgMTkzLjIsNzEwLjQgDQoJMTcxLDY0OC40IDE5Mi4zLDY0OC40IDIwMi41LDY4My45IDIxMi43LDY0OC40IDIyOC41LDY0OC40IDIzOC44LDY4My45ICIvPg0KPHBhdGggaWQ9IlhNTElEXzc5XyIgY2xhc3M9InN0MCIgZD0iTTMxOCw2NzMuNmMtMC4zLTYuMS01LjctMTAuMi0xMi44LTEwLjJjLTUuOCwwLTExLjYsMi44LTEzLjYsMTAuMkgzMTh6IE0zMzcuMyw2ODUuMmgtNDUuNQ0KCWMxLjksNiw3LDkuNywxNC41LDkuN2M1LjgsMCwxMS44LTIuNywxNS43LTYuNGwxMC4xLDEyLjhDMzI2LDcwNy45LDMxNS4zLDcxMiwzMDUsNzEyYy0xOS43LDAtMzMuNS0xMy42LTMzLjUtMzIuNA0KCWMwLTIwLjIsMTUuNS0zMi44LDMzLjQtMzIuOGMxNy44LDAsMzIuNywxMi41LDMyLjcsMzEuNEMzMzcuNSw2NzkuOSwzMzcuNCw2ODIuMSwzMzcuMyw2ODUuMiIvPg0KPHBhdGggaWQ9IlhNTElEXzc2XyIgY2xhc3M9InN0MCIgZD0iTTM5NS43LDY3OS4zYzAtNy44LTYuNi0xNC40LTE0LjQtMTQuNGMtNy40LDAtMTQuNCw2LjQtMTQuNCwxNC40YzAsOCw2LjgsMTQuNSwxNC40LDE0LjUNCglDMzg5LjEsNjkzLjgsMzk1LjcsNjg3LjIsMzk1LjcsNjc5LjMgTTQxNS43LDY3OS4zYzAsMjAuMS0xNC42LDMyLjctMzAuMiwzMi43Yy02LjQsMC0xNC42LTIuNS0xOS4xLTguNXY2LjloLTE5Ljd2LTg2LjJoMTkuN3YzMC45DQoJYzQuNS01LjgsMTIuOC04LjQsMTkuMS04LjRDNDAxLjEsNjQ2LjgsNDE1LjcsNjU5LjMsNDE1LjcsNjc5LjMiLz4NCjxwYXRoIGlkPSJYTUxJRF83M18iIGNsYXNzPSJzdDAiIGQ9Ik00NjksNjc5LjVjMC04LjUtNi4xLTE0LjUtMTMuNy0xNC41Yy03LjYsMC0xMy43LDYtMTMuNywxNC41YzAsOC41LDYuMSwxNC40LDEzLjcsMTQuNA0KCUM0NjIuOSw2OTMuOCw0NjksNjg4LDQ2OSw2NzkuNSBNNDIxLjcsNjc5LjVjMC0xOS43LDE1LjktMzIuNywzMy42LTMyLjdjMTcuNywwLDMzLjgsMTMsMzMuOCwzMi43QzQ4OSw2OTksNDczLDcxMiw0NTUuMyw3MTINCglDNDM3LjYsNzEyLDQyMS43LDY5OSw0MjEuNyw2NzkuNSIvPg0KPHBhdGggaWQ9IlhNTElEXzcwXyIgY2xhc3M9InN0MCIgZD0iTTU0Mi4yLDY3OS41YzAtOC41LTYuMS0xNC41LTEzLjctMTQuNWMtNy42LDAtMTMuNyw2LTEzLjcsMTQuNWMwLDguNSw2LjEsMTQuNCwxMy43LDE0LjQNCglDNTM2LjEsNjkzLjgsNTQyLjIsNjg4LDU0Mi4yLDY3OS41IE00OTQuOSw2NzkuNWMwLTE5LjcsMTUuOS0zMi43LDMzLjYtMzIuN2MxNy43LDAsMzMuOCwxMywzMy44LDMyLjdjMCwxOS41LTE2LjEsMzIuNi0zMy44LDMyLjYNCglDNTEwLjgsNzEyLDQ5NC45LDY5OSw0OTQuOSw2NzkuNSIvPg0KPHBvbHlnb24gaWQ9IlhNTElEXzY3XyIgY2xhc3M9InN0MCIgcG9pbnRzPSI2MzQuNCw3MTAuNCA2MTAuNSw3MTAuNCA1OTEuNCw2ODUuMiA1OTEuNCw3MTAuNCA1NzEuNyw3MTAuNCA1NzEuNyw2MjQuMyA1OTEuNCw2MjQuMyANCgk1OTEuNCw2NjUuOCA2MDQuNyw2NDguNCA2MjkuNCw2NDguNCA2MDYsNjc1LjkgIi8+DQo8cGF0aCBpZD0iWE1MSURfNjZfIiBjbGFzcz0ic3QwIiBkPSJNNjM1LjgsNjk5LjhjMC02LjYsNS40LTExLjYsMTItMTEuNmM2LjYsMCwxMi4yLDQuOSwxMi4yLDExLjZjMCw2LjktNS42LDExLjgtMTIuMiwxMS44DQoJQzY0MS4yLDcxMS42LDYzNS44LDcwNi43LDYzNS44LDY5OS44Ii8+DQo8cGF0aCBpZD0iWE1MSURfNjVfIiBjbGFzcz0ic3QwIiBkPSJNNjY2LjksNjc5LjJjMC0xOS43LDE2LjItMzIuNCwzNC4zLTMyLjRjMTIsMCwyMS4xLDUuOCwyNy4xLDE0LjZMNzEzLDY3MQ0KCWMtMi40LTMuNy03LjQtNi0xMS43LTZjLTksMC0xNC40LDYuNS0xNC40LDE0LjJjMCw3LjgsNS4zLDE0LjYsMTQuNCwxNC42YzQuMywwLDkuMy0yLjMsMTEuNy02bDE1LjMsOS42DQoJYy02LDguOC0xNS4xLDE0LjYtMjcuMSwxNC42QzY4My4xLDcxMiw2NjYuOSw2OTguOSw2NjYuOSw2NzkuMiIvPg0KPHBhdGggaWQ9IlhNTElEXzYyXyIgY2xhc3M9InN0MCIgZD0iTTc3OS42LDY3OS41YzAtOC41LTYuMS0xNC41LTEzLjctMTQuNWMtNy42LDAtMTMuNyw2LTEzLjcsMTQuNWMwLDguNSw2LjEsMTQuNCwxMy43LDE0LjQNCglDNzczLjQsNjkzLjgsNzc5LjYsNjg4LDc3OS42LDY3OS41IE03MzIuMiw2NzkuNWMwLTE5LjcsMTUuOS0zMi43LDMzLjYtMzIuN2MxNy43LDAsMzMuOCwxMywzMy44LDMyLjdjMCwxOS41LTE2LjEsMzIuNi0zMy44LDMyLjYNCglDNzQ4LjIsNzEyLDczMi4yLDY5OSw3MzIuMiw2NzkuNSIvPg0KPHBhdGggaWQ9IlhNTElEXzYxXyIgY2xhc3M9InN0MCIgZD0iTTkwOSw2NzcuMXYzMy40aC0xOS43di0zMi44YzAtOS42LTQuOC0xMi42LTkuOC0xMi42Yy02LjEsMC0xMC42LDQuMy0xMC42LDE1LjF2MzAuM2gtMTkuN1Y2NzgNCgljMC05LjYtNC44LTEzLTkuNy0xM2MtNS4zLDAtMTAuOCwyLjctMTAuOCwxM3YzMi40aC0xOS43di02Mi4xaDE5Ljd2OS44YzIuNC03LjgsMTAuOS0xMS40LDE2LjctMTEuNGM5LjIsMCwxNS45LDQuNCwxOS43LDExLjgNCgljNC4zLTguMiwxMy44LTExLjgsMjAuMy0xMS44QzkwMSw2NDYuOCw5MDksNjU4LjEsOTA5LDY3Ny4xIi8+DQo8cGF0aCBpZD0iWE1MSURfNjBfIiBjbGFzcz0ic3QwIiBkPSJNNjMwLjMsNDY0LjRsLTIwLjUsMTEuOGMtMi4zLDEuMy0yLjMsNC42LDAsNmwyMC41LDExLjhsMjMuOSwxMy44YzEuMSwwLjYsMS43LDEuOCwxLjcsM3Y1My4xDQoJYzAsMS4yLTAuNywyLjQtMS43LDNsLTM5LjcsMjIuOWMtMC41LDAuMy0xLjEsMC41LTEuNywwLjVINDI3LjVjLTEuOSwwLTMuNC0xLjUtMy40LTMuNFYzNzEuNWMwLTEuOSwxLjUtMy40LDMuNC0zLjRoMTg1LjINCgljMC42LDAsMS4yLDAuMiwxLjcsMC41bDM5LjcsMjIuOWMxLjEsMC42LDEuNywxLjcsMS43LDN2NTMuMWMwLDEuMi0wLjcsMi40LTEuNywzTDYzMC4zLDQ2NC40eiIvPg0KPHBhdGggaWQ9IlhNTElEXzU5XyIgY2xhc3M9InN0MCIgZD0iTTg3OC4yLDQ2MC44bC0yNi43LDE1LjRjLTIuMywxLjMtMi4zLDQuNiwwLDZsMjYuNywxNS40bDMwLjEsMTcuNGMxLjEsMC42LDEuNywxLjcsMS43LDN2NjguOQ0KCWMwLDEuOS0xLjUsMy40LTMuNCwzLjRoLTg2LjFjLTEuMiwwLTIuNC0wLjctMy0xLjdsLTExLjItMTkuNGwtOS4yLTE1LjljLTEuMy0yLjMtNC42LTIuMy02LDBsLTIwLjQsMzUuM2MtMC42LDEuMS0xLjcsMS43LTMsMS43DQoJaC04Ni4xYy0xLjksMC0zLjQtMS41LTMuNC0zLjRWMzcxLjVjMC0xLjksMS41LTMuNCwzLjQtMy40aDg2LjFjMS4yLDAsMi40LDAuNywzLDEuN2wyMC40LDM1LjNjMS4zLDIuMyw0LjYsMi4zLDYsMGwyMC40LTM1LjMNCgljMC42LTEuMSwxLjgtMS43LDMtMS43aDg2LjFjMS45LDAsMy40LDEuNSwzLjQsMy40djY4LjljMCwxLjItMC43LDIuNC0xLjcsM0w4NzguMiw0NjAuOHoiLz4NCjxwYXRoIGlkPSJYTUxJRF81OF8iIGNsYXNzPSJzdDAiIGQ9Ik00MDIuMywzNzEuNXYyMTUuM2MwLDEuOS0xLjUsMy40LTMuNCwzLjRoLTg2LjFjLTEuMiwwLTIuNC0wLjctMy0xLjdsLTIwLjQtMzUuMw0KCWMtMS4zLTIuMy00LjYtMi4zLTYsMGwtMjAuNCwzNS4zYy0wLjYsMS4xLTEuNywxLjctMywxLjdIMTc0Yy0xLjksMC0zLjQtMS41LTMuNC0zLjRWMzcxLjVjMC0xLjksMS41LTMuNCwzLjQtMy40aDQyLjkNCgljMS4yLDAsMi40LDAuNywzLDEuN2wxNy4zLDMwbDE1LjQsMjYuN2MxLjMsMi4zLDQuNiwyLjMsNiwwbDI1LTQzLjNjMS4zLTIuMyw0LjYtMi4zLDYsMGwyNSw0My4zYzEuMywyLjMsNC42LDIuMyw2LDBsMTUuNC0yNi43DQoJbDE3LjMtMzBjMC42LTEuMSwxLjgtMS43LDMtMS43aDQyLjlDNDAwLjgsMzY4LjEsNDAyLjMsMzY5LjYsNDAyLjMsMzcxLjUiLz4NCjwvc3ZnPg0K' : 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjE1OCAzNTYgNzY0IDM2OCI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5jbHMtMSB7CiAgICAgICAgZmlsbDogI2ZmMmI3ODsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPHBvbHlnb24gY2xhc3M9ImNscy0xIiBwb2ludHM9IjI0OS4wMSA2NDguMzcgMjcwLjI3IDY0OC4zNyAyNDguNzUgNzEwLjQ0IDIzMiA3MTAuNDQgMjIwLjcgNjcyLjE2IDIwOS45NCA3MTAuNDQgMTkzLjE5IDcxMC40NCAxNzEgNjQ4LjM3IDE5Mi4yNiA2NDguMzcgMjAyLjUgNjgzLjg2IDIxMi43MyA2NDguMzcgMjI4LjU0IDY0OC4zNyAyMzguNzggNjgzLjg2IDI0OS4wMSA2NDguMzciLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0zMTcuOTksNjczLjYzYy0uMjYtNi4xMi01LjcxLTEwLjI0LTEyLjc2LTEwLjI0LTUuODUsMC0xMS41NiwyLjc5LTEzLjU2LDEwLjI0aDI2LjMxWk0zMzcuMjYsNjg1LjE5aC00NS40NWMxLjg2LDUuOTgsNy4wNCw5LjcsMTQuNDgsOS43LDUuODUsMCwxMS44My0yLjY2LDE1LjY4LTYuMzhsMTAuMSwxMi43NmMtNi4xMSw2LjY0LTE2Ljc1LDEwLjc2LTI3LjExLDEwLjc2LTE5LjY3LDAtMzMuNDktMTMuNTYtMzMuNDktMzIuNDMsMC0yMC4yLDE1LjU1LTMyLjgzLDMzLjM2LTMyLjgzczMyLjY5LDEyLjQ5LDMyLjY5LDMxLjM3YzAsMS43My0uMTMsMy45OS0uMjYsNy4wNCIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTM5NS43Myw2NzkuMzRjMC03Ljg0LTYuNjUtMTQuMzUtMTQuMzUtMTQuMzVzLTE0LjM1LDYuMzgtMTQuMzUsMTQuMzUsNi43OCwxNC40OCwxNC4zNSwxNC40OCwxNC4zNS02LjY0LDE0LjM1LTE0LjQ4TTQxNS42Nyw2NzkuMzRjMCwyMC4wNy0xNC42MiwzMi42OS0zMC4xNywzMi42OS02LjM4LDAtMTQuNjItMi41Mi0xOS4xNC04LjUxdjYuOTFoLTE5LjY3di04Ni4xOGgxOS42N3YzMC44OWM0LjUyLTUuODUsMTIuNzYtOC4zNywxOS4xNC04LjM3LDE1LjU1LDAsMzAuMTcsMTIuNDksMzAuMTcsMzIuNTYiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik00NjguOTcsNjc5LjQ3YzAtOC41MS02LjExLTE0LjQ4LTEzLjY5LTE0LjQ4cy0xMy42OSw1Ljk4LTEzLjY5LDE0LjQ4LDYuMTEsMTQuMzUsMTMuNjksMTQuMzUsMTMuNjktNS44NSwxMy42OS0xNC4zNU00MjEuNjUsNjc5LjQ3YzAtMTkuNjcsMTUuOTUtMzIuNjksMzMuNjItMzIuNjlzMzMuNzYsMTMuMDMsMzMuNzYsMzIuNjktMTYuMDgsMzIuNTYtMzMuNzYsMzIuNTYtMzMuNjItMTMuMDItMzMuNjItMzIuNTYiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik01NDIuMTksNjc5LjQ3YzAtOC41MS02LjExLTE0LjQ4LTEzLjY5LTE0LjQ4cy0xMy42OSw1Ljk4LTEzLjY5LDE0LjQ4LDYuMTEsMTQuMzUsMTMuNjksMTQuMzUsMTMuNjktNS44NSwxMy42OS0xNC4zNU00OTQuODgsNjc5LjQ3YzAtMTkuNjcsMTUuOTUtMzIuNjksMzMuNjItMzIuNjlzMzMuNzYsMTMuMDMsMzMuNzYsMzIuNjktMTYuMDgsMzIuNTYtMzMuNzYsMzIuNTYtMzMuNjItMTMuMDItMzMuNjItMzIuNTYiLz4KICA8cG9seWdvbiBjbGFzcz0iY2xzLTEiIHBvaW50cz0iNjM0LjQzIDcxMC40NCA2MTAuNSA3MTAuNDQgNTkxLjM3IDY4NS4xOSA1OTEuMzcgNzEwLjQ0IDU3MS43IDcxMC40NCA1NzEuNyA2MjQuMjYgNTkxLjM3IDYyNC4yNiA1OTEuMzcgNjY1Ljc5IDYwNC42NiA2NDguMzggNjI5LjM4IDY0OC4zOCA2MDUuOTkgNjc1Ljg4IDYzNC40MyA3MTAuNDQiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik02MzUuNzYsNjk5LjgxYzAtNi42NSw1LjQ1LTExLjU2LDExLjk2LTExLjU2czEyLjIyLDQuOTIsMTIuMjIsMTEuNTYtNS41OCwxMS44My0xMi4yMiwxMS44My0xMS45Ni00LjkyLTExLjk2LTExLjgzIi8+CiAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNjY2Ljg2LDY3OS4yMWMwLTE5LjY3LDE2LjIxLTMyLjQzLDM0LjI5LTMyLjQzLDExLjk2LDAsMjEuMTMsNS44NSwyNy4xMSwxNC42MmwtMTUuMjgsOS41N2MtMi4zOS0zLjcyLTcuNDQtNS45OC0xMS43LTUuOTgtOS4wMywwLTE0LjM1LDYuNTEtMTQuMzUsMTQuMjJzNS4zMiwxNC42MiwxNC4zNSwxNC42MmM0LjI1LDAsOS4zMS0yLjI2LDExLjctNS45OGwxNS4yOCw5LjU3Yy01Ljk4LDguNzctMTUuMTUsMTQuNjItMjcuMTEsMTQuNjItMTguMDgsMC0zNC4yOS0xMy4xNS0zNC4yOS0zMi44MyIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTc3OS41Niw2NzkuNDdjMC04LjUxLTYuMTEtMTQuNDgtMTMuNjktMTQuNDhzLTEzLjY5LDUuOTgtMTMuNjksMTQuNDgsNi4xMSwxNC4zNSwxMy42OSwxNC4zNSwxMy42OS01Ljg1LDEzLjY5LTE0LjM1TTczMi4yNCw2NzkuNDdjMC0xOS42NywxNS45NS0zMi42OSwzMy42Mi0zMi42OXMzMy43NiwxMy4wMywzMy43NiwzMi42OS0xNi4wOCwzMi41Ni0zMy43NiwzMi41Ni0zMy42Mi0xMy4wMi0zMy42Mi0zMi41NiIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTkwOSw2NzcuMDh2MzMuMzZoLTE5LjY3di0zMi44M2MwLTkuNTctNC43OC0xMi42Mi05LjgzLTEyLjYyLTYuMTEsMC0xMC42Myw0LjI1LTEwLjYzLDE1LjE1djMwLjNoLTE5LjY3di0zMi40M2MwLTkuNTctNC43OC0xMy4wMi05LjctMTMuMDItNS4zMiwwLTEwLjc3LDIuNjYtMTAuNzcsMTMuMDJ2MzIuNDNoLTE5LjY3di02Mi4wNmgxOS42N3Y5LjgzYzIuMzktNy44NCwxMC45LTExLjQzLDE2Ljc1LTExLjQzLDkuMTcsMCwxNS45NSw0LjM5LDE5LjY3LDExLjgzLDQuMjUtOC4yNCwxMy44Mi0xMS44MywyMC4zMy0xMS44MywxNS41NSwwLDIzLjUyLDExLjMsMjMuNTIsMzAuMyIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTYzMC4yOSw0NjQuMzdsLTIwLjQ2LDExLjgxYy0yLjI5LDEuMzItMi4yOSw0LjYzLDAsNS45NWwyMC40NiwxMS44MiwyMy45LDEzLjhjMS4wNi42MSwxLjcyLDEuNzUsMS43MiwyLjk4djUzLjE0YzAsMS4yMy0uNjYsMi4zNi0xLjcyLDIuOTdsLTM5LjY4LDIyLjkyYy0uNTIuMy0xLjEyLjQ2LTEuNzIuNDZoLTE4NS4yNGMtMS45LDAtMy40NC0xLjU0LTMuNDQtMy40NHYtMjE1LjI0YzAtMS45LDEuNTQtMy40NCwzLjQ0LTMuNDRoMTg1LjI0Yy42LDAsMS4yLjE2LDEuNzIuNDZsMzkuNjgsMjIuOTFjMS4wNi42MSwxLjcyLDEuNzUsMS43MiwyLjk4djUzLjE0YzAsMS4yMy0uNjYsMi4zNi0xLjcyLDIuOTdsLTIzLjksMTMuOFoiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik04NzguMTksNDYwLjhsLTI2LjY1LDE1LjM4Yy0yLjI5LDEuMzItMi4yOSw0LjYzLDAsNS45NWwyNi42NSwxNS4zOCwzMC4wOCwxNy4zN2MxLjA2LjYxLDEuNzIsMS43NSwxLjcyLDIuOTh2NjguOTFjMCwxLjktMS41NCwzLjQ0LTMuNDQsMy40NGgtODYuMTJjLTEuMjMsMC0yLjM2LS42Ni0yLjk4LTEuNzJsLTExLjE4LTE5LjM4LTkuMjEtMTUuOTVjLTEuMzItMi4yOS00LjYzLTIuMjktNS45NSwwbC0yMC40LDM1LjMyYy0uNjEsMS4wNi0xLjc1LDEuNzItMi45OCwxLjcyaC04Ni4xMWMtMS45LDAtMy40NC0xLjU0LTMuNDQtMy40NHYtMjE1LjI0YzAtMS45LDEuNTQtMy40NCwzLjQ0LTMuNDRoODYuMTFjMS4yMywwLDIuMzYuNjYsMi45OCwxLjcybDIwLjQsMzUuMzJjMS4zMiwyLjI5LDQuNjMsMi4yOSw1Ljk1LDBsMjAuMzktMzUuMzJjLjYxLTEuMDYsMS43NS0xLjcyLDIuOTgtMS43Mmg4Ni4xMmMxLjksMCwzLjQ0LDEuNTQsMy40NCwzLjQ0djY4LjkyYzAsMS4yMy0uNjYsMi4zNi0xLjcyLDIuOTdsLTMwLjA4LDE3LjM3WiIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTQwMi4zMSwzNzEuNTN2MjE1LjI1YzAsMS45LTEuNTQsMy40NC0zLjQ0LDMuNDRoLTg2LjFjLTEuMjMsMC0yLjM2LS42Ni0yLjk4LTEuNzJsLTIwLjQxLTM1LjM0Yy0xLjMyLTIuMjktNC42My0yLjI5LTUuOTUsMGwtMjAuMzgsMzUuMzNjLS42MSwxLjA2LTEuNzUsMS43Mi0yLjk4LDEuNzJoLTg2LjEyYy0xLjksMC0zLjQ0LTEuNTQtMy40NC0zLjQ0di0yMTUuMjVjMC0xLjksMS41NC0zLjQ0LDMuNDQtMy40NGg0Mi44NWMxLjIzLDAsMi4zNi42NiwyLjk4LDEuNzJsMTcuMzEsMjkuOTksMTUuNDIsMjYuN2MxLjMyLDIuMjksNC42MywyLjI5LDUuOTUsMGwyNC45OC00My4yN2MxLjMyLTIuMjksNC42My0yLjI5LDUuOTUsMGwyNC45OCw0My4yN2MxLjMyLDIuMjksNC42MywyLjI5LDUuOTUsMGwxNS40LTI2LjcsMTcuMzEtMjkuOTljLjYxLTEuMDYsMS43NS0xLjcyLDIuOTgtMS43Mmg0Mi44NWMxLjksMCwzLjQ0LDEuNTQsMy40NCwzLjQ0Ii8+Cjwvc3ZnPg==') + '" alt="WBK" /></header>' +
         '<div class="wbk-grid">' +
           buttons + chips + segmented + stepper + slider + choice + badges + blabel + progress +
-          avatars + tabs + toasts + banners + tooltip + dialog + countdown + datepick + pin + card +
+          avatars + tabs + toasts + banners + tooltip + dialog + countdown + datepick + pin +
+          breadcrumb + uploader + tiles + price + media + bubble + mappin + ticket + dock + card +
         '</div>' +
       '</div>' +
       '<div class="wbk-modal" id="wbk-modal" hidden><div class="wbk-modal-bd"></div>' +
@@ -7047,6 +7208,25 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
         };
         box.onkeydown = function (e) {
           if (e.key === 'Backspace' && !box.value && boxes[i - 1]) boxes[i - 1].focus();
+        };
+      });
+    });
+    // tiles: single-select (radio-like)
+    const tiles = root.querySelector('#wbk-tiles');
+    if (tiles) tiles.querySelectorAll('.wbk-tile').forEach(function (b) {
+      b.onclick = function () {
+        tiles.querySelectorAll('.wbk-tile').forEach(function (x) { x.classList.remove('is-selected'); x.setAttribute('aria-pressed', 'false'); });
+        b.classList.add('is-selected'); b.setAttribute('aria-pressed', 'true');
+      };
+    });
+    // ticket selector: quantity stepper, clamped at 0, disables minus at 0
+    const tk = root.querySelector('#wbk-tickets');
+    if (tk) tk.querySelectorAll('.wbk-ticket').forEach(function (row) {
+      const v = row.querySelector('.wbk-qty-v'); const minus = row.querySelector('[data-q="-1"]');
+      row.querySelectorAll('[data-q]').forEach(function (btn) {
+        btn.onclick = function () {
+          const next = Math.max(0, (parseInt(v.textContent, 10) || 0) + parseInt(btn.dataset.q, 10));
+          v.textContent = next; if (minus) minus.disabled = next <= 0;
         };
       });
     });

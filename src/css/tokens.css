@@ -47,6 +47,7 @@
   --radius: 8px;     /* WBK DS · UI Radius-M (default) */
   --radius-sm: 4px;  /* WBK DS · Radius-S */
   --radius-lg: 12px; /* WBK DS · UI Radius-L (PIN box, large fields) */
+  --radius-xl: 16px; /* WBK DS · Containers Radius-XL */
 
   /* spacing scale — WBK DS · UI Elements/Gaps + Paddings (2/4/8/12/16) */
   --sp-1: 2px;  --sp-2: 4px;  --sp-3: 8px;  --sp-4: 12px;  --sp-5: 16px;
@@ -54,12 +55,15 @@
   /* type scale — WBK DS · Body-S 14 / Body-M 16 / Label-L 18 */
   --fs-s: 14px; --fs-m: 16px; --fs-l: 18px;
 
-  /* semantic status content (WBK DS · Content/States) — mapped to the nearest
-     existing capacity-state tokens so the palette stays single-sourced.
-     Figma: Notice #fcc800 · Positive #22c55e · Negative #ff6c6c. */
-  --state-notice:   var(--state-balanced);   /* amber  */
-  --state-positive: var(--state-available);  /* green  */
-  --state-negative: var(--state-overloaded); /* red    */
+  /* semantic status content + tinted bg — EXACT WBK DS · Content/States values
+     (confirmed from the DS variable defs; supersedes the Wave-1 capacity-state
+     proxy so booking-label / alert colours are pixel-exact to the DS). */
+  --state-notice:      #fcc800; /* Content-Notice    */
+  --state-positive:    #22c55e; /* Content-Positive  */
+  --state-negative:    #ff6c6c; /* Content-Negative  */
+  --state-notice-bg:   color-mix(in srgb, var(--state-notice) 16%, transparent);
+  --state-positive-bg: color-mix(in srgb, var(--state-positive) 16%, transparent);
+  --state-negative-bg: color-mix(in srgb, var(--state-negative) 16%, transparent);
 
   /* custom scrollbar (slim, floating, theme-aware) */
   --scrollbar-thumb:       rgba(16,24,40,.20);

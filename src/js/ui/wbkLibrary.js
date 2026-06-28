@@ -167,6 +167,64 @@
         '<span class="wbk-blabel">' + ic('pencil', 14) + t('blDraft') + '</span>' +
       '</div>', 'node 2064-46940');
 
+    // ---- Wave 2 molecules ----
+    const sep = '<span class="wbk-bc-sep" aria-hidden="true">' + ic('chevR', 14) + '</span>';
+    const breadcrumb = sec('Breadcrumb',
+      '<nav class="wbk-bc" aria-label="Breadcrumb"><a href="#">' + t('bcHome') + '</a>' + sep +
+        '<a href="#">' + t('bcEvents') + '</a>' + sep +
+        '<span aria-current="page">' + t('bcTickets') + '</span></nav>', 'node 2038-5315');
+
+    const uploader = sec('File uploader',
+      '<div class="wbk-upload" tabindex="0" role="button">' + ic('arrowUp', 22) +
+        '<div class="wbk-upload-t">' + t('uploadCta') + '</div>' +
+        '<div class="wbk-upload-h">' + t('uploadHint') + '</div></div>', 'node 3185-2677');
+
+    const tiles = sec('Tile',
+      '<div class="wbk-row" id="wbk-tiles">' +
+        '<button class="wbk-tile is-selected" aria-pressed="true">' + ic('flame', 24) + t('bcEvents') + '</button>' +
+        '<button class="wbk-tile" aria-pressed="false">' + ic('star', 24) + t('ticketVip') + '</button>' +
+        '<button class="wbk-tile" aria-pressed="false">' + ic('users', 24) + t('ticketGeneral') + '</button>' +
+      '</div>', 'node 2065-49753');
+
+    const price = sec('Price · Wallet amount',
+      '<div class="wbk-row" style="align-items:baseline;gap:20px">' +
+        '<span class="wbk-price"><span class="wbk-price-v">210.75</span><span class="wbk-price-c">SAR</span></span>' +
+        '<span class="wbk-price is-sm"><del>260.00</del><span class="wbk-price-v">199.00</span><span class="wbk-price-c">SAR</span></span>' +
+        '<span class="wbk-price">' + ic('wallet', 18) + '<span class="wbk-price-v">1,240</span><span class="wbk-price-c">SAR</span></span>' +
+      '</div>', 'node 2060-15446');
+
+    const media = sec('Media',
+      '<div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">' +
+        '<div class="wbk-media">' + ic('eye', 26) + '</div>' +
+        '<div class="wbk-media is-square">' + ic('star', 26) + '</div></div>', 'node 2053-20120');
+
+    const bubble = sec('Chat message bubble',
+      '<div style="display:flex;flex-direction:column;gap:8px">' +
+        '<div class="wbk-bubble wbk-bubble--recv">' + ui.esc(t('chatRecv')) + '<span class="wbk-bubble-time">09:24</span></div>' +
+        '<div class="wbk-bubble wbk-bubble--sent">' + ui.esc(t('chatSent')) + '<span class="wbk-bubble-time">09:25</span></div>' +
+      '</div>', 'node 4326-2854');
+
+    const mappin = sec('Map pin',
+      '<div class="wbk-row">' +
+        '<span class="wbk-mappin is-active">' + ic('target', 14) + t('mapRestaurant') + ' · 210 SAR</span>' +
+        '<span class="wbk-mappin">' + ic('target', 14) + t('mapHotel') + ' · 480 SAR</span>' +
+      '</div>', 'nodes 6817-34991 / 6816-34234');
+
+    const ticketRow = function (name, px, qty, id) {
+      return '<div class="wbk-ticket" data-ticket="' + id + '"><div class="wbk-ticket-m"><div class="nm">' + name + '</div><div class="px">' + px + ' SAR</div></div>' +
+        '<div class="wbk-qty"><button data-q="-1" aria-label="Decrease"' + (qty <= 0 ? ' disabled' : '') + '>' + ic('minus', 14) + '</button>' +
+        '<span class="wbk-qty-v">' + qty + '</span>' +
+        '<button data-q="1" aria-label="Increase">' + ic('plus', 14) + '</button></div></div>';
+    };
+    const ticket = sec('Ticket selector',
+      '<div id="wbk-tickets">' + ticketRow(t('ticketGeneral'), '150', 1, 'ga') + ticketRow(t('ticketVip'), '420', 0, 'vip') + '</div>', 'node 2061-36975');
+
+    const dock = sec('Actions bar · Button dock',
+      '<div class="wbk-actions"><button class="btn">Cancel</button>' +
+        '<span class="wbk-actions-end"><button class="btn">Save draft</button><button class="btn primary">Publish</button></span></div>' +
+      '<div class="wbk-dock" style="margin-top:10px"><span class="wbk-price is-sm"><span class="wbk-price-v">570</span><span class="wbk-price-c">SAR</span></span>' +
+        '<button class="btn primary">Checkout</button></div>', 'nodes 2061-24126 / 4398-34377');
+
     const card = sec('Card · List item · Section heading',
       '<div class="wbk-card">' +
         '<div class="wbk-card-media">' + ic('users', 26) + '</div>' +
@@ -186,7 +244,8 @@
           '<img class="wbk-lib-logo" src="src/assets/' + (WP.state.theme === 'dark' ? 'wbk-white.svg' : 'wbk-pink.svg') + '" alt="WBK" /></header>' +
         '<div class="wbk-grid">' +
           buttons + chips + segmented + stepper + slider + choice + badges + blabel + progress +
-          avatars + tabs + toasts + banners + tooltip + dialog + countdown + datepick + pin + card +
+          avatars + tabs + toasts + banners + tooltip + dialog + countdown + datepick + pin +
+          breadcrumb + uploader + tiles + price + media + bubble + mappin + ticket + dock + card +
         '</div>' +
       '</div>' +
       '<div class="wbk-modal" id="wbk-modal" hidden><div class="wbk-modal-bd"></div>' +
@@ -239,6 +298,25 @@
         };
         box.onkeydown = function (e) {
           if (e.key === 'Backspace' && !box.value && boxes[i - 1]) boxes[i - 1].focus();
+        };
+      });
+    });
+    // tiles: single-select (radio-like)
+    const tiles = root.querySelector('#wbk-tiles');
+    if (tiles) tiles.querySelectorAll('.wbk-tile').forEach(function (b) {
+      b.onclick = function () {
+        tiles.querySelectorAll('.wbk-tile').forEach(function (x) { x.classList.remove('is-selected'); x.setAttribute('aria-pressed', 'false'); });
+        b.classList.add('is-selected'); b.setAttribute('aria-pressed', 'true');
+      };
+    });
+    // ticket selector: quantity stepper, clamped at 0, disables minus at 0
+    const tk = root.querySelector('#wbk-tickets');
+    if (tk) tk.querySelectorAll('.wbk-ticket').forEach(function (row) {
+      const v = row.querySelector('.wbk-qty-v'); const minus = row.querySelector('[data-q="-1"]');
+      row.querySelectorAll('[data-q]').forEach(function (btn) {
+        btn.onclick = function () {
+          const next = Math.max(0, (parseInt(v.textContent, 10) || 0) + parseInt(btn.dataset.q, 10));
+          v.textContent = next; if (minus) minus.disabled = next <= 0;
         };
       });
     });
