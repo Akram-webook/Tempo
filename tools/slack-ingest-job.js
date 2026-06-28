@@ -37,7 +37,8 @@ const SI = (function () {
 })();
 
 const DRY = process.argv.includes('--dry');
-const STATE_FILE = path.join(root, '.slack-ingest-state.json'); // { last_run_ts } — not secret
+// state file is overridable so the CI mock can point it at a temp path
+const STATE_FILE = process.env.TEMPO_INGEST_STATE || path.join(root, '.slack-ingest-state.json'); // { last_run_ts } — not secret
 const env = process.env;
 
 function log(msg) { console.log('[slack-ingest] ' + msg); }
@@ -93,6 +94,10 @@ async function supa(verb, pathRel, body) {
 function toRow(ev) {
   return {
     id: 'slack:' + ev.dedupeKey,
+    // events.author_email is NOT NULL with a default of auth.email(), which is NULL
+    // under the service-role key the job runs as -> set it explicitly to a clear
+    // non-person system author (never a real person's email). Matches `actor`.
+    author_email: 'system:slack-ingest',
     ts: ev.ts, type: ev.type, actor: ev.actor, subject_id: ev.subjectId,
     category: ev.category, description: ev.description, source: ev.source,
     confidence: ev.confidence, evidence_refs: ev.evidenceRefs || [],
@@ -137,4 +142,10 @@ async function run() {
   log('done — events:' + emitted + ' skipped(unreadable):' + skipped + ' dropped(unmapped):' + dropped + (DRY ? ' [DRY]' : ''));
 }
 
-run().catch(function (e) { log('fatal: ' + e.message); process.exit(1); });
+// Export internals for the CI mock (test/verify-slack-job.js); auto-run only when
+// invoked directly so requiring the module does NOT kick off a real run.
+module.exports = { run: run, toRow: toRow, resolveSlackAuthor: resolveSlackAuthor, SI: SI, readState: readState };
+
+if (require.main === module) {
+  run().catch(function (e) { log('fatal: ' + e.message); process.exit(1); });
+}

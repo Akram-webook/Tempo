@@ -14,7 +14,9 @@
 (function (WP) {
   'use strict';
 
-  var CATEGORIES = ['workload', 'wellbeing', 'evaluation', 'recognition', 'decision'];
+  // delivery/risk/plan are the Slack daily check-in categories (F-034) — appended
+  // events from WP.db.events flow through the same timeline + filter as derived ones.
+  var CATEGORIES = ['workload', 'wellbeing', 'evaluation', 'recognition', 'decision', 'delivery', 'risk', 'plan'];
 
   function iso(d) { return (d instanceof Date ? d : new Date(d)).toISOString(); }
   function quarterOf(ts) {

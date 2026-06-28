@@ -204,8 +204,8 @@
   /* ---- Evidence Timeline (Intelligence Layer P1) — manager/director/self only.
    * Read-only, derived from real signals, every entry sourced (no fabrication).
    * Growth highlighted; risk framed as early support. Filter by quarter+category. */
-  const CAT_LABEL = { workload: 'catWorkload', wellbeing: 'catWellbeing', evaluation: 'catEvaluation', recognition: 'catRecognition', decision: 'catDecision' };
-  const CAT_ICON = { workload: 'gauge', wellbeing: 'sprout', evaluation: 'clipboard', recognition: 'star', decision: 'key' };
+  const CAT_LABEL = { workload: 'catWorkload', wellbeing: 'catWellbeing', evaluation: 'catEvaluation', recognition: 'catRecognition', decision: 'catDecision', delivery: 'catDelivery', risk: 'catRisk', plan: 'catPlan' };
+  const CAT_ICON = { workload: 'gauge', wellbeing: 'sprout', evaluation: 'clipboard', recognition: 'star', decision: 'key', delivery: 'check', risk: 'alert', plan: 'target' };
   function timelineSection(p) {
     const t = WP.i18n.t, ar = WP.state.lang === 'ar';
     const cached = (WP._tlCache && WP._tlCache.id === p.id) ? WP._tlCache.all : null;

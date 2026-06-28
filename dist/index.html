@@ -2171,6 +2171,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     catEvaluation:  { en: 'Evaluation', ar: 'التقييم' },
     catRecognition: { en: 'Recognition', ar: 'التقدير' },
     catDecision:    { en: 'Decision', ar: 'القرار' },
+    catDelivery:    { en: 'Delivery', ar: 'الإنجاز' },
+    catRisk:        { en: 'Blocker', ar: 'عائق' },
+    catPlan:        { en: 'Plan', ar: 'الخطة' },
     sigDept:        { en: 'Events Operations Department', ar: 'إدارة عمليات الفعاليات' },
     sigManaged:     { en: 'Managed & Executed by', ar: 'إدارة وتنفيذ' },
     sigDirected:    { en: 'Directed by', ar: 'بإشراف' },
@@ -3886,7 +3889,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 (function (WP) {
   'use strict';
 
-  var CATEGORIES = ['workload', 'wellbeing', 'evaluation', 'recognition', 'decision'];
+  // delivery/risk/plan are the Slack daily check-in categories (F-034) — appended
+  // events from WP.db.events flow through the same timeline + filter as derived ones.
+  var CATEGORIES = ['workload', 'wellbeing', 'evaluation', 'recognition', 'decision', 'delivery', 'risk', 'plan'];
 
   function iso(d) { return (d instanceof Date ? d : new Date(d)).toISOString(); }
   function quarterOf(ts) {
@@ -5552,8 +5557,8 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   /* ---- Evidence Timeline (Intelligence Layer P1) — manager/director/self only.
    * Read-only, derived from real signals, every entry sourced (no fabrication).
    * Growth highlighted; risk framed as early support. Filter by quarter+category. */
-  const CAT_LABEL = { workload: 'catWorkload', wellbeing: 'catWellbeing', evaluation: 'catEvaluation', recognition: 'catRecognition', decision: 'catDecision' };
-  const CAT_ICON = { workload: 'gauge', wellbeing: 'sprout', evaluation: 'clipboard', recognition: 'star', decision: 'key' };
+  const CAT_LABEL = { workload: 'catWorkload', wellbeing: 'catWellbeing', evaluation: 'catEvaluation', recognition: 'catRecognition', decision: 'catDecision', delivery: 'catDelivery', risk: 'catRisk', plan: 'catPlan' };
+  const CAT_ICON = { workload: 'gauge', wellbeing: 'sprout', evaluation: 'clipboard', recognition: 'star', decision: 'key', delivery: 'check', risk: 'alert', plan: 'target' };
   function timelineSection(p) {
     const t = WP.i18n.t, ar = WP.state.lang === 'ar';
     const cached = (WP._tlCache && WP._tlCache.id === p.id) ? WP._tlCache.all : null;
