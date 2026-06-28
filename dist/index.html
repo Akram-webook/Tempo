@@ -313,6 +313,42 @@ body {
 .wbk-menu-item--danger svg { color: var(--state-negative); }
 .wbk-menu-item--danger:hover { background: var(--state-negative-bg); }
 .wbk-menu-sep { block-size: 1px; background: var(--border); margin: var(--sp-2) 0; }
+
+/* Page header — WBK PRO V3 (nodes 4826-1513 / 4826-1516). Title (Heading-h4 24/32)
+   + optional subtitle + trailing actions, on V3 section spacing. Optional back
+   affordance mirrors in RTL. Logical props throughout. */
+.wbk-pageheader { display: flex; align-items: flex-start; gap: var(--sp-4); padding-block: var(--sp-5) var(--sp-5); }
+.wbk-ph-back {
+  flex: none; inline-size: 36px; block-size: 36px; display: grid; place-items: center;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface);
+  color: var(--text); cursor: pointer;
+}
+.wbk-ph-back:hover { background: var(--surface-2); border-color: var(--border-secondary); }
+.wbk-ph-back:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
+[dir="rtl"] .wbk-ph-back svg { transform: scaleX(-1); }
+.wbk-ph-main { flex: 1; min-width: 0; }
+.wbk-ph-title { font-family: var(--font-display); font-size: var(--fs-h4); line-height: var(--lh-h4); font-weight: 600; color: var(--text); margin: 0; letter-spacing: -0.5px; }
+.wbk-ph-sub { font-size: var(--fs-body-m); line-height: var(--lh-body-m); color: var(--text-muted); margin-block-start: var(--sp-2); }
+.wbk-ph-actions { flex: none; display: inline-flex; align-items: center; gap: var(--sp-3); }
+
+/* Table — WBK PRO V3 (nodes 4764-5080 / 5235-7293). Header Label-S muted,
+   cells Body-M, Border-Tertiary row rules, optional zebra. RTL-safe via logical
+   text-align (start). */
+.wbk-table-wrap { inline-size: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+.wbk-table { inline-size: 100%; border-collapse: collapse; font-family: var(--font-sans); }
+.wbk-table thead th {
+  text-align: start; font-size: var(--fs-label-s); line-height: var(--lh-label-s); font-weight: 600;
+  text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted);
+  padding: var(--sp-3) var(--sp-5); background: var(--surface-2); border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.wbk-table tbody td {
+  text-align: start; font-size: var(--fs-body-m); line-height: var(--lh-body-m); color: var(--text);
+  padding: var(--sp-4) var(--sp-5); border-bottom: 1px solid var(--border);
+}
+.wbk-table tbody tr:last-child td { border-bottom: 0; }
+.wbk-table tbody tr:hover td { background: var(--surface-1); }
+.wbk-table--zebra tbody tr:nth-child(even) td { background: var(--surface-2); }
+.wbk-table td.wbk-td-num, .wbk-table th.wbk-th-num { text-align: end; font-variant-numeric: tabular-nums; }
 .wbk-menu-item .wbk-menu-trail { margin-inline-start: auto; color: var(--text-tertiary); font-size: var(--fs-body-s); }
 
 .wbk-chip {
@@ -600,6 +636,12 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 }
 .shell { display: flex; align-items: stretch; min-height: calc(100vh - 54px); position: relative; }
 .shell main { flex: 1; min-width: 0; }
+/* content column is a flex column so the signature footer is PINNED to the bottom:
+   #view grows to fill, the footer lands after it. On a short page (e.g. My progress)
+   this stops the bar floating mid-page — no dead space below it. */
+.view-main { display: flex; flex-direction: column; }
+.view-main > #view { flex: 1 0 auto; }
+.view-main > #sig-bar { flex: none; margin-top: auto; }
 .sidebar { background: var(--surface); overflow: hidden; }
 .sb-wrap { display: flex; flex-direction: column; gap: 3px; padding: 16px 12px; overflow-y: auto; box-sizing: border-box; height: 100%; }
 .sb-new { width: 100%; justify-content: center; margin-bottom: 12px; }
@@ -1313,13 +1355,16 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
  * ========================================================== */
 .topnav { display: inline-flex; align-items: center; gap: 4px; }
 .nav-item {
-  display: inline-flex; align-items: center; gap: 7px;
+  display: inline-flex; align-items: center; gap: var(--sp-2);
   border: 0; background: transparent; color: var(--text-muted);
-  padding: 8px 12px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 500;
+  padding: var(--sp-3) var(--sp-4); border-radius: var(--radius-sm);
+  font-family: var(--font-sans); font-size: var(--fs-label-m); line-height: var(--lh-label-m); font-weight: 500;
   cursor: pointer; transition: background .18s ease, color .18s ease;
 }
 .nav-item:hover { background: var(--surface-2); color: var(--text); }
 .nav-item.active { background: var(--surface-2); color: var(--brand); font-weight: 600; }
+.nav-item.active .icn { color: var(--brand); }
+.nav-item:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
 .nav-item .icn { flex: none; }
 
 /* account button + dropdown */
@@ -1582,25 +1627,25 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
    ABOVE it. Slim + low-key: it reads as a signature, never a banner. Gold is darkened in
    light theme to keep the small role labels readable (WCAG AA). RTL reverses the row. */
 #sig-bar { position: relative; z-index: 0; }
-.sig-bar { display: flex; align-items: center; gap: 0; padding: 10px 20px; margin-top: 24px;
+.sig-bar { display: flex; align-items: center; gap: var(--sp-5); padding: var(--sp-3) var(--sp-7); margin-top: var(--sp-5);
   border-top: 1px solid var(--border, rgba(255,255,255,.12));
   background: var(--bg, #09090B);
   font-family: var(--font-sans, system-ui, sans-serif); }
-.sig-dept { flex: 1.5; display: flex; align-items: center; font-size: 11px; letter-spacing: .18em;
-  text-transform: uppercase; color: var(--text-muted, #9b9ba3); font-weight: 500; }
-.sig-sep { flex: none; width: 1px; height: 30px; align-self: center;
-  background: var(--border, rgba(255,255,255,.12)); margin: 0 18px; }
-.sig-credit { flex: 1; text-align: center; padding: 0 6px; }
-.sig-role { font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: #c8a24a;
-  font-weight: 600; margin-bottom: 3px; }
+.sig-dept { flex: 1.5; display: flex; align-items: center; gap: var(--sp-2); font-size: 11px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--text-muted, #9b9ba3); font-weight: 500; line-height: 1; }
+.sig-sep { flex: none; width: 1px; height: 22px; align-self: center;
+  background: var(--border, rgba(255,255,255,.12)); }
+.sig-credit { flex: none; display: inline-flex; align-items: baseline; gap: var(--sp-2); padding: 0; }
+.sig-role { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #c8a24a;
+  font-weight: 600; margin: 0; }
 [data-theme="light"] .sig-role { color: #6e5410; } /* darker gold for AA contrast on light bg */
-.sig-name { font-size: 13px; font-weight: 600; color: var(--text-secondary, var(--text-muted, #b4b4bb)); }
+.sig-name { font-size: 13px; font-weight: 600; color: var(--text-secondary, var(--text-muted, #b4b4bb)); line-height: 1; }
 .sig-name--accent { position: relative; display: inline-block; }
 .sig-name--accent::after { content: ""; position: absolute; left: 50%; transform: translateX(-50%);
   bottom: -4px; width: 20px; height: 2px; border-radius: 2px; background: var(--brand, #ff2c79); }
 [dir="rtl"] .sig-bar { flex-direction: row-reverse; }
 @media (max-width: 640px) {
-  .sig-bar { flex-direction: column; gap: 10px; align-items: center; text-align: center; margin-top: 20px; }
+  .sig-bar { flex-direction: column; gap: var(--sp-3); align-items: center; text-align: center; margin-top: var(--sp-5); }
   .sig-dept { flex: none; justify-content: center; }
   .sig-sep { display: none; }
 }
@@ -2428,6 +2473,15 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     mnEdit:         { en: 'Edit',                   ar: 'تعديل' },
     mnShare:        { en: 'Share',                  ar: 'مشاركة' },
     mnDelete:       { en: 'Delete',                 ar: 'حذف' },
+    phBack:         { en: 'Go back',                ar: 'رجوع' },
+    phTitle:        { en: 'Riyadh Season — Operations', ar: 'موسم الرياض — العمليات' },
+    phSub:          { en: 'Live event · 42 staff on shift', ar: 'فعالية مباشرة · ٤٢ موظفًا في النوبة' },
+    phPreview:      { en: 'Preview',                ar: 'معاينة' },
+    phNew:          { en: 'New task',               ar: 'مهمة جديدة' },
+    tblName:        { en: 'Name',                   ar: 'الاسم' },
+    tblTeam:        { en: 'Team',                   ar: 'الفريق' },
+    tblScore:       { en: 'Readiness',              ar: 'الجاهزية' },
+    tblStatus:      { en: 'Status',                 ar: 'الحالة' },
     sampleDataHint: { en: 'Demo numbers — not yet wired to live data', ar: 'أرقام تجريبية — غير مرتبطة ببيانات حية بعد' },
     reviewsDue:     { en: 'reviews due',            ar: 'تقييمات مطلوبة' },
     reviewNow:      { en: 'Review now',             ar: 'ابدأ الآن' },
@@ -8018,6 +8072,32 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
         '<button class="wbk-menu-item wbk-menu-item--danger" role="menuitem">' + ic('logout', 16) + t('mnDelete') + '</button>' +
       '</div>', 'Item · selected · disabled · danger · separator');
 
+    const pageheader = sec('Page header',
+      '<div class="wbk-pageheader">' +
+        '<button class="wbk-ph-back" aria-label="' + t('phBack') + '">' + ic('chevL', 18) + '</button>' +
+        '<div class="wbk-ph-main"><h2 class="wbk-ph-title">' + t('phTitle') + '</h2>' +
+          '<div class="wbk-ph-sub">' + t('phSub') + '</div></div>' +
+        '<div class="wbk-ph-actions">' +
+          '<button class="wbk-btn wbk-btn--secondary wbk-btn--md">' + ic('eye', 16) + t('phPreview') + '</button>' +
+          '<button class="wbk-btn wbk-btn--cta wbk-btn--md">' + ic('plus', 16) + t('phNew') + '</button>' +
+        '</div>' +
+      '</div>', 'Back · title · subtitle · actions — RTL-mirrored');
+
+    const tableRows = [
+      ['Sara Al-Otaibi', 'Operations', '92', t('blConfirmed')],
+      ['Khalid Nasser', 'Ticketing', '78', t('blPending')],
+      ['Maya Haddad', 'Guest Services', '85', t('blConfirmed')],
+    ];
+    const table = sec('Table',
+      '<div class="wbk-table-wrap"><table class="wbk-table wbk-table--zebra">' +
+        '<thead><tr><th>' + t('tblName') + '</th><th>' + t('tblTeam') + '</th>' +
+          '<th class="wbk-th-num">' + t('tblScore') + '</th><th>' + t('tblStatus') + '</th></tr></thead>' +
+        '<tbody>' + tableRows.map(function (r) {
+          return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td>' +
+            '<td class="wbk-td-num">' + r[2] + '</td><td>' + r[3] + '</td></tr>';
+        }).join('') + '</tbody>' +
+      '</table></div>', 'Header · rows · zebra · numeric-aligned · RTL-safe');
+
     const progress = sec('Progress',
       '<div style="display:flex;gap:32px;align-items:center;flex-wrap:wrap">' +
         '<div style="flex:1;min-width:180px"><div class="wbk-prog"><i style="width:64%"></i></div>' +
@@ -8163,7 +8243,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
           '<p>Every component from the WBK Design System, live on the WBK tokens.</p></div>' +
           '<img class="wbk-lib-logo" src="' + (WP.state.theme === 'dark' ? 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAxOS4wLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiDQoJIHZpZXdCb3g9IjE1OCAzNTYgNzY0IDM2OCIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgMTA4MCAxMDgwOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPg0KCS5zdDB7ZmlsbDojRkZGRkZGO30NCjwvc3R5bGU+DQo8cG9seWdvbiBpZD0iWE1MSURfODJfIiBjbGFzcz0ic3QwIiBwb2ludHM9IjI0OSw2NDguNCAyNzAuMyw2NDguNCAyNDguNyw3MTAuNCAyMzIsNzEwLjQgMjIwLjcsNjcyLjIgMjA5LjksNzEwLjQgMTkzLjIsNzEwLjQgDQoJMTcxLDY0OC40IDE5Mi4zLDY0OC40IDIwMi41LDY4My45IDIxMi43LDY0OC40IDIyOC41LDY0OC40IDIzOC44LDY4My45ICIvPg0KPHBhdGggaWQ9IlhNTElEXzc5XyIgY2xhc3M9InN0MCIgZD0iTTMxOCw2NzMuNmMtMC4zLTYuMS01LjctMTAuMi0xMi44LTEwLjJjLTUuOCwwLTExLjYsMi44LTEzLjYsMTAuMkgzMTh6IE0zMzcuMyw2ODUuMmgtNDUuNQ0KCWMxLjksNiw3LDkuNywxNC41LDkuN2M1LjgsMCwxMS44LTIuNywxNS43LTYuNGwxMC4xLDEyLjhDMzI2LDcwNy45LDMxNS4zLDcxMiwzMDUsNzEyYy0xOS43LDAtMzMuNS0xMy42LTMzLjUtMzIuNA0KCWMwLTIwLjIsMTUuNS0zMi44LDMzLjQtMzIuOGMxNy44LDAsMzIuNywxMi41LDMyLjcsMzEuNEMzMzcuNSw2NzkuOSwzMzcuNCw2ODIuMSwzMzcuMyw2ODUuMiIvPg0KPHBhdGggaWQ9IlhNTElEXzc2XyIgY2xhc3M9InN0MCIgZD0iTTM5NS43LDY3OS4zYzAtNy44LTYuNi0xNC40LTE0LjQtMTQuNGMtNy40LDAtMTQuNCw2LjQtMTQuNCwxNC40YzAsOCw2LjgsMTQuNSwxNC40LDE0LjUNCglDMzg5LjEsNjkzLjgsMzk1LjcsNjg3LjIsMzk1LjcsNjc5LjMgTTQxNS43LDY3OS4zYzAsMjAuMS0xNC42LDMyLjctMzAuMiwzMi43Yy02LjQsMC0xNC42LTIuNS0xOS4xLTguNXY2LjloLTE5Ljd2LTg2LjJoMTkuN3YzMC45DQoJYzQuNS01LjgsMTIuOC04LjQsMTkuMS04LjRDNDAxLjEsNjQ2LjgsNDE1LjcsNjU5LjMsNDE1LjcsNjc5LjMiLz4NCjxwYXRoIGlkPSJYTUxJRF83M18iIGNsYXNzPSJzdDAiIGQ9Ik00NjksNjc5LjVjMC04LjUtNi4xLTE0LjUtMTMuNy0xNC41Yy03LjYsMC0xMy43LDYtMTMuNywxNC41YzAsOC41LDYuMSwxNC40LDEzLjcsMTQuNA0KCUM0NjIuOSw2OTMuOCw0NjksNjg4LDQ2OSw2NzkuNSBNNDIxLjcsNjc5LjVjMC0xOS43LDE1LjktMzIuNywzMy42LTMyLjdjMTcuNywwLDMzLjgsMTMsMzMuOCwzMi43QzQ4OSw2OTksNDczLDcxMiw0NTUuMyw3MTINCglDNDM3LjYsNzEyLDQyMS43LDY5OSw0MjEuNyw2NzkuNSIvPg0KPHBhdGggaWQ9IlhNTElEXzcwXyIgY2xhc3M9InN0MCIgZD0iTTU0Mi4yLDY3OS41YzAtOC41LTYuMS0xNC41LTEzLjctMTQuNWMtNy42LDAtMTMuNyw2LTEzLjcsMTQuNWMwLDguNSw2LjEsMTQuNCwxMy43LDE0LjQNCglDNTM2LjEsNjkzLjgsNTQyLjIsNjg4LDU0Mi4yLDY3OS41IE00OTQuOSw2NzkuNWMwLTE5LjcsMTUuOS0zMi43LDMzLjYtMzIuN2MxNy43LDAsMzMuOCwxMywzMy44LDMyLjdjMCwxOS41LTE2LjEsMzIuNi0zMy44LDMyLjYNCglDNTEwLjgsNzEyLDQ5NC45LDY5OSw0OTQuOSw2NzkuNSIvPg0KPHBvbHlnb24gaWQ9IlhNTElEXzY3XyIgY2xhc3M9InN0MCIgcG9pbnRzPSI2MzQuNCw3MTAuNCA2MTAuNSw3MTAuNCA1OTEuNCw2ODUuMiA1OTEuNCw3MTAuNCA1NzEuNyw3MTAuNCA1NzEuNyw2MjQuMyA1OTEuNCw2MjQuMyANCgk1OTEuNCw2NjUuOCA2MDQuNyw2NDguNCA2MjkuNCw2NDguNCA2MDYsNjc1LjkgIi8+DQo8cGF0aCBpZD0iWE1MSURfNjZfIiBjbGFzcz0ic3QwIiBkPSJNNjM1LjgsNjk5LjhjMC02LjYsNS40LTExLjYsMTItMTEuNmM2LjYsMCwxMi4yLDQuOSwxMi4yLDExLjZjMCw2LjktNS42LDExLjgtMTIuMiwxMS44DQoJQzY0MS4yLDcxMS42LDYzNS44LDcwNi43LDYzNS44LDY5OS44Ii8+DQo8cGF0aCBpZD0iWE1MSURfNjVfIiBjbGFzcz0ic3QwIiBkPSJNNjY2LjksNjc5LjJjMC0xOS43LDE2LjItMzIuNCwzNC4zLTMyLjRjMTIsMCwyMS4xLDUuOCwyNy4xLDE0LjZMNzEzLDY3MQ0KCWMtMi40LTMuNy03LjQtNi0xMS43LTZjLTksMC0xNC40LDYuNS0xNC40LDE0LjJjMCw3LjgsNS4zLDE0LjYsMTQuNCwxNC42YzQuMywwLDkuMy0yLjMsMTEuNy02bDE1LjMsOS42DQoJYy02LDguOC0xNS4xLDE0LjYtMjcuMSwxNC42QzY4My4xLDcxMiw2NjYuOSw2OTguOSw2NjYuOSw2NzkuMiIvPg0KPHBhdGggaWQ9IlhNTElEXzYyXyIgY2xhc3M9InN0MCIgZD0iTTc3OS42LDY3OS41YzAtOC41LTYuMS0xNC41LTEzLjctMTQuNWMtNy42LDAtMTMuNyw2LTEzLjcsMTQuNWMwLDguNSw2LjEsMTQuNCwxMy43LDE0LjQNCglDNzczLjQsNjkzLjgsNzc5LjYsNjg4LDc3OS42LDY3OS41IE03MzIuMiw2NzkuNWMwLTE5LjcsMTUuOS0zMi43LDMzLjYtMzIuN2MxNy43LDAsMzMuOCwxMywzMy44LDMyLjdjMCwxOS41LTE2LjEsMzIuNi0zMy44LDMyLjYNCglDNzQ4LjIsNzEyLDczMi4yLDY5OSw3MzIuMiw2NzkuNSIvPg0KPHBhdGggaWQ9IlhNTElEXzYxXyIgY2xhc3M9InN0MCIgZD0iTTkwOSw2NzcuMXYzMy40aC0xOS43di0zMi44YzAtOS42LTQuOC0xMi42LTkuOC0xMi42Yy02LjEsMC0xMC42LDQuMy0xMC42LDE1LjF2MzAuM2gtMTkuN1Y2NzgNCgljMC05LjYtNC44LTEzLTkuNy0xM2MtNS4zLDAtMTAuOCwyLjctMTAuOCwxM3YzMi40aC0xOS43di02Mi4xaDE5Ljd2OS44YzIuNC03LjgsMTAuOS0xMS40LDE2LjctMTEuNGM5LjIsMCwxNS45LDQuNCwxOS43LDExLjgNCgljNC4zLTguMiwxMy44LTExLjgsMjAuMy0xMS44QzkwMSw2NDYuOCw5MDksNjU4LjEsOTA5LDY3Ny4xIi8+DQo8cGF0aCBpZD0iWE1MSURfNjBfIiBjbGFzcz0ic3QwIiBkPSJNNjMwLjMsNDY0LjRsLTIwLjUsMTEuOGMtMi4zLDEuMy0yLjMsNC42LDAsNmwyMC41LDExLjhsMjMuOSwxMy44YzEuMSwwLjYsMS43LDEuOCwxLjcsM3Y1My4xDQoJYzAsMS4yLTAuNywyLjQtMS43LDNsLTM5LjcsMjIuOWMtMC41LDAuMy0xLjEsMC41LTEuNywwLjVINDI3LjVjLTEuOSwwLTMuNC0xLjUtMy40LTMuNFYzNzEuNWMwLTEuOSwxLjUtMy40LDMuNC0zLjRoMTg1LjINCgljMC42LDAsMS4yLDAuMiwxLjcsMC41bDM5LjcsMjIuOWMxLjEsMC42LDEuNywxLjcsMS43LDN2NTMuMWMwLDEuMi0wLjcsMi40LTEuNywzTDYzMC4zLDQ2NC40eiIvPg0KPHBhdGggaWQ9IlhNTElEXzU5XyIgY2xhc3M9InN0MCIgZD0iTTg3OC4yLDQ2MC44bC0yNi43LDE1LjRjLTIuMywxLjMtMi4zLDQuNiwwLDZsMjYuNywxNS40bDMwLjEsMTcuNGMxLjEsMC42LDEuNywxLjcsMS43LDN2NjguOQ0KCWMwLDEuOS0xLjUsMy40LTMuNCwzLjRoLTg2LjFjLTEuMiwwLTIuNC0wLjctMy0xLjdsLTExLjItMTkuNGwtOS4yLTE1LjljLTEuMy0yLjMtNC42LTIuMy02LDBsLTIwLjQsMzUuM2MtMC42LDEuMS0xLjcsMS43LTMsMS43DQoJaC04Ni4xYy0xLjksMC0zLjQtMS41LTMuNC0zLjRWMzcxLjVjMC0xLjksMS41LTMuNCwzLjQtMy40aDg2LjFjMS4yLDAsMi40LDAuNywzLDEuN2wyMC40LDM1LjNjMS4zLDIuMyw0LjYsMi4zLDYsMGwyMC40LTM1LjMNCgljMC42LTEuMSwxLjgtMS43LDMtMS43aDg2LjFjMS45LDAsMy40LDEuNSwzLjQsMy40djY4LjljMCwxLjItMC43LDIuNC0xLjcsM0w4NzguMiw0NjAuOHoiLz4NCjxwYXRoIGlkPSJYTUxJRF81OF8iIGNsYXNzPSJzdDAiIGQ9Ik00MDIuMywzNzEuNXYyMTUuM2MwLDEuOS0xLjUsMy40LTMuNCwzLjRoLTg2LjFjLTEuMiwwLTIuNC0wLjctMy0xLjdsLTIwLjQtMzUuMw0KCWMtMS4zLTIuMy00LjYtMi4zLTYsMGwtMjAuNCwzNS4zYy0wLjYsMS4xLTEuNywxLjctMywxLjdIMTc0Yy0xLjksMC0zLjQtMS41LTMuNC0zLjRWMzcxLjVjMC0xLjksMS41LTMuNCwzLjQtMy40aDQyLjkNCgljMS4yLDAsMi40LDAuNywzLDEuN2wxNy4zLDMwbDE1LjQsMjYuN2MxLjMsMi4zLDQuNiwyLjMsNiwwbDI1LTQzLjNjMS4zLTIuMyw0LjYtMi4zLDYsMGwyNSw0My4zYzEuMywyLjMsNC42LDIuMyw2LDBsMTUuNC0yNi43DQoJbDE3LjMtMzBjMC42LTEuMSwxLjgtMS43LDMtMS43aDQyLjlDNDAwLjgsMzY4LjEsNDAyLjMsMzY5LjYsNDAyLjMsMzcxLjUiLz4NCjwvc3ZnPg0K' : 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjE1OCAzNTYgNzY0IDM2OCI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5jbHMtMSB7CiAgICAgICAgZmlsbDogI2ZmMmI3ODsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPHBvbHlnb24gY2xhc3M9ImNscy0xIiBwb2ludHM9IjI0OS4wMSA2NDguMzcgMjcwLjI3IDY0OC4zNyAyNDguNzUgNzEwLjQ0IDIzMiA3MTAuNDQgMjIwLjcgNjcyLjE2IDIwOS45NCA3MTAuNDQgMTkzLjE5IDcxMC40NCAxNzEgNjQ4LjM3IDE5Mi4yNiA2NDguMzcgMjAyLjUgNjgzLjg2IDIxMi43MyA2NDguMzcgMjI4LjU0IDY0OC4zNyAyMzguNzggNjgzLjg2IDI0OS4wMSA2NDguMzciLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0zMTcuOTksNjczLjYzYy0uMjYtNi4xMi01LjcxLTEwLjI0LTEyLjc2LTEwLjI0LTUuODUsMC0xMS41NiwyLjc5LTEzLjU2LDEwLjI0aDI2LjMxWk0zMzcuMjYsNjg1LjE5aC00NS40NWMxLjg2LDUuOTgsNy4wNCw5LjcsMTQuNDgsOS43LDUuODUsMCwxMS44My0yLjY2LDE1LjY4LTYuMzhsMTAuMSwxMi43NmMtNi4xMSw2LjY0LTE2Ljc1LDEwLjc2LTI3LjExLDEwLjc2LTE5LjY3LDAtMzMuNDktMTMuNTYtMzMuNDktMzIuNDMsMC0yMC4yLDE1LjU1LTMyLjgzLDMzLjM2LTMyLjgzczMyLjY5LDEyLjQ5LDMyLjY5LDMxLjM3YzAsMS43My0uMTMsMy45OS0uMjYsNy4wNCIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTM5NS43Myw2NzkuMzRjMC03Ljg0LTYuNjUtMTQuMzUtMTQuMzUtMTQuMzVzLTE0LjM1LDYuMzgtMTQuMzUsMTQuMzUsNi43OCwxNC40OCwxNC4zNSwxNC40OCwxNC4zNS02LjY0LDE0LjM1LTE0LjQ4TTQxNS42Nyw2NzkuMzRjMCwyMC4wNy0xNC42MiwzMi42OS0zMC4xNywzMi42OS02LjM4LDAtMTQuNjItMi41Mi0xOS4xNC04LjUxdjYuOTFoLTE5LjY3di04Ni4xOGgxOS42N3YzMC44OWM0LjUyLTUuODUsMTIuNzYtOC4zNywxOS4xNC04LjM3LDE1LjU1LDAsMzAuMTcsMTIuNDksMzAuMTcsMzIuNTYiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik00NjguOTcsNjc5LjQ3YzAtOC41MS02LjExLTE0LjQ4LTEzLjY5LTE0LjQ4cy0xMy42OSw1Ljk4LTEzLjY5LDE0LjQ4LDYuMTEsMTQuMzUsMTMuNjksMTQuMzUsMTMuNjktNS44NSwxMy42OS0xNC4zNU00MjEuNjUsNjc5LjQ3YzAtMTkuNjcsMTUuOTUtMzIuNjksMzMuNjItMzIuNjlzMzMuNzYsMTMuMDMsMzMuNzYsMzIuNjktMTYuMDgsMzIuNTYtMzMuNzYsMzIuNTYtMzMuNjItMTMuMDItMzMuNjItMzIuNTYiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik01NDIuMTksNjc5LjQ3YzAtOC41MS02LjExLTE0LjQ4LTEzLjY5LTE0LjQ4cy0xMy42OSw1Ljk4LTEzLjY5LDE0LjQ4LDYuMTEsMTQuMzUsMTMuNjksMTQuMzUsMTMuNjktNS44NSwxMy42OS0xNC4zNU00OTQuODgsNjc5LjQ3YzAtMTkuNjcsMTUuOTUtMzIuNjksMzMuNjItMzIuNjlzMzMuNzYsMTMuMDMsMzMuNzYsMzIuNjktMTYuMDgsMzIuNTYtMzMuNzYsMzIuNTYtMzMuNjItMTMuMDItMzMuNjItMzIuNTYiLz4KICA8cG9seWdvbiBjbGFzcz0iY2xzLTEiIHBvaW50cz0iNjM0LjQzIDcxMC40NCA2MTAuNSA3MTAuNDQgNTkxLjM3IDY4NS4xOSA1OTEuMzcgNzEwLjQ0IDU3MS43IDcxMC40NCA1NzEuNyA2MjQuMjYgNTkxLjM3IDYyNC4yNiA1OTEuMzcgNjY1Ljc5IDYwNC42NiA2NDguMzggNjI5LjM4IDY0OC4zOCA2MDUuOTkgNjc1Ljg4IDYzNC40MyA3MTAuNDQiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik02MzUuNzYsNjk5LjgxYzAtNi42NSw1LjQ1LTExLjU2LDExLjk2LTExLjU2czEyLjIyLDQuOTIsMTIuMjIsMTEuNTYtNS41OCwxMS44My0xMi4yMiwxMS44My0xMS45Ni00LjkyLTExLjk2LTExLjgzIi8+CiAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNjY2Ljg2LDY3OS4yMWMwLTE5LjY3LDE2LjIxLTMyLjQzLDM0LjI5LTMyLjQzLDExLjk2LDAsMjEuMTMsNS44NSwyNy4xMSwxNC42MmwtMTUuMjgsOS41N2MtMi4zOS0zLjcyLTcuNDQtNS45OC0xMS43LTUuOTgtOS4wMywwLTE0LjM1LDYuNTEtMTQuMzUsMTQuMjJzNS4zMiwxNC42MiwxNC4zNSwxNC42MmM0LjI1LDAsOS4zMS0yLjI2LDExLjctNS45OGwxNS4yOCw5LjU3Yy01Ljk4LDguNzctMTUuMTUsMTQuNjItMjcuMTEsMTQuNjItMTguMDgsMC0zNC4yOS0xMy4xNS0zNC4yOS0zMi44MyIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTc3OS41Niw2NzkuNDdjMC04LjUxLTYuMTEtMTQuNDgtMTMuNjktMTQuNDhzLTEzLjY5LDUuOTgtMTMuNjksMTQuNDgsNi4xMSwxNC4zNSwxMy42OSwxNC4zNSwxMy42OS01Ljg1LDEzLjY5LTE0LjM1TTczMi4yNCw2NzkuNDdjMC0xOS42NywxNS45NS0zMi42OSwzMy42Mi0zMi42OXMzMy43NiwxMy4wMywzMy43NiwzMi42OS0xNi4wOCwzMi41Ni0zMy43NiwzMi41Ni0zMy42Mi0xMy4wMi0zMy42Mi0zMi41NiIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTkwOSw2NzcuMDh2MzMuMzZoLTE5LjY3di0zMi44M2MwLTkuNTctNC43OC0xMi42Mi05LjgzLTEyLjYyLTYuMTEsMC0xMC42Myw0LjI1LTEwLjYzLDE1LjE1djMwLjNoLTE5LjY3di0zMi40M2MwLTkuNTctNC43OC0xMy4wMi05LjctMTMuMDItNS4zMiwwLTEwLjc3LDIuNjYtMTAuNzcsMTMuMDJ2MzIuNDNoLTE5LjY3di02Mi4wNmgxOS42N3Y5LjgzYzIuMzktNy44NCwxMC45LTExLjQzLDE2Ljc1LTExLjQzLDkuMTcsMCwxNS45NSw0LjM5LDE5LjY3LDExLjgzLDQuMjUtOC4yNCwxMy44Mi0xMS44MywyMC4zMy0xMS44MywxNS41NSwwLDIzLjUyLDExLjMsMjMuNTIsMzAuMyIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTYzMC4yOSw0NjQuMzdsLTIwLjQ2LDExLjgxYy0yLjI5LDEuMzItMi4yOSw0LjYzLDAsNS45NWwyMC40NiwxMS44MiwyMy45LDEzLjhjMS4wNi42MSwxLjcyLDEuNzUsMS43MiwyLjk4djUzLjE0YzAsMS4yMy0uNjYsMi4zNi0xLjcyLDIuOTdsLTM5LjY4LDIyLjkyYy0uNTIuMy0xLjEyLjQ2LTEuNzIuNDZoLTE4NS4yNGMtMS45LDAtMy40NC0xLjU0LTMuNDQtMy40NHYtMjE1LjI0YzAtMS45LDEuNTQtMy40NCwzLjQ0LTMuNDRoMTg1LjI0Yy42LDAsMS4yLjE2LDEuNzIuNDZsMzkuNjgsMjIuOTFjMS4wNi42MSwxLjcyLDEuNzUsMS43MiwyLjk4djUzLjE0YzAsMS4yMy0uNjYsMi4zNi0xLjcyLDIuOTdsLTIzLjksMTMuOFoiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik04NzguMTksNDYwLjhsLTI2LjY1LDE1LjM4Yy0yLjI5LDEuMzItMi4yOSw0LjYzLDAsNS45NWwyNi42NSwxNS4zOCwzMC4wOCwxNy4zN2MxLjA2LjYxLDEuNzIsMS43NSwxLjcyLDIuOTh2NjguOTFjMCwxLjktMS41NCwzLjQ0LTMuNDQsMy40NGgtODYuMTJjLTEuMjMsMC0yLjM2LS42Ni0yLjk4LTEuNzJsLTExLjE4LTE5LjM4LTkuMjEtMTUuOTVjLTEuMzItMi4yOS00LjYzLTIuMjktNS45NSwwbC0yMC40LDM1LjMyYy0uNjEsMS4wNi0xLjc1LDEuNzItMi45OCwxLjcyaC04Ni4xMWMtMS45LDAtMy40NC0xLjU0LTMuNDQtMy40NHYtMjE1LjI0YzAtMS45LDEuNTQtMy40NCwzLjQ0LTMuNDRoODYuMTFjMS4yMywwLDIuMzYuNjYsMi45OCwxLjcybDIwLjQsMzUuMzJjMS4zMiwyLjI5LDQuNjMsMi4yOSw1Ljk1LDBsMjAuMzktMzUuMzJjLjYxLTEuMDYsMS43NS0xLjcyLDIuOTgtMS43Mmg4Ni4xMmMxLjksMCwzLjQ0LDEuNTQsMy40NCwzLjQ0djY4LjkyYzAsMS4yMy0uNjYsMi4zNi0xLjcyLDIuOTdsLTMwLjA4LDE3LjM3WiIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTQwMi4zMSwzNzEuNTN2MjE1LjI1YzAsMS45LTEuNTQsMy40NC0zLjQ0LDMuNDRoLTg2LjFjLTEuMjMsMC0yLjM2LS42Ni0yLjk4LTEuNzJsLTIwLjQxLTM1LjM0Yy0xLjMyLTIuMjktNC42My0yLjI5LTUuOTUsMGwtMjAuMzgsMzUuMzNjLS42MSwxLjA2LTEuNzUsMS43Mi0yLjk4LDEuNzJoLTg2LjEyYy0xLjksMC0zLjQ0LTEuNTQtMy40NC0zLjQ0di0yMTUuMjVjMC0xLjksMS41NC0zLjQ0LDMuNDQtMy40NGg0Mi44NWMxLjIzLDAsMi4zNi42NiwyLjk4LDEuNzJsMTcuMzEsMjkuOTksMTUuNDIsMjYuN2MxLjMyLDIuMjksNC42MywyLjI5LDUuOTUsMGwyNC45OC00My4yN2MxLjMyLTIuMjksNC42My0yLjI5LDUuOTUsMGwyNC45OCw0My4yN2MxLjMyLDIuMjksNC42MywyLjI5LDUuOTUsMGwxNS40LTI2LjcsMTcuMzEtMjkuOTljLjYxLTEuMDYsMS43NS0xLjcyLDIuOTgtMS43Mmg0Mi44NWMxLjksMCwzLjQ0LDEuNTQsMy40NCwzLjQ0Ii8+Cjwvc3ZnPg==') + '" alt="WBK" /></header>' +
         '<div class="wbk-grid">' +
-          buttons + btngroup + link + inputs + richtext + chips + segmented + stepper + slider + choice + badges + blabel + alerts + menu + progress +
+          pageheader + table + buttons + btngroup + link + inputs + richtext + chips + segmented + stepper + slider + choice + badges + blabel + alerts + menu + progress +
           avatars + tabs + toasts + banners + tooltip + dialog + countdown + datepick + pin +
           breadcrumb + uploader + tiles + price + media + bubble + mappin + ticket + dock + card +
         '</div>' +

@@ -155,6 +155,32 @@
         '<button class="wbk-menu-item wbk-menu-item--danger" role="menuitem">' + ic('logout', 16) + t('mnDelete') + '</button>' +
       '</div>', 'Item · selected · disabled · danger · separator');
 
+    const pageheader = sec('Page header',
+      '<div class="wbk-pageheader">' +
+        '<button class="wbk-ph-back" aria-label="' + t('phBack') + '">' + ic('chevL', 18) + '</button>' +
+        '<div class="wbk-ph-main"><h2 class="wbk-ph-title">' + t('phTitle') + '</h2>' +
+          '<div class="wbk-ph-sub">' + t('phSub') + '</div></div>' +
+        '<div class="wbk-ph-actions">' +
+          '<button class="wbk-btn wbk-btn--secondary wbk-btn--md">' + ic('eye', 16) + t('phPreview') + '</button>' +
+          '<button class="wbk-btn wbk-btn--cta wbk-btn--md">' + ic('plus', 16) + t('phNew') + '</button>' +
+        '</div>' +
+      '</div>', 'Back · title · subtitle · actions — RTL-mirrored');
+
+    const tableRows = [
+      ['Sara Al-Otaibi', 'Operations', '92', t('blConfirmed')],
+      ['Khalid Nasser', 'Ticketing', '78', t('blPending')],
+      ['Maya Haddad', 'Guest Services', '85', t('blConfirmed')],
+    ];
+    const table = sec('Table',
+      '<div class="wbk-table-wrap"><table class="wbk-table wbk-table--zebra">' +
+        '<thead><tr><th>' + t('tblName') + '</th><th>' + t('tblTeam') + '</th>' +
+          '<th class="wbk-th-num">' + t('tblScore') + '</th><th>' + t('tblStatus') + '</th></tr></thead>' +
+        '<tbody>' + tableRows.map(function (r) {
+          return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td>' +
+            '<td class="wbk-td-num">' + r[2] + '</td><td>' + r[3] + '</td></tr>';
+        }).join('') + '</tbody>' +
+      '</table></div>', 'Header · rows · zebra · numeric-aligned · RTL-safe');
+
     const progress = sec('Progress',
       '<div style="display:flex;gap:32px;align-items:center;flex-wrap:wrap">' +
         '<div style="flex:1;min-width:180px"><div class="wbk-prog"><i style="width:64%"></i></div>' +
@@ -300,7 +326,7 @@
           '<p>Every component from the WBK Design System, live on the WBK tokens.</p></div>' +
           '<img class="wbk-lib-logo" src="src/assets/' + (WP.state.theme === 'dark' ? 'wbk-white.svg' : 'wbk-pink.svg') + '" alt="WBK" /></header>' +
         '<div class="wbk-grid">' +
-          buttons + btngroup + link + inputs + richtext + chips + segmented + stepper + slider + choice + badges + blabel + alerts + menu + progress +
+          pageheader + table + buttons + btngroup + link + inputs + richtext + chips + segmented + stepper + slider + choice + badges + blabel + alerts + menu + progress +
           avatars + tabs + toasts + banners + tooltip + dialog + countdown + datepick + pin +
           breadcrumb + uploader + tiles + price + media + bubble + mappin + ticket + dock + card +
         '</div>' +

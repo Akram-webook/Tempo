@@ -130,6 +130,42 @@ body {
 .wbk-menu-item--danger svg { color: var(--state-negative); }
 .wbk-menu-item--danger:hover { background: var(--state-negative-bg); }
 .wbk-menu-sep { block-size: 1px; background: var(--border); margin: var(--sp-2) 0; }
+
+/* Page header — WBK PRO V3 (nodes 4826-1513 / 4826-1516). Title (Heading-h4 24/32)
+   + optional subtitle + trailing actions, on V3 section spacing. Optional back
+   affordance mirrors in RTL. Logical props throughout. */
+.wbk-pageheader { display: flex; align-items: flex-start; gap: var(--sp-4); padding-block: var(--sp-5) var(--sp-5); }
+.wbk-ph-back {
+  flex: none; inline-size: 36px; block-size: 36px; display: grid; place-items: center;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface);
+  color: var(--text); cursor: pointer;
+}
+.wbk-ph-back:hover { background: var(--surface-2); border-color: var(--border-secondary); }
+.wbk-ph-back:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
+[dir="rtl"] .wbk-ph-back svg { transform: scaleX(-1); }
+.wbk-ph-main { flex: 1; min-width: 0; }
+.wbk-ph-title { font-family: var(--font-display); font-size: var(--fs-h4); line-height: var(--lh-h4); font-weight: 600; color: var(--text); margin: 0; letter-spacing: -0.5px; }
+.wbk-ph-sub { font-size: var(--fs-body-m); line-height: var(--lh-body-m); color: var(--text-muted); margin-block-start: var(--sp-2); }
+.wbk-ph-actions { flex: none; display: inline-flex; align-items: center; gap: var(--sp-3); }
+
+/* Table — WBK PRO V3 (nodes 4764-5080 / 5235-7293). Header Label-S muted,
+   cells Body-M, Border-Tertiary row rules, optional zebra. RTL-safe via logical
+   text-align (start). */
+.wbk-table-wrap { inline-size: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+.wbk-table { inline-size: 100%; border-collapse: collapse; font-family: var(--font-sans); }
+.wbk-table thead th {
+  text-align: start; font-size: var(--fs-label-s); line-height: var(--lh-label-s); font-weight: 600;
+  text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted);
+  padding: var(--sp-3) var(--sp-5); background: var(--surface-2); border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.wbk-table tbody td {
+  text-align: start; font-size: var(--fs-body-m); line-height: var(--lh-body-m); color: var(--text);
+  padding: var(--sp-4) var(--sp-5); border-bottom: 1px solid var(--border);
+}
+.wbk-table tbody tr:last-child td { border-bottom: 0; }
+.wbk-table tbody tr:hover td { background: var(--surface-1); }
+.wbk-table--zebra tbody tr:nth-child(even) td { background: var(--surface-2); }
+.wbk-table td.wbk-td-num, .wbk-table th.wbk-th-num { text-align: end; font-variant-numeric: tabular-nums; }
 .wbk-menu-item .wbk-menu-trail { margin-inline-start: auto; color: var(--text-tertiary); font-size: var(--fs-body-s); }
 
 .wbk-chip {
@@ -417,6 +453,12 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 }
 .shell { display: flex; align-items: stretch; min-height: calc(100vh - 54px); position: relative; }
 .shell main { flex: 1; min-width: 0; }
+/* content column is a flex column so the signature footer is PINNED to the bottom:
+   #view grows to fill, the footer lands after it. On a short page (e.g. My progress)
+   this stops the bar floating mid-page — no dead space below it. */
+.view-main { display: flex; flex-direction: column; }
+.view-main > #view { flex: 1 0 auto; }
+.view-main > #sig-bar { flex: none; margin-top: auto; }
 .sidebar { background: var(--surface); overflow: hidden; }
 .sb-wrap { display: flex; flex-direction: column; gap: 3px; padding: 16px 12px; overflow-y: auto; box-sizing: border-box; height: 100%; }
 .sb-new { width: 100%; justify-content: center; margin-bottom: 12px; }
@@ -1130,13 +1172,16 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
  * ========================================================== */
 .topnav { display: inline-flex; align-items: center; gap: 4px; }
 .nav-item {
-  display: inline-flex; align-items: center; gap: 7px;
+  display: inline-flex; align-items: center; gap: var(--sp-2);
   border: 0; background: transparent; color: var(--text-muted);
-  padding: 8px 12px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 500;
+  padding: var(--sp-3) var(--sp-4); border-radius: var(--radius-sm);
+  font-family: var(--font-sans); font-size: var(--fs-label-m); line-height: var(--lh-label-m); font-weight: 500;
   cursor: pointer; transition: background .18s ease, color .18s ease;
 }
 .nav-item:hover { background: var(--surface-2); color: var(--text); }
 .nav-item.active { background: var(--surface-2); color: var(--brand); font-weight: 600; }
+.nav-item.active .icn { color: var(--brand); }
+.nav-item:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
 .nav-item .icn { flex: none; }
 
 /* account button + dropdown */
@@ -1399,25 +1444,25 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
    ABOVE it. Slim + low-key: it reads as a signature, never a banner. Gold is darkened in
    light theme to keep the small role labels readable (WCAG AA). RTL reverses the row. */
 #sig-bar { position: relative; z-index: 0; }
-.sig-bar { display: flex; align-items: center; gap: 0; padding: 10px 20px; margin-top: 24px;
+.sig-bar { display: flex; align-items: center; gap: var(--sp-5); padding: var(--sp-3) var(--sp-7); margin-top: var(--sp-5);
   border-top: 1px solid var(--border, rgba(255,255,255,.12));
   background: var(--bg, #09090B);
   font-family: var(--font-sans, system-ui, sans-serif); }
-.sig-dept { flex: 1.5; display: flex; align-items: center; font-size: 11px; letter-spacing: .18em;
-  text-transform: uppercase; color: var(--text-muted, #9b9ba3); font-weight: 500; }
-.sig-sep { flex: none; width: 1px; height: 30px; align-self: center;
-  background: var(--border, rgba(255,255,255,.12)); margin: 0 18px; }
-.sig-credit { flex: 1; text-align: center; padding: 0 6px; }
-.sig-role { font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: #c8a24a;
-  font-weight: 600; margin-bottom: 3px; }
+.sig-dept { flex: 1.5; display: flex; align-items: center; gap: var(--sp-2); font-size: 11px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--text-muted, #9b9ba3); font-weight: 500; line-height: 1; }
+.sig-sep { flex: none; width: 1px; height: 22px; align-self: center;
+  background: var(--border, rgba(255,255,255,.12)); }
+.sig-credit { flex: none; display: inline-flex; align-items: baseline; gap: var(--sp-2); padding: 0; }
+.sig-role { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #c8a24a;
+  font-weight: 600; margin: 0; }
 [data-theme="light"] .sig-role { color: #6e5410; } /* darker gold for AA contrast on light bg */
-.sig-name { font-size: 13px; font-weight: 600; color: var(--text-secondary, var(--text-muted, #b4b4bb)); }
+.sig-name { font-size: 13px; font-weight: 600; color: var(--text-secondary, var(--text-muted, #b4b4bb)); line-height: 1; }
 .sig-name--accent { position: relative; display: inline-block; }
 .sig-name--accent::after { content: ""; position: absolute; left: 50%; transform: translateX(-50%);
   bottom: -4px; width: 20px; height: 2px; border-radius: 2px; background: var(--brand, #ff2c79); }
 [dir="rtl"] .sig-bar { flex-direction: row-reverse; }
 @media (max-width: 640px) {
-  .sig-bar { flex-direction: column; gap: 10px; align-items: center; text-align: center; margin-top: 20px; }
+  .sig-bar { flex-direction: column; gap: var(--sp-3); align-items: center; text-align: center; margin-top: var(--sp-5); }
   .sig-dept { flex: none; justify-content: center; }
   .sig-sep { display: none; }
 }

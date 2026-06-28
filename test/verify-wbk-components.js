@@ -109,6 +109,27 @@ try{
   const stateJs=fs.readFileSync(path.join(root,'src/js/core/state.js'),'utf8');
   assert(/theme:\s*'dark'/.test(stateJs),'default theme held at dark during V3 transition (flips to light at Wave 4)');
 
+  // NEW Wave-3 organisms — Page header + Table
+  assert(view.querySelector('.wbk-pageheader .wbk-ph-title'),'page header renders with a title');
+  assert(view.querySelector('.wbk-ph-back[aria-label]'),'page header back control is labelled');
+  assert(view.querySelector('.wbk-ph-actions .wbk-btn'),'page header carries trailing actions');
+  assert(view.querySelector('.wbk-table thead th') && view.querySelectorAll('.wbk-table tbody tr').length>=3,'table renders header + rows');
+  assert(view.querySelector('.wbk-table--zebra'),'table zebra variant present');
+  assert(view.querySelector('.wbk-table .wbk-td-num'),'table has numeric-aligned cells');
+  // nav reconciled to V3 tokens (spacing scale + label-m) and carries a focus ring
+  const navBlock=appcssMol.slice(appcssMol.indexOf('.nav-item {'),appcssMol.indexOf('.nav-item:hover'));
+  assert(/var\(--sp-3\)/.test(navBlock) && /var\(--sp-4\)/.test(navBlock),'nav-item reconciled to spacing-scale tokens');
+  assert(/var\(--fs-label-m\)/.test(navBlock),'nav-item type reconciled to V3 Label-M');
+  assert(/\.nav-item:focus-visible/.test(appcssMol),'nav-item has a focus ring');
+  // FOOTER FIX — signature bar pinned to the bottom of the content column (no float mid-page):
+  // .view-main is a flex column, #view grows (flex:1), footer pushed down (margin-top:auto).
+  assert(/\.view-main \{[^}]*flex-direction:\s*column/.test(appcssMol),'content column is a flex column (footer-pin scaffold)');
+  assert(/\.view-main > #view \{[^}]*flex:\s*1/.test(appcssMol),'#view grows to fill so the footer sinks to the bottom');
+  assert(/\.view-main > #sig-bar \{[^}]*margin-top:\s*auto/.test(appcssMol),'signature footer pinned to bottom (margin-top:auto) — no dead space on short pages');
+  // table/page-header CSS uses tokens, not pasted hex
+  const tblBlock=appcssMol.slice(appcssMol.indexOf('.wbk-pageheader {'),appcssMol.indexOf('.wbk-table td.wbk-td-num'));
+  assert(!/#071437|#dbdfe9|#78829d|#f1f1f4/i.test(tblBlock),'page-header/table styles use tokens, not pasted V3 hex');
+
   // NEW atom — PIN code: 6 boxes per group, numeric, accessible labels, error variant present
   const pinGroups=view.querySelectorAll('.wbk-pin');
   assert(pinGroups.length>=2,'PIN renders default + error groups');
@@ -145,7 +166,7 @@ try{
   assert(window.document.getElementById('view').querySelector('.wbk-blabel'),'components still mount under RTL');
 
   // EN+AR strings exist for the new labels
-  const i18nKeys=['pinCode','blConfirmed','blPending','blSoldOut','blDraft','bcHome','bcEvents','bcTickets','uploadCta','uploadHint','ticketGeneral','ticketVip','mapRestaurant','mapHotel','chatRecv','chatSent','btnCta','btnPrimary','btnSecondary','btnTertiary','btnDisabled','btnAnimating','bgDay','bgWeek','bgMonth','linkLearn','linkView','inEmail','inEmailHint','inName','inNamePh','inNameErr','inDisabled','rtTitle','rtBody','rtLink','alClose','alInfoT','alInfoM','alOkT','alOkM','alWarnT','alWarnM','alErrT','alErrM','mnView','mnEdit','mnShare','mnDelete'];
+  const i18nKeys=['pinCode','blConfirmed','blPending','blSoldOut','blDraft','bcHome','bcEvents','bcTickets','uploadCta','uploadHint','ticketGeneral','ticketVip','mapRestaurant','mapHotel','chatRecv','chatSent','btnCta','btnPrimary','btnSecondary','btnTertiary','btnDisabled','btnAnimating','bgDay','bgWeek','bgMonth','linkLearn','linkView','inEmail','inEmailHint','inName','inNamePh','inNameErr','inDisabled','rtTitle','rtBody','rtLink','alClose','alInfoT','alInfoM','alOkT','alOkM','alWarnT','alWarnM','alErrT','alErrM','mnView','mnEdit','mnShare','mnDelete','phBack','phTitle','phSub','phPreview','phNew','tblName','tblTeam','tblScore','tblStatus'];
   WP.state.lang='en';
   i18nKeys.forEach(function(k){ assert(WP.i18n.t(k) && WP.i18n.t(k)!==k,'i18n EN key present: '+k); });
   WP.state.lang='ar';
