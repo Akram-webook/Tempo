@@ -1154,7 +1154,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .fr-unbalanced { color: var(--state-over, #c0392b); background: var(--state-over-bg, rgba(192,57,43,.13)); border-color: rgba(192,57,43,.34); }
 .prog { display: flex; height: 12px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
 .prog .pg-done { background: var(--state-available); height: 100%; }
-.prog .pg-prog { background: #1d58ff; height: 100%; }
+.prog .pg-prog { background: var(--brand); height: 100%; }
 .prog-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; font-size: 12.5px; color: var(--text-muted); }
 
 .banner-risk { background: var(--state-overloaded-bg); border: 1px solid var(--state-overloaded); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13px; margin-bottom: 14px; }

@@ -7,11 +7,19 @@
 (function (WP) {
   'use strict';
 
+  /* ════════════════════════════════════════════════════════════════════
+   * THE V3 CUTOVER SWITCH  —  flip this ONE line to throw the default theme.
+   *   'dark'  = current look (held through the directors' observation period)
+   *   'light' = the WBK PRO V3 light system (navy on white)
+   * Pages are built coherent in BOTH themes; the user toggle and saved prefs
+   * always win over this default. Reversible at any time — change & redeploy.
+   * ════════════════════════════════════════════════════════════════════ */
+  var DEFAULT_THEME = 'dark';   // ← Akram: change to 'light' for the V3 cutover
+  WP.DEFAULT_THEME = DEFAULT_THEME;
+
   WP.state = {
     lang: 'en',            // 'en' | 'ar'
-    theme: 'dark',         // 'light' | 'dark' — DEFAULT held at dark through the V3 waves
-                           //   (low-disruption for directors during observation; saved pref still
-                           //   honored via restore() below). Flip to 'light' when Wave 4 re-skins pages.
+    theme: DEFAULT_THEME,  // default honored only when no saved pref exists (see restore())
     authed: false,         // signed in via company email?
     window: 'month',       // 'week' | 'month' | 'year'
     viewerId: 'p_ahmed',   // who is "logged in" (set at sign-in; admin can View-as)

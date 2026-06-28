@@ -107,7 +107,7 @@
             '<i class="pg-prog" style="width:' + pct(counts['In progress']) + '%"></i></div>' +
           '<div class="prog-legend">' +
             '<span><span class="dot" style="background:var(--state-available)"></span> ' + pct(counts.Completed) + '% ' + t('done') + '</span>' +
-            '<span><span class="dot" style="background:#2a7de1"></span> ' + pct(counts['In progress']) + '% ' + t('inProgressL') + '</span>' +
+            '<span><span class="dot" style="background:var(--brand)"></span> ' + pct(counts['In progress']) + '% ' + t('inProgressL') + '</span>' +
             '<span><span class="dot" style="background:var(--text-muted)"></span> ' + pct(counts['Not started']) + '% ' + t('notStartedL') + '</span></div></div>' +
       '</div>' +
 

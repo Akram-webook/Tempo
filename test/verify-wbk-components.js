@@ -105,9 +105,21 @@ try{
   assert(/\.wbk-card \{[^}]*--radius-lg/.test(appcssMol),'card reconciled to V3 radius-lg (12px)');
   const alBlock=appcssMol.slice(appcssMol.indexOf('.wbk-alert {'),appcssMol.indexOf('.wbk-menu-sep'));
   assert(!/#f8285a|#ffeef3|#17c653|#fcc800/i.test(alBlock),'alert/menu styles use tokens, not pasted V3 hex');
-  // transition guard: live default theme held at DARK through the V3 waves (saved pref still honored)
+  // Wave 4 — reversible V3 cutover switch: a single named DEFAULT_THEME const,
+  // held at 'dark' in this PR (saved pref + user toggle still win). Flipping it
+  // to 'light' is the one-line cutover Akram throws when ready.
   const stateJs=fs.readFileSync(path.join(root,'src/js/core/state.js'),'utf8');
-  assert(/theme:\s*'dark'/.test(stateJs),'default theme held at dark during V3 transition (flips to light at Wave 4)');
+  assert(/var DEFAULT_THEME = 'dark'/.test(stateJs),'single-line DEFAULT_THEME switch present, held at dark');
+  assert(/theme:\s*DEFAULT_THEME/.test(stateJs),'WP.state.theme is driven by the DEFAULT_THEME switch (one place to flip)');
+  assert(WP.DEFAULT_THEME==='dark','default theme held at dark for the directors’ observation period');
+  // user toggle + saved pref still win over the default
+  WP.setState({theme:'light'}); assert(WP.state.theme==='light','user can still choose light (toggle works)');
+  WP.setState({theme:'dark'});
+  // page re-skin: no hardcoded non-brand blues left in the evaluations legend / progress fill
+  const evalJs=fs.readFileSync(path.join(root,'src/js/ui/evaluations.js'),'utf8');
+  assert(!/#2a7de1/i.test(evalJs),'evaluations legend in-progress dot uses a token, not #2a7de1');
+  const appcssPg=fs.readFileSync(path.join(root,'src/css/app.css'),'utf8');
+  assert(!/#1d58ff/i.test(appcssPg),'progress-bar in-progress fill uses a token, not #1d58ff');
 
   // NEW Wave-3 organisms — Page header + Table
   assert(view.querySelector('.wbk-pageheader .wbk-ph-title'),'page header renders with a title');
