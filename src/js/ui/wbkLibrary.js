@@ -148,6 +148,25 @@
 
     const datepick = sec('Date picker', MONTH());
 
+    // PIN code input — 6 boxes, with a default + error state demo. data-i sets order; LTR digits even in RTL.
+    const pinBoxes = function (n, err, val) {
+      let h = '<div class="wbk-pin' + (err ? ' is-error' : '') + '" role="group" aria-label="' + t('pinCode') + '">';
+      for (let i = 0; i < n; i++) h += '<input inputmode="numeric" maxlength="1" aria-label="' + t('pinCode') + ' ' + (i + 1) + '" value="' + ((val && val[i]) || '') + '"' + (i === 0 ? ' id="wbk-pin-first"' : '') + ' />';
+      return h + '</div>';
+    };
+    const pin = sec('PIN code', pinBoxes(6, false, '12') +
+      '<div class="wbk-row" style="margin-top:10px"><span class="sub">Error state</span></div>' + pinBoxes(6, true, '12'),
+      'node 2053-12021');
+
+    // Booking label — semantic status pills, each paired with an icon (never colour alone).
+    const blabel = sec('Booking label',
+      '<div class="wbk-row">' +
+        '<span class="wbk-blabel wbk-blabel--positive">' + ic('check', 14) + t('blConfirmed') + '</span>' +
+        '<span class="wbk-blabel wbk-blabel--notice">' + ic('clock', 14) + t('blPending') + '</span>' +
+        '<span class="wbk-blabel wbk-blabel--negative">' + ic('x', 14) + t('blSoldOut') + '</span>' +
+        '<span class="wbk-blabel">' + ic('pencil', 14) + t('blDraft') + '</span>' +
+      '</div>', 'node 2064-46940');
+
     const card = sec('Card · List item · Section heading',
       '<div class="wbk-card">' +
         '<div class="wbk-card-media">' + ic('users', 26) + '</div>' +
@@ -166,8 +185,8 @@
           '<p>Every component from the WBK Design System, live on the WBK tokens.</p></div>' +
           '<img class="wbk-lib-logo" src="src/assets/' + (WP.state.theme === 'dark' ? 'wbk-white.svg' : 'wbk-pink.svg') + '" alt="WBK" /></header>' +
         '<div class="wbk-grid">' +
-          buttons + chips + segmented + stepper + slider + choice + badges + progress +
-          avatars + tabs + toasts + banners + tooltip + dialog + countdown + datepick + card +
+          buttons + chips + segmented + stepper + slider + choice + badges + blabel + progress +
+          avatars + tabs + toasts + banners + tooltip + dialog + countdown + datepick + pin + card +
         '</div>' +
       '</div>' +
       '<div class="wbk-modal" id="wbk-modal" hidden><div class="wbk-modal-bd"></div>' +
@@ -209,6 +228,19 @@
     const cal = root.querySelector('.wbk-cal');
     if (cal) cal.querySelectorAll('.wbk-cal-d:not(.is-empty)').forEach(function (d) {
       d.onclick = function () { cal.querySelectorAll('.wbk-cal-d').forEach(function (x) { x.classList.remove('is-sel'); }); d.classList.add('is-sel'); };
+    });
+    // PIN inputs: digits only, auto-advance forward, backspace steps back
+    root.querySelectorAll('.wbk-pin').forEach(function (grp) {
+      const boxes = Array.prototype.slice.call(grp.querySelectorAll('input'));
+      boxes.forEach(function (box, i) {
+        box.oninput = function () {
+          box.value = box.value.replace(/[^0-9]/g, '').slice(0, 1);
+          if (box.value && boxes[i + 1]) boxes[i + 1].focus();
+        };
+        box.onkeydown = function (e) {
+          if (e.key === 'Backspace' && !box.value && boxes[i - 1]) boxes[i - 1].focus();
+        };
+      });
     });
     // toast / banner dismiss
     root.querySelectorAll('.wbk-x').forEach(function (x) { x.onclick = function () { x.closest('.wbk-toast').style.display = 'none'; }; });

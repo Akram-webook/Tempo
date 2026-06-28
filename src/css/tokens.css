@@ -46,6 +46,20 @@
   --shadow: 0 1px 3px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.06);
   --radius: 8px;     /* WBK DS · UI Radius-M (default) */
   --radius-sm: 4px;  /* WBK DS · Radius-S */
+  --radius-lg: 12px; /* WBK DS · UI Radius-L (PIN box, large fields) */
+
+  /* spacing scale — WBK DS · UI Elements/Gaps + Paddings (2/4/8/12/16) */
+  --sp-1: 2px;  --sp-2: 4px;  --sp-3: 8px;  --sp-4: 12px;  --sp-5: 16px;
+
+  /* type scale — WBK DS · Body-S 14 / Body-M 16 / Label-L 18 */
+  --fs-s: 14px; --fs-m: 16px; --fs-l: 18px;
+
+  /* semantic status content (WBK DS · Content/States) — mapped to the nearest
+     existing capacity-state tokens so the palette stays single-sourced.
+     Figma: Notice #fcc800 · Positive #22c55e · Negative #ff6c6c. */
+  --state-notice:   var(--state-balanced);   /* amber  */
+  --state-positive: var(--state-available);  /* green  */
+  --state-negative: var(--state-overloaded); /* red    */
 
   /* custom scrollbar (slim, floating, theme-aware) */
   --scrollbar-thumb:       rgba(16,24,40,.20);

@@ -45,6 +45,35 @@ body {
 }
 .wbk-chip[aria-selected="true"], .wbk-chip.is-selected { background: var(--brand); color: var(--brand-contrast); border-color: transparent; }
 
+/* PIN code input (WBK DS · node 2053-12021) — Figtree 18/24 medium, Radius-L 12,
+   gap 12, brand active border, semantic error state. Logical props → RTL-safe. */
+.wbk-pin { display: inline-flex; gap: var(--sp-4); direction: ltr; }
+.wbk-pin input {
+  inline-size: 48px; block-size: 56px; text-align: center; box-sizing: border-box;
+  font-family: var(--font-sans); font-size: var(--fs-l); line-height: 24px; font-weight: 500;
+  font-variant-numeric: tabular-nums; color: var(--text);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.wbk-pin input::placeholder { color: var(--text-muted); }
+.wbk-pin input:hover { border-color: var(--text-muted); }
+.wbk-pin input:focus-visible { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 22%, transparent); }
+.wbk-pin input:disabled { opacity: .4; cursor: not-allowed; }
+.wbk-pin.is-error input { border-color: var(--state-negative); }
+.wbk-pin.is-error input:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--state-negative) 22%, transparent); }
+
+/* Booking label (WBK DS · node 2064-46940) — Body-S 14/20 pill, gap-S 4, icon + text,
+   semantic states (neutral / notice / positive / negative). Colour is never the only signal — each carries an icon. */
+.wbk-blabel {
+  display: inline-flex; align-items: center; gap: var(--sp-2); padding: var(--sp-1) var(--sp-3);
+  border-radius: 999px; font-family: var(--font-sans); font-size: var(--fs-s); line-height: 20px; font-weight: 500;
+  background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); white-space: nowrap;
+}
+.wbk-blabel svg { flex: none; }
+.wbk-blabel--notice   { color: var(--state-notice);   background: color-mix(in srgb, var(--state-notice) 14%, transparent);   border-color: color-mix(in srgb, var(--state-notice) 30%, transparent); }
+.wbk-blabel--positive { color: var(--state-positive); background: color-mix(in srgb, var(--state-positive) 14%, transparent); border-color: color-mix(in srgb, var(--state-positive) 30%, transparent); }
+.wbk-blabel--negative { color: var(--state-negative); background: color-mix(in srgb, var(--state-negative) 14%, transparent); border-color: color-mix(in srgb, var(--state-negative) 30%, transparent); }
+
 /* status palette for toasts / system banners (pair with an icon, never color alone) */
 .wbk-toast, .wbk-banner {
   display: flex; align-items: center; gap: 8px; font-family: var(--font-sans); font-size: 14px; color: var(--text);
