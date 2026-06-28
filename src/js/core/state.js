@@ -9,7 +9,9 @@
 
   WP.state = {
     lang: 'en',            // 'en' | 'ar'
-    theme: 'light',        // 'light' | 'dark'
+    theme: 'dark',         // 'light' | 'dark' — DEFAULT held at dark through the V3 waves
+                           //   (low-disruption for directors during observation; saved pref still
+                           //   honored via restore() below). Flip to 'light' when Wave 4 re-skins pages.
     authed: false,         // signed in via company email?
     window: 'month',       // 'week' | 'month' | 'year'
     viewerId: 'p_ahmed',   // who is "logged in" (set at sign-in; admin can View-as)

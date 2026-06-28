@@ -89,6 +89,26 @@ try{
   const btnBlock=appcssAtom.slice(appcssAtom.indexOf('.wbk-btn {'),appcssAtom.indexOf('.wbk-link {'));
   assert(!/#071437|#ff2c79|#f9f9f9|#ffd4e4/i.test(btnBlock),'button styles use tokens, not pasted V3 hex');
 
+  // NEW Wave-2 molecules — Alert (semantic, icon-led) + Dropdown menu
+  ['positive','notice','negative'].forEach(function(m){
+    assert(view.querySelector('.wbk-alert--'+m),'alert variant .wbk-alert--'+m+' renders');
+  });
+  let alertsIconed=true; view.querySelectorAll('.wbk-alert').forEach(function(a){ if(!a.querySelector('.wbk-alert-ic svg')) alertsIconed=false; });
+  assert(alertsIconed,'every alert leads with an icon (accessible, not colour-alone)');
+  assert(view.querySelector('.wbk-alert-x[aria-label]'),'closable alert has a labelled dismiss control');
+  assert(view.querySelector('.wbk-menu [role="menuitem"][aria-selected="true"]'),'menu marks the selected item');
+  assert(view.querySelector('.wbk-menu-item:disabled'),'menu has a disabled item');
+  assert(view.querySelector('.wbk-menu-item--danger'),'menu has a danger item');
+  assert(view.querySelector('.wbk-menu-sep'),'menu has a separator');
+  // card reconciled to V3 radius-lg + alert/menu use tokens not pasted hex
+  const appcssMol=fs.readFileSync(path.join(root,'src/css/app.css'),'utf8');
+  assert(/\.wbk-card \{[^}]*--radius-lg/.test(appcssMol),'card reconciled to V3 radius-lg (12px)');
+  const alBlock=appcssMol.slice(appcssMol.indexOf('.wbk-alert {'),appcssMol.indexOf('.wbk-menu-sep'));
+  assert(!/#f8285a|#ffeef3|#17c653|#fcc800/i.test(alBlock),'alert/menu styles use tokens, not pasted V3 hex');
+  // transition guard: live default theme held at DARK through the V3 waves (saved pref still honored)
+  const stateJs=fs.readFileSync(path.join(root,'src/js/core/state.js'),'utf8');
+  assert(/theme:\s*'dark'/.test(stateJs),'default theme held at dark during V3 transition (flips to light at Wave 4)');
+
   // NEW atom — PIN code: 6 boxes per group, numeric, accessible labels, error variant present
   const pinGroups=view.querySelectorAll('.wbk-pin');
   assert(pinGroups.length>=2,'PIN renders default + error groups');
@@ -125,7 +145,7 @@ try{
   assert(window.document.getElementById('view').querySelector('.wbk-blabel'),'components still mount under RTL');
 
   // EN+AR strings exist for the new labels
-  const i18nKeys=['pinCode','blConfirmed','blPending','blSoldOut','blDraft','bcHome','bcEvents','bcTickets','uploadCta','uploadHint','ticketGeneral','ticketVip','mapRestaurant','mapHotel','chatRecv','chatSent','btnCta','btnPrimary','btnSecondary','btnTertiary','btnDisabled','btnAnimating','bgDay','bgWeek','bgMonth','linkLearn','linkView','inEmail','inEmailHint','inName','inNamePh','inNameErr','inDisabled','rtTitle','rtBody','rtLink'];
+  const i18nKeys=['pinCode','blConfirmed','blPending','blSoldOut','blDraft','bcHome','bcEvents','bcTickets','uploadCta','uploadHint','ticketGeneral','ticketVip','mapRestaurant','mapHotel','chatRecv','chatSent','btnCta','btnPrimary','btnSecondary','btnTertiary','btnDisabled','btnAnimating','bgDay','bgWeek','bgMonth','linkLearn','linkView','inEmail','inEmailHint','inName','inNamePh','inNameErr','inDisabled','rtTitle','rtBody','rtLink','alClose','alInfoT','alInfoM','alOkT','alOkM','alWarnT','alWarnM','alErrT','alErrM','mnView','mnEdit','mnShare','mnDelete'];
   WP.state.lang='en';
   i18nKeys.forEach(function(k){ assert(WP.i18n.t(k) && WP.i18n.t(k)!==k,'i18n EN key present: '+k); });
   WP.state.lang='ar';

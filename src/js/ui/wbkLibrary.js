@@ -131,6 +131,30 @@
         '<span class="wbk-badge-host">' + ic('chart', 22) + '<i class="wbk-badge">12</i></span>' +
       '</div>');
 
+    const alertRow = function (mod, icon, title, msg, closable) {
+      return '<div class="wbk-alert' + (mod ? ' wbk-alert--' + mod : '') + '">' +
+        '<span class="wbk-alert-ic">' + ic(icon, 18) + '</span>' +
+        '<div class="wbk-alert-bd"><div class="wbk-alert-t">' + title + '</div><div class="wbk-alert-m">' + msg + '</div></div>' +
+        (closable ? '<button class="wbk-alert-x" aria-label="' + t('alClose') + '">' + ic('x', 16) + '</button>' : '') +
+      '</div>';
+    };
+    const alerts = sec('Alert',
+      '<div style="display:flex;flex-direction:column;gap:10px">' +
+        alertRow('', 'bulb', t('alInfoT'), t('alInfoM'), true) +
+        alertRow('positive', 'check', t('alOkT'), t('alOkM'), false) +
+        alertRow('notice', 'alert', t('alWarnT'), t('alWarnM'), false) +
+        alertRow('negative', 'lock', t('alErrT'), t('alErrM'), true) +
+      '</div>', 'Info · positive · notice · negative — icon-led (never colour-alone)');
+
+    const menu = sec('Dropdown menu',
+      '<div class="wbk-menu" role="menu">' +
+        '<button class="wbk-menu-item" role="menuitem" aria-selected="true">' + ic('eye', 16) + t('mnView') + ic('check', 14) + '</button>' +
+        '<button class="wbk-menu-item" role="menuitem">' + ic('pencil', 16) + t('mnEdit') + '<span class="wbk-menu-trail">⌘E</span></button>' +
+        '<button class="wbk-menu-item" role="menuitem" disabled>' + ic('users', 16) + t('mnShare') + '</button>' +
+        '<div class="wbk-menu-sep"></div>' +
+        '<button class="wbk-menu-item wbk-menu-item--danger" role="menuitem">' + ic('logout', 16) + t('mnDelete') + '</button>' +
+      '</div>', 'Item · selected · disabled · danger · separator');
+
     const progress = sec('Progress',
       '<div style="display:flex;gap:32px;align-items:center;flex-wrap:wrap">' +
         '<div style="flex:1;min-width:180px"><div class="wbk-prog"><i style="width:64%"></i></div>' +
@@ -276,7 +300,7 @@
           '<p>Every component from the WBK Design System, live on the WBK tokens.</p></div>' +
           '<img class="wbk-lib-logo" src="src/assets/' + (WP.state.theme === 'dark' ? 'wbk-white.svg' : 'wbk-pink.svg') + '" alt="WBK" /></header>' +
         '<div class="wbk-grid">' +
-          buttons + btngroup + link + inputs + richtext + chips + segmented + stepper + slider + choice + badges + blabel + progress +
+          buttons + btngroup + link + inputs + richtext + chips + segmented + stepper + slider + choice + badges + blabel + alerts + menu + progress +
           avatars + tabs + toasts + banners + tooltip + dialog + countdown + datepick + pin +
           breadcrumb + uploader + tiles + price + media + bubble + mappin + ticket + dock + card +
         '</div>' +

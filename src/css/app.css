@@ -84,6 +84,54 @@ body {
 .wbk-link:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
 .wbk-link .icn, .wbk-link svg { flex: none; }
 
+/* Alert — WBK PRO V3 (nodes 4861-10220 / 4861-10222). Icon + title + message +
+   optional action/close. Semantic variants on exact V3 tokens; colour is never
+   the sole signal (each leads with an icon). Logical props → RTL-safe. */
+.wbk-alert {
+  display: flex; align-items: flex-start; gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5); border-radius: var(--radius);
+  border: 1px solid var(--border); background: var(--surface);
+  border-inline-start: 3px solid var(--text-muted);
+}
+.wbk-alert-ic { flex: none; display: grid; place-items: center; color: var(--text-muted); margin-block-start: 1px; }
+.wbk-alert-ic svg { display: block; }
+.wbk-alert-bd { flex: 1; min-width: 0; }
+.wbk-alert-t { font-family: var(--font-sans); font-weight: 600; font-size: var(--fs-label-m); line-height: var(--lh-label-m); color: var(--text); }
+.wbk-alert-m { font-size: var(--fs-body-m); line-height: var(--lh-body-m); color: var(--text-muted); margin-block-start: 2px; }
+.wbk-alert-x { flex: none; appearance: none; border: 0; background: transparent; color: var(--text-muted); cursor: pointer; padding: 2px; border-radius: var(--radius-sm); line-height: 0; }
+.wbk-alert-x:hover { color: var(--text); background: var(--surface-2); }
+.wbk-alert-x:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
+.wbk-alert--positive { background: var(--state-positive-bg); border-color: color-mix(in srgb, var(--state-positive) 30%, transparent); border-inline-start-color: var(--state-positive); }
+.wbk-alert--positive .wbk-alert-ic { color: var(--state-positive); }
+.wbk-alert--notice   { background: var(--state-notice-bg);   border-color: color-mix(in srgb, var(--state-notice) 30%, transparent);   border-inline-start-color: var(--state-notice); }
+.wbk-alert--notice .wbk-alert-ic { color: var(--state-notice); }
+.wbk-alert--negative { background: var(--state-negative-bg); border-color: color-mix(in srgb, var(--state-negative) 30%, transparent); border-inline-start-color: var(--state-negative); }
+.wbk-alert--negative .wbk-alert-ic { color: var(--state-negative); }
+
+/* Dropdown / Menu — WBK PRO V3 (nodes 5028-8206 / 5447-8168). Popover list:
+   items with icon slot, hover/selected/disabled, separators, danger item. */
+.wbk-menu {
+  display: inline-flex; flex-direction: column; min-inline-size: 200px; padding: var(--sp-2);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.wbk-menu-item {
+  display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-3);
+  border-radius: var(--radius-sm); border: 0; background: transparent; width: 100%; text-align: start;
+  font-family: var(--font-sans); font-size: var(--fs-label-m); line-height: var(--lh-label-m); color: var(--text); cursor: pointer;
+}
+.wbk-menu-item .icn, .wbk-menu-item svg { flex: none; color: var(--text-muted); }
+.wbk-menu-item:hover { background: var(--surface-2); }
+.wbk-menu-item[aria-selected="true"] { color: var(--brand); font-weight: 600; }
+.wbk-menu-item[aria-selected="true"] svg { color: var(--brand); }
+.wbk-menu-item:disabled, .wbk-menu-item[aria-disabled="true"] { color: var(--text-disabled); cursor: not-allowed; }
+.wbk-menu-item:disabled svg { color: var(--text-disabled); }
+.wbk-menu-item:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
+.wbk-menu-item--danger { color: var(--state-negative); }
+.wbk-menu-item--danger svg { color: var(--state-negative); }
+.wbk-menu-item--danger:hover { background: var(--state-negative-bg); }
+.wbk-menu-sep { block-size: 1px; background: var(--border); margin: var(--sp-2) 0; }
+.wbk-menu-item .wbk-menu-trail { margin-inline-start: auto; color: var(--text-tertiary); font-size: var(--fs-body-s); }
+
 .wbk-chip {
   display: inline-flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4); border-radius: 999px;
   font-family: var(--font-sans); font-weight: 500; font-size: var(--fs-label-m); line-height: var(--lh-label-m);
@@ -1321,7 +1369,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .wbk-cal-d.is-empty { pointer-events: none; }
 
 /* Card / list item */
-.wbk-card { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface-2); margin-bottom: 12px; }
+.wbk-card { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; background: var(--surface-2); margin-bottom: 12px; }
 .wbk-card-media { height: 96px; display: grid; place-items: center; color: var(--text-muted); background: linear-gradient(135deg, var(--surface-2), var(--surface)); }
 .wbk-card-b { padding: 12px; }
 .wbk-card-t { font-weight: 600; font-size: 14px; }
