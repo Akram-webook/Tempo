@@ -61,7 +61,9 @@ Runs out-of-band with secrets from **env only** (`SLACK_BOT_TOKEN`,
 6. `author_email = 'system:slack-ingest'` (the events table column is NOT NULL with a
    default of `auth.email()`, which is NULL under the service role — set explicitly).
 7. Slack unreachable → no-op (no throw, no state write). Never hard-deletes.
-- Tested by `test/verify-slack-job.js` (fake Slack + Supabase; 20 checks, incl. a `--dry` smoke).
+- Tested by `test/verify-slack-job.js` (fake **paginated** Slack + id-keyed fake Supabase; 26
+  checks proving cursor-advance, idempotent re-run, skip, fail-closed drop, Slack-down no-op,
+  exact events, + a `--dry` smoke). Operations runbook: [`docs/slack-ingest-runbook.md`](slack-ingest-runbook.md).
 
 ### Running the job (operations runbook)
 The job is **server-side only** — `build.js` never bundles `tools/**`, so it never reaches the
