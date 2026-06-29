@@ -302,7 +302,13 @@
     // Verified sign-in: consume a magic-link token from the URL and restore any
     // persisted Supabase session, so returning from the email link signs the user in.
     if (WP.auth && WP.auth.initSession) WP.auth.initSession();
-    WP.render();
+    WP.render();   // first paint uses the bundled mock directory (graceful fallback — never blank)
+    // F1: load the org directory server-side under RLS, then re-render so server
+    // rows win when present. On signed-out/offline/error this is a no-op and the
+    // mock stays (WP.db.people.list never throws), so the app is never blank.
+    if (WP.db && WP.db.people && WP.db.people.list) {
+      WP.db.people.list().then(function () { WP.render(); }).catch(function () {});
+    }
   });
   // safety net — also flush on unload in case a mutation didn't go through setState
   window.addEventListener('beforeunload', function () { if (WP.persist) WP.persist.saveData(); });

@@ -66,6 +66,42 @@ Evidence Timeline events. It is deliberately narrow, to honour the Intelligence-
   the **subject**, their **direct manager**, and **Director/HR** can (verified by `test/verify-db.js`
   scenario J). The ingest job runs server-side with the service-role key — never in the front-end.
 
+## Where the access model is actually ENFORCED (server RLS) vs only PRESENTED (client) — F1
+The access rules above are enforced in two very different places, and the difference is the whole
+point of finding **F1**. `access.js` is a **client-side filter**: it decides what the signed-in
+browser *renders*, but every signed-in browser still *receives* whatever data is in the static
+bundle. So for any entity that ships as a bundled mock, the access model is **presentation-only** —
+the moment real data replaces that mock in the bundle, every signed-in user receives the whole
+thing. The fix is to move the data **server-side under Row-Level Security (RLS)**, so the database
+returns only the rows a viewer may read — `access.js` then becomes defence-in-depth, not the lock.
+
+Status by entity (updated per F1 phase — keep honest):
+
+| Entity | Where it lives | Read enforcement | Status |
+|--------|----------------|------------------|--------|
+| `evaluations` | `public.evaluations` | **server RLS** `can_read_person(subject_id)` (0003) | ✅ server-enforced |
+| `events` (incl. Slack check-ins) | `public.events` | **server RLS** `can_read_person(subject_id)` (0003) | ✅ server-enforced |
+| **people / directory** (non-sensitive: name, title, level, manager, employment) | `public.people` (**0004**) + bundled mock fallback | **server RLS** `can_read_person(person_id)` (0004) | ✅ server-enforced **(F1 Phase 1)** |
+| **growth / sensitive** (growth areas, manager notes, retention/promotion signals) | `src/js/data/growth-data.js` (bundled mock) | client-side `canSeeSensitive` only | ⏳ **still mock — Phase 2 (0005_growth.sql)** |
+| workload / capacity / engagement numbers | bundled mock (`mock-data.js`, `engage-data.js`) | client-side only | ⏳ still mock (operational, lower sensitivity) |
+
+**F1 Phase 1 (this change):** the org directory's non-sensitive fields are now read through
+`WP.db.people.list()` from `public.people` under RLS, merged into the in-memory `WP.data.PEOPLE`
+the UI already reads. The bundled mock remains the **signed-out / offline / pre-migration fallback**
+(server rows win when present), so the app is never blank and the change is fully reversible. The
+highest-sensitivity data — growth areas, manager notes, retention/promotion signals — is **still
+mock** and is **NOT** closed by Phase 1; it lands in Phase 2 under a **stricter** predicate
+(self **OR direct manager only** OR director/admin — never skip-level, never peers). Until then,
+that sensitive data is protected only by the client filter, exactly the F1 risk — so do not put
+real growth data in the bundle before Phase 2 ships.
+
+**Manager-scope coverage caveat (F2):** `can_read_person`'s "direct manager" clause keys on
+`public.directory.manager_email`, populated only where both the report and the manager have a
+verified `@webook.com` account. The `people.manager_id` chain is complete, but several managers
+have no account yet, so their reports' manager-scoped reads do not fire until the account exists
+(the subject and any director/admin can still read them). The exact gap is documented in
+`supabase/0004_people.sql` — we are not silently shipping a half-working manager scope.
+
 ## For any department (generalizable)
 The model is role + relationship, not hard-coded to events ops. Any department plugs in its own
 org tree; the same tiers, the same field-sensitivity, the same aggregate-vs-drilldown split apply.

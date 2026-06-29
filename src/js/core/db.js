@@ -222,14 +222,93 @@
       evidenceRefs: r.evidence_refs || [], visibility: r.visibility || 'managers' };
   }
 
+  /* --- people: the org directory, server-backed under RLS (F1, Phase 1) -------
+   * Reads the NON-sensitive directory (public.people, migration 0004) under the
+   * same can_read_person() policy as evaluations/events, and MERGES the directory
+   * fields into the in-memory WP.data.PEOPLE the UI already reads — so views don't
+   * change. Server wins for the fields it carries; the rich operational fields the
+   * server doesn't hold (photo, dailyCheckin, assignedEvents, tenure, slackId,
+   * email) are preserved from the bundled mock. Read-only: there is intentionally
+   * no client write (the directory is service-role / admin-tooling maintained).
+   * Signed out / offline / error -> the bundled mock stays as the graceful
+   * fallback (never blanks, fully reversible). Never throws. */
+  var PEOPLE_TABLE = 'people';
+  // Only these directory fields are server-authoritative in Phase 1. Everything
+  // else on a person record stays from the mock seed.
+  function personRowToFields(row) {
+    row = row || {};
+    return {
+      id: row.person_id,
+      name: row.name,
+      nameAr: row.name_ar,
+      title: row.title,
+      titleAr: row.title_ar,
+      level: row.level,
+      managerId: (row.manager_id === undefined ? null : row.manager_id),
+      employment: row.employment || 'fulltime',
+      initials: row.initials,
+      active: row.active !== false,
+      tbc: row.active === false
+    };
+  }
+  function peopleStore() {
+    return (WP.data && Array.isArray(WP.data.PEOPLE)) ? WP.data.PEOPLE : [];
+  }
+  // Merge one server row into WP.data.PEOPLE in place: update an existing person's
+  // directory fields (server wins), or append a new minimal person if unseen.
+  function mergePerson(row) {
+    var f = personRowToFields(row);
+    if (!f.id) return;
+    var list = peopleStore();
+    var existing = list.filter(function (p) { return p.id === f.id; })[0];
+    if (existing) {
+      // server-authoritative directory fields only — leave operational fields intact
+      existing.name = f.name; existing.nameAr = f.nameAr;
+      existing.title = f.title; existing.titleAr = f.titleAr;
+      existing.level = f.level; existing.managerId = f.managerId;
+      existing.employment = f.employment; existing.initials = f.initials;
+      if (f.tbc) existing.tbc = true; else delete existing.tbc;
+    } else {
+      list.push({ id: f.id, name: f.name, nameAr: f.nameAr, title: f.title, titleAr: f.titleAr,
+        level: f.level, managerId: f.managerId, employment: f.employment, initials: f.initials,
+        tbc: f.tbc, assignedEvents: [], dailyCheckin: null });
+    }
+  }
+
+  var people = {
+    /* Fetch the directory the user may read and merge into WP.data.PEOPLE.
+     * Falls back to the bundled mock on signed-out/offline/error. Never throws.
+     * Returns WP.data.PEOPLE (the same array reference the UI reads). */
+    list: function () {
+      var c = client();
+      if (!c) { status.offline = false; return Promise.resolve(peopleStore()); }
+      status.loading = true; status.lastError = null;
+      return Promise.resolve(c.from(PEOPLE_TABLE).select('*'))
+        .then(function (res) {
+          if (res && res.error) throw res.error;
+          var rows = (res && res.data) || [];
+          rows.forEach(mergePerson);          // server wins for directory fields
+          status.offline = false; status.synced = true;
+          return peopleStore();
+        })
+        .catch(function (e) {
+          status.offline = true; status.lastError = e;
+          return peopleStore();               // graceful fallback to mock — no throw
+        })
+        .then(function (store) { status.loading = false; return store; });
+    }
+  };
+
   WP.db = {
     status: status,
     usingBackend: usingBackend,
     evaluations: evaluations,
     events: events,
+    people: people,
     _recToRow: recToRow,        // exposed for tests
     _rowToRec: rowToRec,
     _eventToRow: eventToRow,
+    _personRowToFields: personRowToFields,  // tests
     _resetImport: function () { importDone = false; }  // tests
   };
 })(window.WP = window.WP || {});
