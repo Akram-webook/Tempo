@@ -169,6 +169,41 @@
     epCount:        { en: '{n} sourced item(s)', ar: '{n} عنصر بمصدر' },
     epHuman:        { en: 'This is raw material for your judgment — not a rating or a decision.', ar: 'هذه مادة خام لحكمك — وليست تقييماً ولا قراراً.' },
     // ─────────── end Eval-Prep keys ───────────
+    // ─────────── P3 · Suggested-range support panel ───────────
+    sbTitle:        { en: 'Suggested range — support', ar: 'النطاق المقترح — دعم' },
+    sbIntro:        { en: 'A range from the evidence to anchor your thinking. You set the rating — this never does.', ar: 'نطاق مستمد من الأدلة لتأطير تفكيرك. أنت من يحدّد التقييم — هذا لا يفعل ذلك أبداً.' },
+    sbNotEnough:    { en: 'Not enough evidence yet', ar: 'الأدلة غير كافية بعد' },
+    sbNotEnoughNote:{ en: 'We won’t guess a range without enough sourced evidence. Rate from your own judgment.', ar: 'لن نخمّن نطاقاً دون أدلة كافية موثّقة. قيّم وفق حكمك الخاص.' },
+    sbConfHigh:     { en: 'High confidence', ar: 'ثقة عالية' },
+    sbConfMed:      { en: 'Medium confidence', ar: 'ثقة متوسطة' },
+    sbConfLow:      { en: 'Low confidence', ar: 'ثقة منخفضة' },
+    // Plural forms (en: one/other · ar: one/two/few/many/other) — see WP.i18n.plural.
+    sbCitesOne:     { en: 'cites 1 item', ar: 'يستند إلى عنصر واحد' },
+    sbCitesTwo:     { en: 'cites 2 items', ar: 'يستند إلى عنصرين' },
+    sbCitesFew:     { en: 'cites {n} items', ar: 'يستند إلى {n} عناصر' },
+    sbCitesMany:    { en: 'cites {n} items', ar: 'يستند إلى {n} عنصراً' },
+    sbCitesOther:   { en: 'cites {n} items', ar: 'يستند إلى {n} عنصر' },
+    sbReveal:       { en: 'Show suggested range', ar: 'إظهار النطاق المقترح' },
+    sbRevealNote:   { en: 'Form your own view first — reveal the evidence-based range only if you want a second reference.', ar: 'كوّن رأيك أولاً — أظهر النطاق المستند إلى الأدلة فقط إذا أردت مرجعاً ثانياً.' },
+    sbHide:         { en: 'Hide', ar: 'إخفاء' },
+    sbViewEvidence: { en: 'View cited evidence', ar: 'عرض الأدلة المُستشهد بها' },
+    sbEvTitle:      { en: 'Cited evidence', ar: 'الأدلة المُستشهد بها' },
+    sbEvIntro:      { en: 'The sourced items behind this point — traceable, not invented.', ar: 'العناصر الموثّقة وراء هذه النقطة — قابلة للتتبّع وليست مُختلقة.' },
+    sbEvNone:       { en: 'No traceable items for this point.', ar: 'لا عناصر قابلة للتتبّع لهذه النقطة.' },
+    sbWeigh:        { en: 'Weigh these', ar: 'ضع هذه في الحسبان' },
+    sbAnchorOrg:    { en: 'Anchored to this cycle’s average ({v}/5).', ar: 'مُعاير على متوسط هذه الدورة ({v}/٥).' },
+    sbAnchorDefault:{ en: 'Anchored to a neutral midpoint (no cycle baseline yet).', ar: 'مُعاير على نقطة وسط محايدة (لا أساس للدورة بعد).' },
+    sbHuman:        { en: 'A range, not a score — you decide. There is no “apply” here by design.', ar: 'نطاق وليس درجة — القرار لك. لا يوجد زر «تطبيق» هنا عن قصد.' },
+    sbAria:         { en: 'Suggested range from {lo} to {hi} out of 5', ar: 'النطاق المقترح من {lo} إلى {hi} من ٥' },
+    // ─────────── P3 · Consistency awareness ───────────
+    ccTitle:        { en: 'Worth a second look', ar: 'يستحق نظرة ثانية' },
+    ccIntro:        { en: 'Calibration awareness across your own reviews — not a judgment of you or anyone. Nothing here blocks you.', ar: 'وعي بالمعايرة عبر تقييماتك — وليس حكماً عليك أو على أحد. لا شيء هنا يمنعك.' },
+    ccCitesOne:     { en: 'cites 1 review', ar: 'يستند إلى تقييم واحد' },
+    ccCitesTwo:     { en: 'cites 2 reviews', ar: 'يستند إلى تقييمين' },
+    ccCitesFew:     { en: 'cites {n} reviews', ar: 'يستند إلى {n} تقييمات' },
+    ccCitesMany:    { en: 'cites {n} reviews', ar: 'يستند إلى {n} تقييماً' },
+    ccCitesOther:   { en: 'cites {n} reviews', ar: 'يستند إلى {n} تقييم' },
+    ccOk:           { en: 'Calibration looks consistent across your reviews.', ar: 'تبدو المعايرة متّسقة عبر تقييماتك.' },
     skills:         { en: 'Skills & competencies', ar: 'المهارات والكفاءات' },
     hardSkills:     { en: 'Technical', ar: 'تقنية' },
     softSkills:     { en: 'Behavioral', ar: 'سلوكية' },
@@ -442,6 +477,23 @@
     return s[WP.state.lang] || s.en;
   }
 
+  // Plural-correct lookup. Picks the CLDR category for n in the active language
+  // (en → one/other; ar → one/two/few/many/other) and reads the matching flat key
+  // `<prefix><Category>` (e.g. sbCitesOne / sbCitesTwo / sbCitesFew). Falls back to
+  // `<prefix>Other`. Replaces {n}. So "1 item" / "2 items" and the full Arabic forms
+  // are honest, not the lazy "item(s)".
+  function pluralCat(n, lang) {
+    try { return new Intl.PluralRules(lang === 'ar' ? 'ar' : 'en').select(n); }
+    catch (e) { return n === 1 ? 'one' : 'other'; }
+  }
+  function plural(prefix, n) {
+    const cat = pluralCat(n, WP.state.lang);
+    const key = prefix + cat.charAt(0).toUpperCase() + cat.slice(1);
+    let s = STRINGS[key] || STRINGS[prefix + 'Other'];
+    const v = s ? (s[WP.state.lang] || s.en) : prefix;
+    return v.replace('{n}', n);
+  }
+
   function isRTL() { return WP.state.lang === 'ar'; }
 
   function name(person) {
@@ -469,5 +521,5 @@
     return d.getDate() + ' ' + MONTHS_SHORT[d.getMonth()];
   }
 
-  WP.i18n = { t, isRTL, name, title, eventName, stateLabel, shortDate };
+  WP.i18n = { t, plural, isRTL, name, title, eventName, stateLabel, shortDate };
 })(window.WP = window.WP || {});

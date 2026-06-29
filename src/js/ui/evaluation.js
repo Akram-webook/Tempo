@@ -35,6 +35,49 @@
       '</li>';
   }
 
+  // Mirror of evalIntel's citeId(): the stable ref string for a cited item. Lets the
+  // band's "cites N" chip resolve its refs back to the sourced evidence objects.
+  function refOf(e) { return e && (e.id || e.source || ((e.category || '') + '@' + (e.ts || ''))); }
+
+  // "cites N items" as a REAL, keyboard-accessible control (Heuristic #1/#6 — evidence
+  // is traceable, not decorative). Carries its refs so a click opens them. Empty refs →
+  // no chip (never a dead affordance). Plural-correct via WP.i18n.plural.
+  function evChip(refs, prefix, t) {
+    var ids = (refs || []).filter(Boolean);
+    if (!ids.length) return '';
+    return '<button type="button" class="wbk-band-ev" data-refs="' + WP.ui.esc(ids.join('|')) + '"' +
+        ' title="' + t('sbViewEvidence') + '">' +
+      WP.ui.icon('eye', 12) + ' ' + WP.ui.esc(WP.i18n.plural(prefix, ids.length)) + '</button>';
+  }
+
+  // Evidence "timeline" filtered to a point's refs: a calm drawer listing the SOURCED
+  // items behind it. De-fabricated — only items actually on record appear.
+  function openEvidence(refs, all, t) {
+    var set = {}; (refs || []).forEach(function (r) { set[r] = 1; });
+    var items = (all || []).filter(function (e) { return set[refOf(e)]; });
+    var host = document.getElementById('overlay-host');
+    if (!host) return;
+    host.innerHTML = '<div class="overlay"><div class="drawer">' +
+      '<button class="btn icon-btn" id="ev-close" style="margin-bottom:14px" aria-label="Close">' + WP.ui.icon('x', 14) + '</button>' +
+      '<h3>' + WP.ui.icon('eye', 16) + ' ' + t('sbEvTitle') + '</h3>' +
+      '<div class="disclaimer">' + t('sbEvIntro') + '</div>' +
+      (items.length
+        ? '<ul class="ep-list">' + items.map(function (e) {
+            return lineHTML({ text: e.text || catLabel(e.category || '', t), source: e.source, ts: e.ts }, t);
+          }).join('') + '</ul>'
+        : '<div class="ep-empty"><div class="ttl">' + t('sbEvNone') + '</div></div>') +
+      '</div></div>';
+    host.querySelector('#ev-close').onclick = function () { host.innerHTML = ''; };
+    host.querySelector('.overlay').onclick = function (e) { if (e.target.classList.contains('overlay')) host.innerHTML = ''; };
+  }
+
+  // Wire the cited-evidence chips inside a freshly-rendered band to the evidence drawer.
+  function wireEvidence(host, all, t) {
+    host.querySelectorAll('.wbk-band-ev[data-refs]').forEach(function (btn) {
+      btn.onclick = function () { openEvidence(btn.dataset.refs.split('|'), all, t); };
+    });
+  }
+
   /* Render the evidence-prep summary. PREP ONLY — deliberately renders NO score,
    * rating, or verdict; just sourced lines, growth highlights, and listed gaps. */
   function prepHTML(s, t, ar) {
@@ -80,6 +123,59 @@
 
     return head + highlights + sections + gaps +
       '<div class="disclaimer">' + t('epHuman') + '</div>';
+  }
+
+  /* Render the SUGGESTED RANGE as a calm support panel (P3, WP.evalIntel). It shows a
+   * /5 BAND [low–high] — never a single number to copy — with confidence, cited
+   * reasoning, and risks framed "weigh these". It NEVER replaces the manager's input
+   * and carries NO apply button (the human decides). Sensitive-gated by the caller. */
+  function bandHTML(s, t) {
+    var head = '<h3>' + WP.ui.icon('sparkles', 14) + ' ' + t('sbTitle') + '</h3>' +
+      '<div class="disclaimer">' + t('sbIntro') + '</div>';
+
+    // "Not enough evidence yet" is a first-class, honest result — no fabricated band.
+    if (!s || s.denied || !s.enoughEvidence || !Array.isArray(s.range)) {
+      return head +
+        '<div class="wbk-band-empty"><strong>' + WP.ui.icon('clock', 14) + ' ' + t('sbNotEnough') + '</strong>' +
+          '<div class="wbk-band-sub">' + t('sbNotEnoughNote') + '</div></div>' +
+        '<div class="disclaimer">' + t('sbHuman') + '</div>';
+    }
+
+    var lo = s.range[0], hi = s.range[1];
+    var pct = function (v) { return ((v - 1) / 4) * 100; }; // /5 → 0–100% across the track
+    var left = pct(lo), width = Math.max(pct(hi) - pct(lo), 2);
+    var confKey = s.confidence === 'high' ? 'sbConfHigh' : (s.confidence === 'low' ? 'sbConfLow' : 'sbConfMed');
+
+    var track =
+      '<div class="wbk-band-val">' + lo.toFixed(1) + '–' + hi.toFixed(1) + '<span>/5</span></div>' +
+      // gridlines (1–5) keep the span keyed to the scale, not floating decoration (#4).
+      '<div class="wbk-band-track" role="img" aria-label="' + t('sbAria').replace('{lo}', lo).replace('{hi}', hi) + '">' +
+        '<span class="wbk-band-grid" aria-hidden="true"></span>' +
+        '<span class="wbk-band-span" style="inset-inline-start:' + left + '%;inline-size:' + width + '%"></span></div>' +
+      '<div class="wbk-band-scale"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>';
+
+    var reason = s.reasoning && s.reasoning.length
+      ? '<ul class="wbk-band-reason">' + s.reasoning.map(function (r) {
+          return '<li><span>' + WP.ui.esc(r.text) + '</span>' + evChip(r.evidence, 'sbCites', t) + '</li>';
+        }).join('') + '</ul>'
+      : '';
+
+    var risks = s.risks && s.risks.length
+      ? '<div class="ep-gaps"><div class="mini-label">' + WP.ui.icon('alert', 13) + ' ' + t('sbWeigh') + '</div>' +
+          '<ul class="wbk-band-reason">' + s.risks.map(function (rk) {
+            return '<li class="wbk-band-risk"><span>' + WP.ui.esc(rk.text) + '</span>' + evChip(rk.evidence, 'sbCites', t) + '</li>';
+          }).join('') + '</ul></div>'
+      : '';
+
+    var anchor = s.baseline
+      ? '<div class="wbk-band-sub">' + (s.baseline.anchoredTo === 'orgMean'
+          ? t('sbAnchorOrg').replace('{v}', s.baseline.value) : t('sbAnchorDefault')) + '</div>'
+      : '';
+
+    return head +
+      '<div class="wbk-band-head"><span class="wbk-band-conf">' + WP.ui.icon('gauge', 12) + ' ' + t(confKey) + '</span></div>' +
+      track + anchor + reason + risks +
+      '<div class="disclaimer">' + t('sbHuman') + '</div>';
   }
 
   function render(root) {
@@ -149,6 +245,15 @@
 
       (showPrep ? '<div class="section eval-prep" id="eval-prep-host" aria-live="polite"><div class="ttl">' + WP.ui.icon('clipboard',14) + ' ' + t('epLoading') + '</div></div>' : '') +
 
+      // ANCHORING GUARD (Heuristic #2/#5): the suggested range is COLLAPSED on load —
+      // the manager forms their own view first, then reveals it on demand. data-suggested
+      // stays EMPTY until reveal, so "shown" == "revealed" for B1's provenance stamp.
+      (showPrep ? '<div class="section wbk-band wbk-band--collapsed" id="eval-suggested-band" data-suggested="" aria-live="polite">' +
+        '<h3>' + WP.ui.icon('sparkles',14) + ' ' + t('sbTitle') + '</h3>' +
+        '<div class="disclaimer">' + t('sbRevealNote') + '</div>' +
+        '<button type="button" class="btn" id="sb-reveal" disabled>' + WP.ui.icon('eye',14) + ' ' + t('epLoading') + '</button>' +
+      '</div>' : '') +
+
       '<div class="section"><h3>' + (selfMode ? t('selfAssessment') : t('downwardFeedback')) + ' · ' + t('criteriaTitle') +
         '<span class="ttl" style="font-weight:400"> · ' + t('groupWeight') + ' 100% · ' + t('scale') + ' 1–5</span></h3>' +
         (selfCmp ? '<div class="disclaimer">' + WP.ui.icon('user',13) + ' = ' + t('selfRating') + '</div>' : '') +
@@ -169,9 +274,31 @@
     // eval with no AI input. Held in a closure the approve handler reads.
     let aiSuggestion = null;
     if (showPrep && WP.evalIntel) {
+      // Fetch eagerly so reveal is instant, but DO NOT render or stamp until the
+      // manager reveals it. Revealing is the act that makes the suggestion "shown":
+      // only then do we fill the band, stamp data-suggested, and arm aiSuggestion for
+      // the acceptance flag. A band never revealed = no AI shown = no provenance — which
+      // keeps B1's later aiAccepted stamp honest. (CONTRACT: shown == revealed.)
+      const revealBand = function (s, host) {
+        if (s && s.enoughEvidence && Array.isArray(s.range)) aiSuggestion = s;
+        host.classList.remove('wbk-band--collapsed');
+        host.innerHTML = bandHTML(s, t);
+        host.setAttribute('data-suggested',
+          (s && s.enoughEvidence && Array.isArray(s.range)) ? (s.range[0] + '-' + s.range[1]) : '');
+        wireEvidence(host, (s && s.evidence) || [], t); // chips → cited-evidence drawer (#1)
+      };
+      const armReveal = function (s) {
+        const host = root.querySelector('#eval-suggested-band');
+        if (!host) return;
+        const btn = host.querySelector('#sb-reveal');
+        if (!btn) return;
+        btn.disabled = false;
+        btn.innerHTML = WP.ui.icon('eye', 14) + ' ' + t('sbReveal');
+        btn.onclick = function () { revealBand(s, host); };
+      };
       Promise.resolve(WP.evalIntel.suggestedRange(p.id, ev.period, { viewer: viewer, refDate: WP.state.refDate }))
-        .then(function (s) { if (s && s.enoughEvidence && Array.isArray(s.range)) aiSuggestion = s; })
-        .catch(function () {});
+        .then(armReveal)
+        .catch(function () { armReveal(null); });
     }
 
     // Fill the evidence-prep panel asynchronously (reads the append-only event store).

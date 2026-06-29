@@ -111,10 +111,48 @@
             '<span><span class="dot" style="background:var(--text-muted)"></span> ' + pct(counts['Not started']) + '% ' + t('notStartedL') + '</span></div></div>' +
       '</div>' +
 
+      // Consistency / bias AWARENESS (P3) — only for an actual evaluator, about THEIR
+      // OWN ratings. Neutral "worth a second look", never blocking, never a rank.
+      ((isReal && reports.length) ? '<div class="section wbk-band" id="eval-consist-host" aria-live="polite" hidden></div>' : '') +
+
       '<div class="section"><h3>' + t('employees') + ' · ' + scope.length + '</h3>' + (rows || '<div class="sub">—</div>') + '</div>';
 
     // S3-1 + S4-1 — open THIS cycle's evaluation, and remember we came from the hub
     // so the evaluation's back button returns here ("Back to evaluations").
+    // Fill the consistency-awareness panel asynchronously (reads completed reviews +
+    // their evidence counts). Neutral cards; hidden entirely when there's nothing to
+    // flag or not enough data — never an empty accusation, never a score of anyone.
+    const consistHost = root.querySelector('#eval-consist-host');
+    if (consistHost && WP.evalIntel && WP.evalIntel.consistencyCheck) {
+      Promise.resolve(WP.evalIntel.consistencyCheck(viewer.id, cycle.id, { refDate: WP.state.refDate }))
+        .then(function (c) {
+          // Not enough data → stay hidden (no fabricated calibration claim).
+          if (!c || !c.enoughData) { consistHost.hidden = true; return; }
+          consistHost.hidden = false;
+          // Zero warnings but the check DID run → a quiet "looks consistent" line so the
+          // evaluator knows it ran and passed (#6) — never an accusation, never a score.
+          if (!c.warnings || !c.warnings.length) {
+            consistHost.innerHTML =
+              '<div class="wbk-consist-ok"><span class="wbk-consist-ok-ic">' + WP.ui.icon('check', 14) + '</span> ' +
+                ui.esc(t('ccOk')) + '</div>';
+            return;
+          }
+          consistHost.innerHTML =
+            '<h3>' + WP.ui.icon('bulb', 14) + ' ' + t('ccTitle') + '</h3>' +
+            '<div class="disclaimer">' + t('ccIntro') + '</div>' +
+            '<div class="wbk-consist">' + c.warnings.map(function (w) {
+              return '<div class="wbk-consist-card">' +
+                '<span class="wbk-consist-ic">' + WP.ui.icon('alert', 16) + '</span>' +
+                '<div><div class="wbk-consist-t">' + ui.esc(w.text) + '</div>' +
+                  '<div class="wbk-consist-x">' + ui.esc(w.explanation || '') + '</div>' +
+                  '<div class="wbk-band-ev">' + WP.ui.icon('eye', 12) + ' ' +
+                    ui.esc(WP.i18n.plural('ccCites', (w.evidence || []).length)) + '</div></div>' +
+              '</div>';
+            }).join('') + '</div>';
+        })
+        .catch(function () { consistHost.hidden = true; });
+    }
+
     const openEval = function (id) {
       WP.setState({ route: 'evaluation', selectedId: id, selectedCycle: cycle.id, evalOrigin: 'evaluations' });
     };

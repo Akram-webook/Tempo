@@ -1496,3 +1496,66 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .ep-gaps { margin-top: 14px; }
 .ep-gap { color: var(--text-muted); font-size: 13px; padding: 4px 0; }
 [dir="rtl"] .eval-prep { border-left: 0; border-right: 3px solid var(--brand); }
+
+/* ── Suggested-range SUPPORT panel (P3, WP.evalIntel.suggestedRange). A calm aid
+   BESIDE the manager's own rating — never replaces it. Shows a RANGE band on /5
+   (never a single number to copy), confidence, cited reasoning, and risks framed
+   "weigh these". Sensitive-gated. Tokens only; both themes; RTL via logical props. */
+.wbk-band { border-inline-start: 3px solid var(--brand); }
+.wbk-band .ttl { line-height: 1.5; }
+.wbk-band-head { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.wbk-band-sub { color: var(--text-muted); font-size: var(--fs-body-s); line-height: var(--lh-body-s); margin-top: 2px; }
+.wbk-band-conf { display: inline-flex; align-items: center; gap: var(--sp-1); margin-inline-start: auto;
+  font-size: var(--fs-label-xs); line-height: var(--lh-label-xs); text-transform: uppercase; letter-spacing: .06em;
+  color: var(--text-muted); }
+/* the /5 range track — a highlighted band [low–high], not a point */
+.wbk-band-track { position: relative; block-size: 8px; border-radius: 999px; background: var(--surface-3);
+  margin: var(--sp-5) 0 var(--sp-3); }
+/* 1–5 gridlines: thin marks at 0/25/50/75/100% so the span reads against the scale (#4). */
+.wbk-band-grid { position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background-image: repeating-linear-gradient(to right,
+    var(--border) 0, var(--border) 1px, transparent 1px, transparent 25%);
+  border-inline-end: 1px solid var(--border); /* the 5/right-edge tick */
+  opacity: .9; }
+.wbk-band-span { position: absolute; block-size: 100%; border-radius: 999px;
+  background: color-mix(in srgb, var(--brand) 55%, transparent); border: 1px solid var(--brand); }
+.wbk-band-scale { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary); font-size: var(--fs-body-xs); }
+.wbk-band-val { font-family: var(--font-display); font-weight: 600; color: var(--text);
+  font-size: var(--fs-h5); line-height: var(--lh-h5); font-variant-numeric: tabular-nums; }
+.wbk-band-val span { color: var(--text-muted); font-size: var(--fs-body-m); font-weight: 400; }
+.wbk-band-reason { list-style: none; margin: var(--sp-3) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+.wbk-band-reason li { display: flex; flex-direction: column; gap: 2px; padding: var(--sp-3);
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: var(--fs-body-m); color: var(--text); }
+/* "cites N" is a real control opening the cited-evidence drawer (#1) — reset the button
+   chrome, keep it quiet, but give it a clear hover + keyboard focus ring. */
+.wbk-band-ev { display: inline-flex; align-items: center; gap: var(--sp-1); align-self: flex-start;
+  color: var(--text-muted); font-size: var(--fs-body-s); font-family: inherit;
+  background: none; border: 1px solid transparent; border-radius: var(--radius-sm);
+  padding: 2px 6px; margin-block-start: 2px; cursor: pointer; text-decoration: underline;
+  text-decoration-style: dotted; text-underline-offset: 2px; }
+.wbk-band-ev:hover { color: var(--text); background: var(--surface-2); border-color: var(--border); }
+.wbk-band-ev:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+/* Collapsed (anchoring guard): only the title + note + reveal button show. */
+.wbk-band--collapsed .wbk-band-head, .wbk-band--collapsed .wbk-band-track,
+.wbk-band--collapsed .wbk-band-scale, .wbk-band--collapsed .wbk-band-val,
+.wbk-band--collapsed .wbk-band-reason, .wbk-band--collapsed .ep-gaps { display: none; }
+#sb-reveal { margin-block-start: var(--sp-3); }
+#sb-reveal[disabled] { opacity: .6; cursor: progress; }
+.wbk-band-risk { border-color: var(--state-notice-border); }
+.wbk-band-risk .wbk-band-ev { color: var(--state-notice); }
+.wbk-band-empty { padding: var(--sp-4); border: 1px dashed var(--border); border-radius: var(--radius-sm);
+  background: var(--surface-2); color: var(--text-muted); }
+
+/* ── Consistency / bias AWARENESS cards (P3, WP.evalIntel.consistencyCheck). Neutral
+   "worth a second look" — never blocking, never a rank/score of anyone. */
+.wbk-consist { display: flex; flex-direction: column; gap: var(--sp-3); }
+.wbk-consist-card { display: flex; align-items: flex-start; gap: var(--sp-3); padding: var(--sp-4);
+  border: 1px solid var(--state-notice-border); background: var(--state-notice-bg); border-radius: var(--radius); }
+.wbk-consist-ic { flex: none; color: var(--state-notice); margin-block-start: 1px; }
+.wbk-consist-t { font-weight: 600; font-size: var(--fs-label-m); line-height: var(--lh-label-m); color: var(--text); }
+.wbk-consist-x { font-size: var(--fs-body-s); line-height: var(--lh-body-s); color: var(--text-muted); margin-top: 2px; }
+/* Quiet "calibration looks consistent" line (#6) — confirms the check ran; never an alarm. */
+.wbk-consist-ok { display: flex; align-items: center; gap: var(--sp-2); color: var(--text-muted);
+  font-size: var(--fs-body-s); line-height: var(--lh-body-s); }
+.wbk-consist-ok-ic { display: inline-flex; color: var(--state-positive); }
