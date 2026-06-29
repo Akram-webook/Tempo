@@ -4,3 +4,4 @@ _site/
 *.log
 .vscode/
 .slack-ingest-state.json
+.slack-ingest-health.json
