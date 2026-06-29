@@ -54,6 +54,9 @@
       nav.splice(5, 0, { id: 'fairness', routes: ['fairness'], icon: 'tree', label: t('navFairness') });
     }
     if (canManage) {
+      // Weekly Intelligence Report — director/admin only (decision patterns, never
+      // people). Hidden for everyone else (guardrail, Constitution II / Ethics #6).
+      nav.push({ id: 'weekly', routes: ['weekly'], icon: 'chart', label: t('navWeekly') });
       nav.push({ id: 'permissions', routes: ['permissions'], icon: 'key',      label: t('permsTitle') });
       nav.push({ id: 'settings',    routes: ['settings'],    icon: 'settings', label: t('settings') });
     }
@@ -199,6 +202,7 @@
     else if (WP.state.route === 'wellbeing') WP.ui.wellbeing.render(root);
     else if (WP.state.route === 'fairness') WP.ui.fairness.render(root);
     else if (WP.state.route === 'me') WP.ui.me.render(root);
+    else if (WP.state.route === 'weekly') WP.ui.weeklyReport.render(root);
     else if (WP.state.route === 'library') WP.ui.wbkLibrary.render(root);
     else WP.ui.workloadMap.render(root);
 

@@ -166,6 +166,15 @@ body {
 .wbk-table tbody tr:hover td { background: var(--surface-1); }
 .wbk-table--zebra tbody tr:nth-child(even) td { background: var(--surface-2); }
 .wbk-table td.wbk-td-num, .wbk-table th.wbk-th-num { text-align: end; font-variant-numeric: tabular-nums; }
+
+/* ── Weekly Intelligence Report (P5, WP.decisionMemory). Director/admin-only
+   view of decision PATTERNS — never people. Tokens only; both themes; RTL-safe. */
+.wr-kpi { display: inline-flex; flex-direction: column; gap: 2px; }
+.wr-kpi-v { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-h3); line-height: var(--lh-h3); color: var(--text); font-variant-numeric: tabular-nums; }
+.wr-kpi-l { font-size: var(--fs-label-s); line-height: var(--lh-label-s); text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+.wr-cite { display: inline-flex; align-items: center; gap: var(--sp-1); color: var(--text-tertiary); font-size: var(--fs-body-s); white-space: nowrap; }
+.wr-empty { padding: var(--sp-4); border: 1px dashed var(--border); border-radius: var(--radius); background: var(--surface-2); color: var(--text-muted); }
+.wr-empty-note { color: var(--text-muted); font-size: var(--fs-body-s); line-height: var(--lh-body-s); margin-top: 2px; }
 .wbk-menu-item .wbk-menu-trail { margin-inline-start: auto; color: var(--text-tertiary); font-size: var(--fs-body-s); }
 
 .wbk-chip {
