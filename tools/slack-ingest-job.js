@@ -47,13 +47,68 @@ function need(k) { const v = env[k]; if (!v && !DRY) throw new Error('missing en
 function readState() { try { return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')); } catch (e) { return { last_run_ts: '0' }; } }
 function writeState(s) { try { fs.writeFileSync(STATE_FILE, JSON.stringify(s, null, 2)); } catch (e) {} }
 
+// Injectable clock + sleep so tests can drive backoff/timestamps WITHOUT real waits.
+const HOOKS = {
+  now: function () { return new Date().toISOString(); },
+  sleep: function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+};
+// 429 backoff: honor Retry-After, bounded attempts + a hard total-wait cap. On
+// exhaustion the caller treats it as Slack-unreachable (clean no-op, same fail-safe).
+const BACKOFF = { maxAttempts: 5, capTotalWaitMs: 60000, defaultWaitMs: 1000 };
+
+// ---- run-health heartbeat (operational counts only — NO message text / author / PII) ----
+const HEALTH_FILE = process.env.TEMPO_INGEST_HEALTH || path.join(root, '.slack-ingest-health.json'); // not secret
+function readHealth() { try { return JSON.parse(fs.readFileSync(HEALTH_FILE, 'utf8')); } catch (e) { return {}; } }
+/* Persist a tiny health record so a silently-stuck cursor or a creeping error count is
+ * visible without grepping logs. Carries ONLY operational counts — never any message
+ * content, person/author, or PII. Skipped on --dry (a human preview must not clobber the
+ * scheduled-run health). */
+function recordHealth(summary, dry) {
+  if (dry) return; // preview run — do not touch the monitoring record
+  var prev = readHealth();
+  var at = HOOKS.now();
+  var errored = summary.errors > 0;
+  // "stuck" = there were messages to process but the cursor did not move (e.g. the first
+  // message keeps erroring). An idle channel (scanned 0) is NOT flagged as stuck.
+  var stuck = !summary.cursorAdvanced && summary.scanned > 0;
+  var health = {
+    lastRunAt: at,
+    lastSuccessAt: errored ? (prev.lastSuccessAt || null) : at,
+    lastSummary: {
+      scanned: summary.scanned, parsed: summary.parsed, inserted: summary.inserted,
+      skipped: summary.skipped, deduped: summary.deduped, errors: summary.errors,
+      cursorAdvanced: !!summary.cursorAdvanced
+    },
+    consecutiveErrorRuns: errored ? ((prev.consecutiveErrorRuns || 0) + 1) : 0,
+    cursorStuckSince: stuck ? (prev.cursorStuckSince || at) : null
+  };
+  try { fs.writeFileSync(HEALTH_FILE, JSON.stringify(health, null, 2)); } catch (e) {}
+  return health;
+}
+
 // ---- thin Slack + Supabase REST clients (no extra deps; Node 18+ global fetch) ----
 async function slack(method, params) {
   const url = 'https://slack.com/api/' + method + '?' + new URLSearchParams(params).toString();
-  const res = await fetch(url, { headers: { Authorization: 'Bearer ' + need('SLACK_BOT_TOKEN') } });
-  const json = await res.json();
-  if (!json.ok) throw new Error('slack ' + method + ': ' + json.error);
-  return json;
+  let waited = 0;
+  for (let attempt = 1; ; attempt++) {
+    const res = await fetch(url, { headers: { Authorization: 'Bearer ' + need('SLACK_BOT_TOKEN') } });
+    if (res.status === 429) {
+      const raHeader = (res.headers && typeof res.headers.get === 'function') ? res.headers.get('Retry-After') : null;
+      const ra = parseInt(raHeader, 10);
+      const waitMs = Number.isFinite(ra) && ra >= 0 ? ra * 1000 : BACKOFF.defaultWaitMs;
+      // bounded: give up once attempts OR the total wait cap is exceeded → treat as
+      // unreachable so the run becomes a clean no-op (never hammer Slack).
+      if (attempt >= BACKOFF.maxAttempts || waited + waitMs > BACKOFF.capTotalWaitMs) {
+        throw new Error('slack ' + method + ': rate-limited (429) past backoff cap');
+      }
+      log('rate-limited on ' + method + ' — retry in ' + Math.round(waitMs / 1000) + 's (attempt ' + attempt + ')');
+      await HOOKS.sleep(waitMs); waited += waitMs;
+      continue;
+    }
+    const json = await res.json();
+    if (!json.ok) throw new Error('slack ' + method + ': ' + json.error);
+    return json;
+  }
 }
 
 // Resolve a Slack user -> directory person_id. Reads the Slack user's verified
@@ -140,6 +195,7 @@ async function run(opts) {
   } catch (e) {
     log('Slack unreachable — no-op this run: ' + e.message);
     summary.errors++; summary.cursorAdvanced = false; summary.maxTs = state.last_run_ts;
+    recordHealth(summary, dry);
     return summary;
   }
 
@@ -190,6 +246,7 @@ async function run(opts) {
   summary.cursorAdvanced = (!dry && maxTs !== state.last_run_ts);
   if (summary.cursorAdvanced) writeState({ last_run_ts: maxTs }); // DRY never advances the cursor
   summary.maxTs = maxTs;
+  recordHealth(summary, dry);
   log('done — scanned:' + summary.scanned + ' parsed:' + summary.parsed + ' inserted:' + summary.inserted +
       ' skipped:' + summary.skipped + ' deduped:' + summary.deduped + ' errors:' + summary.errors + (dry ? ' [DRY]' : ''));
   return summary;
@@ -197,7 +254,8 @@ async function run(opts) {
 
 // Export internals for the CI mock (test/verify-slack-job.js); auto-run only when
 // invoked directly so requiring the module does NOT kick off a real run.
-module.exports = { run: run, toRow: toRow, resolveSlackAuthor: resolveSlackAuthor, SI: SI, readState: readState };
+module.exports = { run: run, toRow: toRow, resolveSlackAuthor: resolveSlackAuthor, SI: SI,
+  readState: readState, readHealth: readHealth, HOOKS: HOOKS, BACKOFF: BACKOFF };
 
 if (require.main === module) {
   // Runtime faults (Slack/Supabase down) are caught inside run() → no-op, exit 0.

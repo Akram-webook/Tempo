@@ -18,9 +18,12 @@ function ok(name, cond) { if (!cond) failed++; console.log((cond ? 'PASS' : 'FAI
 
 // --- env (secrets are fake; state file -> temp so we never touch the repo) ------
 const STATE = path.join(os.tmpdir(), 'tempo-ingest-test-state.json');
+const HEALTH = path.join(os.tmpdir(), 'tempo-ingest-test-health.json');
 function resetState() { try { fs.unlinkSync(STATE); } catch (e) {} }
-resetState();
+function resetHealth() { try { fs.unlinkSync(HEALTH); } catch (e) {} }
+resetState(); resetHealth();
 process.env.TEMPO_INGEST_STATE        = STATE;
+process.env.TEMPO_INGEST_HEALTH       = HEALTH;
 process.env.SLACK_BOT_TOKEN           = 'xoxb-test';
 process.env.SLACK_CHECKIN_CHANNEL_ID  = 'C_TEST';
 process.env.SUPABASE_URL              = 'https://proj.supabase.co';
@@ -39,15 +42,22 @@ const PAGE2 = [
 ];
 const USERS = { U_OSAMA: { email: 'o.taher.c@webook.com' }, U_GHOST: { email: 'ghost@nowhere.com' } };
 
-function jsonRes(obj, status) { return { ok: (status || 200) < 400, status: status || 200, json: async () => obj, text: async () => JSON.stringify(obj) }; }
+function jsonRes(obj, status) { return { ok: (status || 200) < 400, status: status || 200, headers: { get: () => null }, json: async () => obj, text: async () => JSON.stringify(obj) }; }
+function res429(retryAfterSec) {
+  return { ok: false, status: 429, headers: { get: (k) => (String(k).toLowerCase() === 'retry-after' ? String(retryAfterSec) : null) },
+           json: async () => ({ ok: false, error: 'ratelimited' }), text: async () => 'rate limited' };
+}
 
 // FAKE Supabase: an id-keyed store. POST of a known id → 409 (PK conflict = dedupe);
 // new id → 201 and stored. GET /directory resolves the email→person_id mapping.
 function makeFetch(db, opts) {
   opts = opts || {};
+  const rl = opts.rateLimit; // { times, retryAfter } — return 429 this many times first
+  let rlSeen = 0;
   return async function (url, init) {
     if (url.indexOf('/api/conversations.history') !== -1) {
       if (opts.slackDown) throw new Error('ENOTFOUND slack.com');
+      if (rl && rlSeen < rl.times) { rlSeen++; return res429(rl.retryAfter); }
       const cursor = new URL(url).searchParams.get('cursor');
       if (!cursor) return jsonRes({ ok: true, messages: PAGE1.slice(), has_more: true, response_metadata: { next_cursor: 'CUR2' } });
       return jsonRes({ ok: true, messages: PAGE2.slice(), has_more: false, response_metadata: { next_cursor: '' } });
@@ -63,6 +73,7 @@ function makeFetch(db, opts) {
       return jsonRes([]); // unmapped → fail closed
     }
     if (url.indexOf('/rest/v1/events') !== -1 && init && init.method === 'POST') {
+      if (opts.supaFail) return jsonRes({ message: 'boom' }, 500); // injected insert fault
       const row = JSON.parse(init.body);
       if (db.has(row.id)) return jsonRes({}, 409); // PK conflict → dedupe
       db.set(row.id, row);
@@ -73,6 +84,10 @@ function makeFetch(db, opts) {
 }
 
 const job = require('../tools/slack-ingest-job.js'); // require.main !== module → no auto-run
+
+// Drive backoff WITHOUT real waits: record requested sleeps, resolve immediately.
+let sleeps = [];
+job.HOOKS.sleep = function (ms) { sleeps.push(ms); return Promise.resolve(); };
 
 (async () => {
   // ===== run 1: normal, two pages =========================================
@@ -141,7 +156,79 @@ const job = require('../tools/slack-ingest-job.js'); // require.main !== module 
   ok('D3: dry run advances no cursor (no state file)', !fs.existsSync(STATE) && s4.cursorAdvanced === false);
   ok('D4: dry run reports its mode honestly', s4.dry === true);
 
+  // ===== run 5: 429 once → backoff retries, run completes, page not dropped ===
+  resetState(); resetHealth();
+  sleeps = [];
+  const db5 = new Map();
+  global.fetch = makeFetch(db5, { rateLimit: { times: 1, retryAfter: 2 } });
+  const s5 = await job.run();
+  ok('7a: a single 429 is retried, run completes (3 inserted)', s5.inserted === 3 && db5.size === 3);
+  ok('7b: it waited per Retry-After (2s), once, via the injected clock (no real sleep)', sleeps.length === 1 && sleeps[0] === 2000);
+  ok('7c: the rate-limited page was NOT dropped (cursor advanced to newest)', job.readState().last_run_ts === '1782900003.0001');
+
+  // ===== run 6: repeated 429 past the cap → bounded, then clean no-op ========
+  resetState(); resetHealth();
+  sleeps = [];
+  const db6 = new Map();
+  global.fetch = makeFetch(db6, { rateLimit: { times: Infinity, retryAfter: 1 } });
+  let threw6 = false, s6;
+  try { s6 = await job.run(); } catch (e) { threw6 = true; }
+  ok('8a: repeated 429 does not throw past the boundary', !threw6);
+  ok('8b: repeated 429 → clean no-op (no rows written)', db6.size === 0);
+  ok('8c: repeated 429 left the cursor unchanged', !fs.existsSync(STATE) && s6.cursorAdvanced === false);
+  ok('8d: backoff is BOUNDED (fewer than maxAttempts waits, under the cap)',
+    sleeps.length < job.BACKOFF.maxAttempts && sleeps.reduce((a, b) => a + b, 0) <= job.BACKOFF.capTotalWaitMs);
+
+  // ===== run 7: health record shape + transitions + NO PII ==================
+  // clean run → no errors, cursor advanced, not stuck
+  resetState(); resetHealth();
+  global.fetch = makeFetch(new Map());
+  await job.run();
+  let h = job.readHealth();
+  ok('9a: health written with the documented shape', h && h.lastRunAt && h.lastSummary &&
+    ['scanned', 'parsed', 'inserted', 'skipped', 'deduped', 'errors', 'cursorAdvanced'].every(k => k in h.lastSummary) &&
+    'consecutiveErrorRuns' in h && 'cursorStuckSince' in h && 'lastSuccessAt' in h);
+  ok('9b: clean run → consecutiveErrorRuns 0, not stuck, success stamped', h.consecutiveErrorRuns === 0 && h.cursorStuckSince === null && h.lastSuccessAt === h.lastRunAt);
+
+  // two error runs (Slack down) → consecutiveErrorRuns increments, success frozen
+  const successAt = h.lastSuccessAt;
+  global.fetch = makeFetch(new Map(), { slackDown: true });
+  await job.run(); let h2 = job.readHealth();
+  ok('9c: error run increments consecutiveErrorRuns to 1', h2.consecutiveErrorRuns === 1);
+  await job.run(); let h3 = job.readHealth();
+  ok('9d: a second error run increments to 2 and keeps last success frozen', h3.consecutiveErrorRuns === 2 && h3.lastSuccessAt === successAt);
+  // a clean run resets the error streak
   resetState();
+  global.fetch = makeFetch(new Map());
+  await job.run(); let h4 = job.readHealth();
+  ok('9e: a clean run resets consecutiveErrorRuns to 0', h4.consecutiveErrorRuns === 0);
+
+  // cursor-stuck: messages present but insert keeps failing → cursor frozen, stuck set
+  resetState(); resetHealth();
+  global.fetch = makeFetch(new Map(), { supaFail: true });
+  await job.run(); let h5 = job.readHealth();
+  ok('9f: cursorStuckSince sets when there is work but the cursor cannot advance', !!h5.cursorStuckSince && h5.lastSummary.cursorAdvanced === false && h5.lastSummary.scanned > 0);
+  // then a clean run clears it
+  resetState();
+  global.fetch = makeFetch(new Map());
+  await job.run(); let h6 = job.readHealth();
+  ok('9g: cursorStuckSince clears once the cursor advances again', h6.cursorStuckSince === null);
+
+  // NO PII in the health file — operational counts only
+  const healthRaw = fs.readFileSync(HEALTH, 'utf8');
+  const pii = ['issued 40 tickets', 'review my PR', 'did stuff', 'cross-sell', 'power supply',
+    'U_OSAMA', 'U_GHOST', 'p_osama', 'o.taher.c@webook.com', 'slack.com/archives', 'Daily Check-in'];
+  ok('9h: health file contains NO message text / author / PII', pii.every(s => healthRaw.indexOf(s) === -1));
+  ok('9i: health file keys are operational-only', Object.keys(JSON.parse(healthRaw)).sort().join(',') ===
+    'consecutiveErrorRuns,cursorStuckSince,lastRunAt,lastSuccessAt,lastSummary');
+
+  // ===== dry run does NOT write the health record (preview ≠ scheduled run) ==
+  resetState(); resetHealth();
+  global.fetch = makeFetch(new Map());
+  await job.run({ dry: true });
+  ok('9j: a --dry preview does not write/clobber the health record', !fs.existsSync(HEALTH));
+
+  resetState(); resetHealth();
   console.log('\n' + (failed ? failed + ' FAILED' : 'ALL PASS'));
   process.exit(failed ? 1 : 0);
 })();

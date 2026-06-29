@@ -63,11 +63,32 @@ self-heals on the next run.
 exit 0**, no partial write, cursor unchanged. Only a real **misconfig** (a required env var
 missing on a non-dry run) exits **non-zero**.
 
+## Run-health heartbeat (`.slack-ingest-health.json`)
+
+Every scheduled (non-`--dry`) run rewrites a tiny, **non-secret** health record next to the
+cursor file, so a silently-stuck cursor or a creeping error count is visible without grepping
+logs. Path override: `TEMPO_INGEST_HEALTH`. It carries **operational counts only — no message
+text, no person/author, no PII.**
+
+| Field | Meaning |
+|-------|---------|
+| `lastRunAt` | ISO timestamp of the most recent run |
+| `lastSuccessAt` | ISO timestamp of the most recent run with `errors === 0` (frozen across error runs) |
+| `lastSummary` | the last run's `{ scanned, parsed, inserted, skipped, deduped, errors, cursorAdvanced }` |
+| `consecutiveErrorRuns` | count of back-to-back runs with `errors > 0`; resets to 0 on a clean run |
+| `cursorStuckSince` | ISO timestamp set when there were messages but the cursor could **not** advance (e.g. the first message keeps erroring); cleared (`null`) once it advances again. An idle channel is **not** flagged. |
+
+Suggested alerts: `consecutiveErrorRuns >= 3`, or `cursorStuckSince` older than ~1h, or
+`now − lastSuccessAt` exceeding a few cron intervals. `--dry` previews do **not** write this
+file (a manual preview must never clobber the scheduled-run health).
+
 ## CI
 
 `npm test` runs `test/verify-slack-job.js` every build — the full loop against a fake paginated
 Slack + id-keyed fake Supabase (no network), asserting cursor-advance, idempotent re-run, skip,
-fail-closed drop, Slack-down no-op, the exact emitted events, and the `--dry` no-op.
+fail-closed drop, Slack-down no-op, the exact emitted events, the `--dry` no-op, the **429
+Retry-After backoff** (bounded; exhaustion → clean no-op, with mocked timers — no real sleep),
+and the **health record** shape/transitions + its no-PII guarantee.
 
 ## Go-live dependency (honest)
 
