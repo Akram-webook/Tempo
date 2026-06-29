@@ -85,8 +85,11 @@ async function supa(verb, pathRel, body) {
   };
   const res = await fetch(url, { method: verb, headers: headers, body: body ? JSON.stringify(body) : undefined });
   if (verb === 'GET') return res.json();
-  if (!res.ok && res.status !== 409) throw new Error('supabase ' + res.status + ' ' + (await res.text()));
-  return null;
+  // 409 = primary-key conflict on id='slack:<dedupeKey>' → already ingested (deduped),
+  // not an error. (Prod also uses Prefer:ignore-duplicates, so this is belt-and-braces.)
+  if (res.status === 409) return { duplicate: true };
+  if (!res.ok) throw new Error('supabase ' + res.status + ' ' + (await res.text()));
+  return { duplicate: false };
 }
 
 // Map a pure-module event -> the events store row, using dedupeKey as the stable
@@ -105,44 +108,91 @@ function toRow(ev) {
   };
 }
 
+// Read EVERY page of channel history since the cursor. Returns all messages, or
+// throws (caller turns that into a clean no-op — never a partial write).
+async function readAllHistory(oldest) {
+  let messages = [], cursor = '';
+  for (let page = 0; page < 100; page++) { // hard page cap (safety bound)
+    const params = { channel: need('SLACK_CHECKIN_CHANNEL_ID'), oldest: oldest, limit: '200' };
+    if (cursor) params.cursor = cursor;
+    const history = await slack('conversations.history', params);
+    messages = messages.concat(history.messages || []);
+    cursor = (history.response_metadata && history.response_metadata.next_cursor) || '';
+    if (!history.has_more || !cursor) break;
+  }
+  return messages;
+}
+
+/* One callable run a cron/scheduler invokes. Returns a structured summary and never
+ * throws past this boundary for a runtime fault (Slack/Supabase down → logged no-op).
+ * It only throws for real MISCONFIG (missing env when not --dry), surfaced by need(). */
 async function run(opts) {
   opts = opts || {};
   const dry = opts.dry || DRY; // CLI --dry OR programmatic (CI smoke) — preview, no writes
+  const summary = { scanned: 0, parsed: 0, inserted: 0, skipped: 0, deduped: 0, errors: 0, dry: dry };
   const state = readState();
-  let history;
+
+  // Read all pages BEFORE any write, so a Slack fault mid-pagination = clean no-op
+  // (no partial insert, cursor unchanged).
+  let messages;
   try {
-    history = await slack('conversations.history', {
-      channel: need('SLACK_CHECKIN_CHANNEL_ID'), oldest: state.last_run_ts, limit: '200'
-    });
-  } catch (e) { log('Slack unreachable — no-op this run: ' + e.message); return; }
+    messages = await readAllHistory(state.last_run_ts);
+  } catch (e) {
+    log('Slack unreachable — no-op this run: ' + e.message);
+    summary.errors++; summary.cursorAdvanced = false; summary.maxTs = state.last_run_ts;
+    return summary;
+  }
 
-  const msgs = (history.messages || []).filter(function (m) { return m.type === 'message' && !m.subtype && m.ts > state.last_run_ts; });
-  let maxTs = state.last_run_ts, emitted = 0, skipped = 0, dropped = 0;
+  const msgs = (messages || [])
+    .filter(function (m) { return m.type === 'message' && !m.subtype && m.ts > state.last_run_ts; })
+    .sort(function (a, b) { return a.ts < b.ts ? -1 : 1; });
 
-  for (const m of msgs.sort(function (a, b) { return a.ts < b.ts ? -1 : 1; })) {
-    if (m.ts > maxTs) maxTs = m.ts;
-    const parsed = SI.parseCheckin(m.text || '');
-    if (!parsed.isCheckin) { log("couldn't read " + m.ts + ' (not a check-in) — skipped'); skipped++; continue; }
+  // Cursor advances over leading processed messages; it HALTS at the first errored
+  // message so the tail is retried next run (id-dedupe makes the retry safe).
+  let maxTs = state.last_run_ts, advancing = true;
 
-    const subjectId = await resolveSlackAuthor(m.user);
-    if (!subjectId) { log('unmapped author ' + m.user + ' @ ' + m.ts + ' — dropped (fail closed)'); dropped++; continue; }
+  for (const m of msgs) {
+    summary.scanned++;
+    try {
+      const parsed = SI.parseCheckin(m.text || '');
+      if (!parsed.isCheckin) {
+        log("couldn't read " + m.ts + ' (not a check-in / too sparse) — skipped'); summary.skipped++;
+        if (advancing) maxTs = m.ts; continue;
+      }
+      summary.parsed++;
 
-    let permalink = '';
-    try { permalink = (await slack('chat.getPermalink', { channel: need('SLACK_CHECKIN_CHANNEL_ID'), message_ts: m.ts })).permalink; } catch (e) {}
+      const subjectId = await resolveSlackAuthor(m.user);
+      if (!subjectId) {
+        // FAIL CLOSED: no directory match → drop. Never insert a NULL/placeholder author.
+        log('unmapped author ' + m.user + ' @ ' + m.ts + ' — dropped (fail closed)'); summary.skipped++;
+        if (advancing) maxTs = m.ts; continue;
+      }
 
-    const confidence = (env.SLACK_FORM_BOT_USER_ID && m.user === env.SLACK_FORM_BOT_USER_ID) ? 'high' : 'med';
-    const events = SI.toEvents(parsed, { subjectId: subjectId, permalink: permalink, ts: m.ts, checkinId: 'chk:' + subjectId + ':' + m.ts, confidence: confidence });
+      let permalink = '';
+      try { permalink = (await slack('chat.getPermalink', { channel: need('SLACK_CHECKIN_CHANNEL_ID'), message_ts: m.ts })).permalink; } catch (e) {}
 
-    for (const ev of events) {
-      if (dry) { log('DRY would append ' + JSON.stringify(toRow(ev))); emitted++; continue; }
-      await supa('POST', '/rest/v1/events', toRow(ev)); // idempotent (id = slack:<dedupeKey>)
-      emitted++;
+      const confidence = (env.SLACK_FORM_BOT_USER_ID && m.user === env.SLACK_FORM_BOT_USER_ID) ? 'high' : 'med';
+      const events = SI.toEvents(parsed, { subjectId: subjectId, permalink: permalink, ts: m.ts, checkinId: 'chk:' + subjectId + ':' + m.ts, confidence: confidence });
+
+      for (const ev of events) {
+        const row = toRow(ev);
+        if (dry) { log('DRY would append ' + row.id); summary.inserted++; continue; }
+        const res = await supa('POST', '/rest/v1/events', row); // idempotent (id = slack:<dedupeKey>)
+        if (res && res.duplicate) summary.deduped++; else summary.inserted++;
+      }
+      if (advancing) maxTs = m.ts; // advance only after the message fully processed
+    } catch (e) {
+      log('error on ' + m.ts + ': ' + e.message + ' — left for retry'); summary.errors++;
+      advancing = false; // stop the cursor here; retry this + the tail next run
     }
   }
 
-  if (!dry) writeState({ last_run_ts: maxTs }); // DRY never advances the cursor
-  log('done — events:' + emitted + ' skipped(unreadable):' + skipped + ' dropped(unmapped):' + dropped + (dry ? ' [DRY]' : ''));
-  return { emitted: emitted, skipped: skipped, dropped: dropped, dry: dry, maxTs: maxTs };
+  summary.cursorAdvanced = (!dry && maxTs !== state.last_run_ts);
+  if (summary.cursorAdvanced) writeState({ last_run_ts: maxTs }); // DRY never advances the cursor
+  summary.maxTs = maxTs;
+  log('done — scanned:' + summary.scanned + ' parsed:' + summary.parsed + ' inserted:' + summary.inserted +
+      ' skipped:' + summary.skipped + ' deduped:' + summary.deduped + ' errors:' + summary.errors + (dry ? ' [DRY]' : ''));
+  return summary;
 }
 
 // Export internals for the CI mock (test/verify-slack-job.js); auto-run only when
@@ -150,5 +200,9 @@ async function run(opts) {
 module.exports = { run: run, toRow: toRow, resolveSlackAuthor: resolveSlackAuthor, SI: SI, readState: readState };
 
 if (require.main === module) {
-  run().catch(function (e) { log('fatal: ' + e.message); process.exit(1); });
+  // Runtime faults (Slack/Supabase down) are caught inside run() → no-op, exit 0.
+  // Only a real misconfig (missing required env when not --dry) rejects here → exit 1.
+  run()
+    .then(function (summary) { log('summary ' + JSON.stringify(summary)); process.exit(0); })
+    .catch(function (e) { log('fatal (misconfig): ' + e.message); process.exit(1); });
 }
