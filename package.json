@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node build.js",
     "watch": "node watch.js",
-    "test": "node test/verify-all.js && node test/verify-login.js && node test/verify-persist.js && node test/verify-eval.js && node test/verify-tree.js && node test/verify-db.js && node test/verify-people.js && node test/verify-wellbeing.js && node test/verify-fairness.js && node test/verify-events.js && node test/verify-evalprep.js && node test/verify-wbk-components.js && node test/verify-slack-ingest.js && node test/verify-slack-job.js && node test/verify-evalintel.js && node test/verify-decision-memory.js && node test/verify-ai-provenance.js && node test/verify-readiness.js && node test/verify-intelligence-layer.js && node test/verify-intel-ui.js && node test/verify-weekly-report.js",
+    "test": "node test/verify-all.js && node test/verify-login.js && node test/verify-persist.js && node test/verify-eval.js && node test/verify-tree.js && node test/verify-db.js && node test/verify-people.js && node test/verify-growth.js && node test/verify-wellbeing.js && node test/verify-fairness.js && node test/verify-events.js && node test/verify-evalprep.js && node test/verify-wbk-components.js && node test/verify-slack-ingest.js && node test/verify-slack-job.js && node test/verify-evalintel.js && node test/verify-decision-memory.js && node test/verify-ai-provenance.js && node test/verify-readiness.js && node test/verify-intelligence-layer.js && node test/verify-intel-ui.js && node test/verify-weekly-report.js",
     "test:dist": "node build.js && node test/verify-dist.js",
     "ingest": "node tools/slack-ingest-job.js",
     "ingest:dry": "node tools/slack-ingest-job.js --dry"

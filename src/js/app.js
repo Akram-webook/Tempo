@@ -309,6 +309,13 @@
     if (WP.db && WP.db.people && WP.db.people.list) {
       WP.db.people.list().then(function () { WP.render(); }).catch(function () {});
     }
+    // F1 Phase 2: load the SENSITIVE growth records server-side under the stricter
+    // can_see_sensitive predicate (self / direct-manager-only / director). Same
+    // never-blank contract: mock already painted; this re-renders only on success
+    // and never throws. Real growth values live only in public.growth, never the bundle.
+    if (WP.db && WP.db.growth && WP.db.growth.list) {
+      WP.db.growth.list().then(function () { WP.render(); }).catch(function () {});
+    }
   });
   // safety net — also flush on unload in case a mutation didn't go through setState
   window.addEventListener('beforeunload', function () { if (WP.persist) WP.persist.saveData(); });

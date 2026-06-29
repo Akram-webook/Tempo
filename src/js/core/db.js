@@ -299,16 +299,93 @@
     }
   };
 
+  /* --- growth: the SENSITIVE development record, server-backed under the STRICTER
+   * predicate (F1, Phase 2). Reads public.growth (migration 0005) under
+   * can_see_sensitive(person_id) = self OR DIRECT-manager-only OR director/admin
+   * (NOT skip-level, NOT peers). Merges the per-person record into WP.data.GROWTH
+   * — the same map the profile/growth views already read — so views don't change.
+   * The whole growth record is server-authoritative (it IS the sensitive data), so
+   * a present server row REPLACES the person's record wholesale. Signed out /
+   * offline / error / not-permitted -> the bundled SYNTHETIC mock stays as the
+   * graceful fallback (never blanks, fully reversible). Read-only: no client write
+   * (service-role / admin tooling maintained). Never throws.
+   * GO-LIVE GUARD: real growth values must NEVER be bundled — they live only here. */
+  var GROWTH_TABLE = 'growth';
+  function growthRowToRec(row) {
+    row = row || {};
+    return {
+      skills: row.skills || [],
+      eq: row.eq || {},
+      managerNote: (row.manager_note === undefined ? null : row.manager_note),
+      directorNote: (row.director_note === undefined ? null : row.director_note),
+      quarterly: row.quarterly || [],
+      workStyle: (row.work_style === undefined ? null : row.work_style)
+    };
+  }
+  function growthStore() {
+    if (!WP.data) return {};
+    if (!WP.data.GROWTH) WP.data.GROWTH = {};
+    return WP.data.GROWTH;
+  }
+  function mergeGrowth(row) {
+    if (!row || !row.person_id) return;
+    growthStore()[row.person_id] = growthRowToRec(row);   // server-authoritative: full replace
+  }
+
+  var growth = {
+    /* Fetch every growth record the viewer may see (server-side RLS does the
+     * gating) and merge into WP.data.GROWTH. Falls back to the bundled mock on
+     * signed-out/offline/error. Never throws. Returns WP.data.GROWTH. */
+    list: function () {
+      var c = client();
+      if (!c) { status.offline = false; return Promise.resolve(growthStore()); }
+      status.loading = true; status.lastError = null;
+      return Promise.resolve(c.from(GROWTH_TABLE).select('*'))
+        .then(function (res) {
+          if (res && res.error) throw res.error;
+          ((res && res.data) || []).forEach(mergeGrowth);
+          status.offline = false; status.synced = true;
+          return growthStore();
+        })
+        .catch(function (e) {
+          status.offline = true; status.lastError = e;
+          return growthStore();               // graceful fallback to mock — no throw
+        })
+        .then(function (store) { status.loading = false; return store; });
+    },
+
+    /* One person's growth record. Server (RLS-scoped) when available, else the
+     * bundled mock for that person. A row the viewer may NOT see simply isn't
+     * returned by RLS -> we fall back to whatever is already in the local store
+     * (mock), never throwing and never fabricating. */
+    get: function (personId) {
+      var c = client();
+      if (!c) return Promise.resolve(growthStore()[personId] || null);
+      var q = c.from(GROWTH_TABLE).select('*');
+      if (q.eq) q = q.eq('person_id', personId);
+      return Promise.resolve(q)
+        .then(function (res) {
+          if (res && res.error) throw res.error;
+          var row = ((res && res.data) || [])[0];
+          if (row) { mergeGrowth(row); status.offline = false; }
+          return growthStore()[personId] || null;
+        })
+        .catch(function (e) { status.offline = true; status.lastError = e; return growthStore()[personId] || null; });
+    }
+  };
+
   WP.db = {
     status: status,
     usingBackend: usingBackend,
     evaluations: evaluations,
     events: events,
     people: people,
+    growth: growth,
     _recToRow: recToRow,        // exposed for tests
     _rowToRec: rowToRec,
     _eventToRow: eventToRow,
     _personRowToFields: personRowToFields,  // tests
+    _growthRowToRec: growthRowToRec,        // tests
     _resetImport: function () { importDone = false; }  // tests
   };
 })(window.WP = window.WP || {});

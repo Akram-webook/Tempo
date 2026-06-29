@@ -82,18 +82,28 @@ Status by entity (updated per F1 phase — keep honest):
 | `evaluations` | `public.evaluations` | **server RLS** `can_read_person(subject_id)` (0003) | ✅ server-enforced |
 | `events` (incl. Slack check-ins) | `public.events` | **server RLS** `can_read_person(subject_id)` (0003) | ✅ server-enforced |
 | **people / directory** (non-sensitive: name, title, level, manager, employment) | `public.people` (**0004**) + bundled mock fallback | **server RLS** `can_read_person(person_id)` (0004) | ✅ server-enforced **(F1 Phase 1)** |
-| **growth / sensitive** (growth areas, manager notes, retention/promotion signals) | `src/js/data/growth-data.js` (bundled mock) | client-side `canSeeSensitive` only | ⏳ **still mock — Phase 2 (0005_growth.sql)** |
+| **growth / sensitive** (skills, EQ, manager notes, director impact/potential, quarterly, retention/promotion signal) | `public.growth` (**0005**) + bundled **synthetic** mock fallback | **server RLS** `can_see_sensitive(person_id)` — **stricter** (0005) | ✅ server-enforced **(F1 Phase 2)** |
 | workload / capacity / engagement numbers | bundled mock (`mock-data.js`, `engage-data.js`) | client-side only | ⏳ still mock (operational, lower sensitivity) |
 
-**F1 Phase 1 (this change):** the org directory's non-sensitive fields are now read through
-`WP.db.people.list()` from `public.people` under RLS, merged into the in-memory `WP.data.PEOPLE`
-the UI already reads. The bundled mock remains the **signed-out / offline / pre-migration fallback**
-(server rows win when present), so the app is never blank and the change is fully reversible. The
-highest-sensitivity data — growth areas, manager notes, retention/promotion signals — is **still
-mock** and is **NOT** closed by Phase 1; it lands in Phase 2 under a **stricter** predicate
-(self **OR direct manager only** OR director/admin — never skip-level, never peers). Until then,
-that sensitive data is protected only by the client filter, exactly the F1 risk — so do not put
-real growth data in the bundle before Phase 2 ships.
+**F1 Phase 1:** the org directory's non-sensitive fields are read through `WP.db.people.list()` from
+`public.people` under RLS (`can_read_person`), merged into the in-memory `WP.data.PEOPLE` the UI
+already reads. Bundled mock remains the signed-out / offline / pre-migration fallback (server wins
+when present) — never blank, fully reversible.
+
+**F1 Phase 2 (this change):** the highest-sensitivity data — skills, EQ, manager notes, director
+impact/potential, quarterly reliability, retention/promotion signals — is now read through
+`WP.db.growth.list()/get()` from `public.growth` under a predicate **intentionally stricter** than
+the directory's: **`can_see_sensitive(person_id)` = self OR DIRECT manager (one hop) OR
+director/admin — NOT skip-level, NOT peers** (candor protection; mirrors `access.canSeeSensitive`).
+It is a **separate** SECURITY DEFINER function from `can_read_person` on purpose: the directory-read
+predicate may later widen (e.g. chain browsing), and sensitive growth must not widen with it. The
+bundled growth data stays **synthetic** and is the offline/pre-migration fallback only; **real growth
+values must never be loaded into the front-end bundle** — they live only in `public.growth` behind
+`can_see_sensitive`. The skip-level-denied guarantee is regression-locked by
+`test/verify-growth.js` (D3). With Phase 2, the access model for both the directory **and** the
+sensitive growth record is **server-enforced**, not presentation-only — **F1 is fully closed** for
+the person-data entities. (Workload/capacity/engagement numbers remain bundled mock — operational,
+lower-sensitivity; not part of F1.)
 
 **Manager-scope coverage caveat (F2):** `can_read_person`'s "direct manager" clause keys on
 `public.directory.manager_email`, populated only where both the report and the manager have a
