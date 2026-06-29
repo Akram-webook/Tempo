@@ -72,6 +72,27 @@ try{
   assert(!('byPerson' in rep)&&!('people' in rep),'aggregate exposes no per-person structure');
   assert(rep.evidence.every(e=>!('target' in e)&&!('person' in e)&&!('subjectId' in e)),'evidence refs are de-identified');
 
+  // ── WINDOW STEPPER (#3): older/newer + 7/30 toggle change {ref,days} & re-render ──
+  WP.state.weeklyWin=null; // start at most recent
+  WP.setState({route:'weekly'});
+  assert(/wr-aibar/.test(reportJs),'AI-acceptance is the slim horizontal bar (#8), not a full-width block');
+  assert(/function wireControls/.test(reportJs),'window controls are wired');
+  const older=view.querySelector('#wr-older'); const newer=view.querySelector('#wr-newer');
+  assert(older,'week stepper renders an "earlier period" control');
+  assert(newer && newer.disabled,'"more recent" is disabled at the most-recent window (can\'t go into the future)');
+  older.click();
+  assert(WP.state.weeklyWin && WP.state.weeklyWin.back===1,'clicking older steps the window back one period (re-renders)');
+  const newer2=view.querySelector('#wr-newer');
+  assert(newer2 && !newer2.disabled,'"more recent" re-enables once stepped back');
+  const r30=view.querySelector('.wr-range[data-days="30"]');
+  assert(r30,'a 30-day range toggle is offered');
+  r30.click();
+  assert(WP.state.weeklyWin.days===30 && WP.state.weeklyWin.back===0,'switching range to 30 days resets to the most-recent window');
+  // de-identification + gate STILL hold after stepping (no per-person leak crept in)
+  assert(!/WP\.i18n\.name\(|WP\.access\.byId\(/.test(reportJs),'view still resolves no person name/row after window changes');
+  assert(/canManage\(viewer\)/.test(reportJs),'gate re-check still present');
+  WP.state.weeklyWin=null;
+
   WP.state.lang='ar'; WP.setState({route:'weekly'}); assert(view.innerHTML.length>0,'report renders under RTL/AR');
   WP.state.lang='en';
 }catch(e){errors.push('[run] '+e.message+'\n'+e.stack);}

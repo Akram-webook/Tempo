@@ -392,6 +392,24 @@ body {
 .wr-cite { display: inline-flex; align-items: center; gap: var(--sp-1); color: var(--text-tertiary); font-size: var(--fs-body-s); white-space: nowrap; }
 .wr-empty { padding: var(--sp-4); border: 1px dashed var(--border); border-radius: var(--radius); background: var(--surface-2); color: var(--text-muted); }
 .wr-empty-note { color: var(--text-muted); font-size: var(--fs-body-s); line-height: var(--lh-body-s); margin-top: 2px; }
+/* AI-acceptance as a SLIM horizontal bar (#8) — no full-width vertical dead space. */
+.wr-aibar { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4);
+  margin-block-end: var(--sp-3); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); }
+.wr-aibar-v { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-h3); line-height: 1;
+  color: var(--text); font-variant-numeric: tabular-nums; flex: none; }
+.wr-aibar-main { flex: 1; min-inline-size: 0; }
+.wr-aibar-l { font-size: var(--fs-label-s); line-height: var(--lh-label-s); text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+/* Window stepper + 7/30 range toggle (#3). */
+.wr-win { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.wr-win-lbl { font-variant-numeric: tabular-nums; color: var(--text-muted); font-size: var(--fs-body-s); min-inline-size: 12ch; text-align: center; }
+.wr-range-group { display: inline-flex; gap: 2px; margin-inline-start: var(--sp-2); padding: 2px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.wr-range { font: inherit; font-size: var(--fs-body-s); color: var(--text-muted); background: none; border: none;
+  border-radius: calc(var(--radius-sm) - 2px); padding: 4px 10px; cursor: pointer; }
+.wr-range.is-on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.wr-range:focus-visible, .wr-win .icon-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+/* Mirror the directional nav arrows in RTL so "earlier/later" point the right way. */
+[dir="rtl"] .wr-win .icon-btn svg { transform: scaleX(-1); }
 .wbk-menu-item .wbk-menu-trail { margin-inline-start: auto; color: var(--text-tertiary); font-size: var(--fs-body-s); }
 
 .wbk-chip {
@@ -2991,7 +3009,19 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     wrAiRate:       { en: 'AI-acceptance rate', ar: 'معدّل قبول الذكاء الاصطناعي' },
     wrAiOf:         { en: '{a} of {n} where AI input was on record', ar: '{a} من {n} حيث وُجد إدخال للذكاء الاصطناعي' },
     wrAiNone:       { en: '— not yet available', ar: '— غير متاح بعد' },
-    wrCites:        { en: 'cites {n}', ar: 'يستند إلى {n}' },
+    // Plural-correct cites (en one/other · ar one/two/few/many) — see WP.i18n.plural.
+    wrCitesOne:     { en: 'cites 1', ar: 'يستند إلى عنصر واحد' },
+    wrCitesTwo:     { en: 'cites 2', ar: 'يستند إلى عنصرين' },
+    wrCitesFew:     { en: 'cites {n}', ar: 'يستند إلى {n} عناصر' },
+    wrCitesMany:    { en: 'cites {n}', ar: 'يستند إلى {n} عنصراً' },
+    wrCitesOther:   { en: 'cites {n}', ar: 'يستند إلى {n} عنصر' },
+    // Window stepper + range toggle (#3).
+    wrOlder:        { en: 'Earlier period', ar: 'فترة أسبق' },
+    wrNewer:        { en: 'More recent period', ar: 'فترة أحدث' },
+    wrPast:         { en: 'past period', ar: 'فترة سابقة' },
+    wrRangeLbl:     { en: 'Window length', ar: 'طول النافذة' },
+    wrRange7:       { en: '7 days', ar: '٧ أيام' },
+    wrRange30:      { en: '30 days', ar: '٣٠ يوماً' },
     wrColType:      { en: 'Decision type', ar: 'نوع القرار' },
     wrColCount:     { en: 'Count', ar: 'العدد' },
     wrColEvidence:  { en: 'Evidence', ar: 'الأدلة' },
@@ -5639,6 +5669,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     user:     '<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 12 0v1"/>',
     arrowUp:  '<path d="M12 19V5M5 12l7-7 7 7"/>',
     arrowRight:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+    arrowLeft:'<path d="M19 12H5M11 6l-6 6 6 6"/>',
     bulb:     '<path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1h6c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/>',
     eye:      '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
     tree:     '<rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="17" width="6" height="5" rx="1"/><rect x="16" y="17" width="6" height="5" rx="1"/><path d="M12 7v5M5 17v-2.5a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1V17"/>',
@@ -8618,7 +8649,15 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     var v = t(k);
     return v === k ? type.replace(/-/g, ' ') : v;
   }
-  function cites(n, t) { return '<span class="wr-cite">' + WP.ui.icon('eye', 12) + ' ' + t('wrCites').replace('{n}', n) + '</span>'; }
+  function cites(n, t) { return '<span class="wr-cite">' + WP.ui.icon('eye', 12) + ' ' + WP.i18n.plural('wrCites', n) + '</span>'; }
+
+  // ISO date shifted by n days — for the window stepper (no Date.now: we parse refDate).
+  function shiftDays(iso, n) {
+    var d = new Date((iso || '') + 'T00:00:00');
+    if (isNaN(d)) return iso;
+    d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0, 10);
+  }
 
   function render(root) {
     var t = WP.i18n.t;
@@ -8631,14 +8670,30 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       return;
     }
 
-    var rep = WP.decisionMemory.weeklyReport({ days: 7, ref: WP.state.refDate }, { viewer: viewer });
+    // WINDOW (#3): a stepper (‹ older · newer ›) + a 7/30-day toggle. The engine already
+    // takes {days, ref}; we shift ref back by `back` whole windows. back=0 = most recent.
+    var win = WP.state.weeklyWin || { days: 7, back: 0 };
+    var ref = shiftDays(WP.state.refDate, -win.back * win.days);
+    var rep = WP.decisionMemory.weeklyReport({ days: win.days, ref: ref }, { viewer: viewer });
+
+    var rangeOpts = [7, 30].map(function (d) {
+      return '<button type="button" class="wr-range' + (win.days === d ? ' is-on' : '') +
+        '" data-days="' + d + '" aria-pressed="' + (win.days === d) + '">' + t('wrRange' + d) + '</button>';
+    }).join('');
+    var stepper =
+      '<div class="wr-win">' +
+        '<button type="button" class="btn icon-btn" id="wr-older" aria-label="' + t('wrOlder') + '">' + WP.ui.icon('arrowLeft', 14) + '</button>' +
+        '<span class="wr-win-lbl">' + (rep.period ? rep.period.start + ' → ' + rep.period.end : '') + '</span>' +
+        '<button type="button" class="btn icon-btn" id="wr-newer" aria-label="' + t('wrNewer') + '"' + (win.back <= 0 ? ' disabled' : '') + '>' + WP.ui.icon('arrowRight', 14) + '</button>' +
+        '<span class="wr-range-group" role="group" aria-label="' + t('wrRangeLbl') + '">' + rangeOpts + '</span>' +
+      '</div>';
 
     var head =
       '<div class="wbk-pageheader"><div class="wbk-ph-main">' +
         '<h2 class="wbk-ph-title">' + t('wrTitle') + '</h2>' +
         '<div class="wbk-ph-sub">' + t('wrSub') +
-          (rep.period ? ' · ' + rep.period.start + ' → ' + rep.period.end : '') + '</div>' +
-      '</div></div>' +
+          (win.back > 0 ? ' · ' + t('wrPast') : '') + '</div>' +
+      '</div>' + stepper + '</div>' +
       '<div class="disclaimer">' + WP.ui.icon('bulb', 13) + ' ' + t('wrIntro') + '</div>';
 
     // EMPTY — "Not enough data" is first-class (sparse window or denied-but-gated).
@@ -8647,6 +8702,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
         '<div class="section"><div class="wr-empty">' +
           '<strong>' + WP.ui.icon('clock', 14) + ' ' + t('wrEmpty') + '</strong>' +
           '<div class="wr-empty-note">' + t('wrEmptyNote') + '</div></div></div>';
+      wireControls(root); // still let a director step to a populated window
       return;
     }
 
@@ -8678,12 +8734,15 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
         '<div class="wbk-li-m">' + ui.esc(th.text) + '</div></div>' + cites(th.evidence.length, t) + '</div>';
     }).join('') : '<div class="sub">' + t('wrNoThemes') + '</div>';
 
-    // 4) AI-acceptance rate — "— / not yet available" when null (honest).
+    // 4) AI-acceptance rate — a SLIM horizontal bar (#8: no full-width dead space),
+    // grouped at the top of the counts column. "—" when null (honest, not 0%).
     var ai = rep.aiAcceptanceRate;
-    var aiHTML = '<div class="wr-kpi">' +
-      '<div class="wr-kpi-v">' + (ai ? Math.round(ai.rate * 100) + '%' : '—') + '</div>' +
-        '<div class="wr-kpi-l">' + t('wrAiRate') + '</div>' +
-        '<div class="ttl">' + (ai ? t('wrAiOf').replace('{a}', ai.accepted).replace('{n}', ai.of) + ' · ' + cites(ai.evidence.length, t) : t('wrAiNone')) + '</div></div>';
+    var aiHTML = '<div class="wr-aibar">' +
+        '<div class="wr-aibar-v">' + (ai ? Math.round(ai.rate * 100) + '%' : '—') + '</div>' +
+        '<div class="wr-aibar-main"><div class="wr-aibar-l">' + t('wrAiRate') + '</div>' +
+          '<div class="ttl">' + (ai ? t('wrAiOf').replace('{a}', ai.accepted).replace('{n}', ai.of) : t('wrAiNone')) + '</div></div>' +
+        (ai ? cites(ai.evidence.length, t) : '') +
+      '</div>';
 
     // 5) Week-over-week shifts (per type) — each cites the period's events.
     var shiftsHTML = rep.shifts.length ? rep.shifts.map(function (s) {
@@ -8695,9 +8754,8 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     }).join('') : '<div class="sub">' + t('wrNoShifts') + '</div>';
 
     root.innerHTML = head +
-      '<div class="section">' + aiHTML + '</div>' +
       '<div class="grid-2" style="align-items:start">' +
-        '<div class="section"><h3>' + t('wrCounts') + '</h3>' + countsHTML + '</div>' +
+        '<div class="section"><h3>' + t('wrCounts') + '</h3>' + aiHTML + countsHTML + '</div>' +
         '<div class="section"><h3>' + t('wrFocusAreas') + '</h3>' + (focusHTML || '<div class="sub">—</div>') + '</div>' +
       '</div>' +
       '<div class="grid-2" style="align-items:start">' +
@@ -8705,6 +8763,19 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
         '<div class="section"><h3>' + t('wrShifts') + '</h3>' + shiftsHTML + '</div>' +
       '</div>' +
       '<div class="disclaimer">' + t('wrHuman') + '</div>';
+    wireControls(root);
+  }
+
+  // Wire the window stepper + range toggle. Window lives in WP.state.weeklyWin so a
+  // re-render keeps the chosen period; changing the range resets to the most recent.
+  function wireControls(root) {
+    var win = WP.state.weeklyWin || { days: 7, back: 0 };
+    var older = root.querySelector('#wr-older'), newer = root.querySelector('#wr-newer');
+    if (older) older.onclick = function () { WP.setState({ weeklyWin: { days: win.days, back: win.back + 1 } }); };
+    if (newer) newer.onclick = function () { if (win.back > 0) WP.setState({ weeklyWin: { days: win.days, back: win.back - 1 } }); };
+    root.querySelectorAll('.wr-range[data-days]').forEach(function (b) {
+      b.onclick = function () { WP.setState({ weeklyWin: { days: parseInt(b.dataset.days, 10), back: 0 } }); };
+    });
   }
 
   WP.ui.weeklyReport = { render: render };

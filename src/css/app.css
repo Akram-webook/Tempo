@@ -175,6 +175,24 @@ body {
 .wr-cite { display: inline-flex; align-items: center; gap: var(--sp-1); color: var(--text-tertiary); font-size: var(--fs-body-s); white-space: nowrap; }
 .wr-empty { padding: var(--sp-4); border: 1px dashed var(--border); border-radius: var(--radius); background: var(--surface-2); color: var(--text-muted); }
 .wr-empty-note { color: var(--text-muted); font-size: var(--fs-body-s); line-height: var(--lh-body-s); margin-top: 2px; }
+/* AI-acceptance as a SLIM horizontal bar (#8) — no full-width vertical dead space. */
+.wr-aibar { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4);
+  margin-block-end: var(--sp-3); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); }
+.wr-aibar-v { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-h3); line-height: 1;
+  color: var(--text); font-variant-numeric: tabular-nums; flex: none; }
+.wr-aibar-main { flex: 1; min-inline-size: 0; }
+.wr-aibar-l { font-size: var(--fs-label-s); line-height: var(--lh-label-s); text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+/* Window stepper + 7/30 range toggle (#3). */
+.wr-win { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.wr-win-lbl { font-variant-numeric: tabular-nums; color: var(--text-muted); font-size: var(--fs-body-s); min-inline-size: 12ch; text-align: center; }
+.wr-range-group { display: inline-flex; gap: 2px; margin-inline-start: var(--sp-2); padding: 2px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.wr-range { font: inherit; font-size: var(--fs-body-s); color: var(--text-muted); background: none; border: none;
+  border-radius: calc(var(--radius-sm) - 2px); padding: 4px 10px; cursor: pointer; }
+.wr-range.is-on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.wr-range:focus-visible, .wr-win .icon-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+/* Mirror the directional nav arrows in RTL so "earlier/later" point the right way. */
+[dir="rtl"] .wr-win .icon-btn svg { transform: scaleX(-1); }
 .wbk-menu-item .wbk-menu-trail { margin-inline-start: auto; color: var(--text-tertiary); font-size: var(--fs-body-s); }
 
 .wbk-chip {

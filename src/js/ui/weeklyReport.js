@@ -22,7 +22,15 @@
     var v = t(k);
     return v === k ? type.replace(/-/g, ' ') : v;
   }
-  function cites(n, t) { return '<span class="wr-cite">' + WP.ui.icon('eye', 12) + ' ' + t('wrCites').replace('{n}', n) + '</span>'; }
+  function cites(n, t) { return '<span class="wr-cite">' + WP.ui.icon('eye', 12) + ' ' + WP.i18n.plural('wrCites', n) + '</span>'; }
+
+  // ISO date shifted by n days — for the window stepper (no Date.now: we parse refDate).
+  function shiftDays(iso, n) {
+    var d = new Date((iso || '') + 'T00:00:00');
+    if (isNaN(d)) return iso;
+    d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0, 10);
+  }
 
   function render(root) {
     var t = WP.i18n.t;
@@ -35,14 +43,30 @@
       return;
     }
 
-    var rep = WP.decisionMemory.weeklyReport({ days: 7, ref: WP.state.refDate }, { viewer: viewer });
+    // WINDOW (#3): a stepper (‹ older · newer ›) + a 7/30-day toggle. The engine already
+    // takes {days, ref}; we shift ref back by `back` whole windows. back=0 = most recent.
+    var win = WP.state.weeklyWin || { days: 7, back: 0 };
+    var ref = shiftDays(WP.state.refDate, -win.back * win.days);
+    var rep = WP.decisionMemory.weeklyReport({ days: win.days, ref: ref }, { viewer: viewer });
+
+    var rangeOpts = [7, 30].map(function (d) {
+      return '<button type="button" class="wr-range' + (win.days === d ? ' is-on' : '') +
+        '" data-days="' + d + '" aria-pressed="' + (win.days === d) + '">' + t('wrRange' + d) + '</button>';
+    }).join('');
+    var stepper =
+      '<div class="wr-win">' +
+        '<button type="button" class="btn icon-btn" id="wr-older" aria-label="' + t('wrOlder') + '">' + WP.ui.icon('arrowLeft', 14) + '</button>' +
+        '<span class="wr-win-lbl">' + (rep.period ? rep.period.start + ' → ' + rep.period.end : '') + '</span>' +
+        '<button type="button" class="btn icon-btn" id="wr-newer" aria-label="' + t('wrNewer') + '"' + (win.back <= 0 ? ' disabled' : '') + '>' + WP.ui.icon('arrowRight', 14) + '</button>' +
+        '<span class="wr-range-group" role="group" aria-label="' + t('wrRangeLbl') + '">' + rangeOpts + '</span>' +
+      '</div>';
 
     var head =
       '<div class="wbk-pageheader"><div class="wbk-ph-main">' +
         '<h2 class="wbk-ph-title">' + t('wrTitle') + '</h2>' +
         '<div class="wbk-ph-sub">' + t('wrSub') +
-          (rep.period ? ' · ' + rep.period.start + ' → ' + rep.period.end : '') + '</div>' +
-      '</div></div>' +
+          (win.back > 0 ? ' · ' + t('wrPast') : '') + '</div>' +
+      '</div>' + stepper + '</div>' +
       '<div class="disclaimer">' + WP.ui.icon('bulb', 13) + ' ' + t('wrIntro') + '</div>';
 
     // EMPTY — "Not enough data" is first-class (sparse window or denied-but-gated).
@@ -51,6 +75,7 @@
         '<div class="section"><div class="wr-empty">' +
           '<strong>' + WP.ui.icon('clock', 14) + ' ' + t('wrEmpty') + '</strong>' +
           '<div class="wr-empty-note">' + t('wrEmptyNote') + '</div></div></div>';
+      wireControls(root); // still let a director step to a populated window
       return;
     }
 
@@ -82,12 +107,15 @@
         '<div class="wbk-li-m">' + ui.esc(th.text) + '</div></div>' + cites(th.evidence.length, t) + '</div>';
     }).join('') : '<div class="sub">' + t('wrNoThemes') + '</div>';
 
-    // 4) AI-acceptance rate — "— / not yet available" when null (honest).
+    // 4) AI-acceptance rate — a SLIM horizontal bar (#8: no full-width dead space),
+    // grouped at the top of the counts column. "—" when null (honest, not 0%).
     var ai = rep.aiAcceptanceRate;
-    var aiHTML = '<div class="wr-kpi">' +
-      '<div class="wr-kpi-v">' + (ai ? Math.round(ai.rate * 100) + '%' : '—') + '</div>' +
-        '<div class="wr-kpi-l">' + t('wrAiRate') + '</div>' +
-        '<div class="ttl">' + (ai ? t('wrAiOf').replace('{a}', ai.accepted).replace('{n}', ai.of) + ' · ' + cites(ai.evidence.length, t) : t('wrAiNone')) + '</div></div>';
+    var aiHTML = '<div class="wr-aibar">' +
+        '<div class="wr-aibar-v">' + (ai ? Math.round(ai.rate * 100) + '%' : '—') + '</div>' +
+        '<div class="wr-aibar-main"><div class="wr-aibar-l">' + t('wrAiRate') + '</div>' +
+          '<div class="ttl">' + (ai ? t('wrAiOf').replace('{a}', ai.accepted).replace('{n}', ai.of) : t('wrAiNone')) + '</div></div>' +
+        (ai ? cites(ai.evidence.length, t) : '') +
+      '</div>';
 
     // 5) Week-over-week shifts (per type) — each cites the period's events.
     var shiftsHTML = rep.shifts.length ? rep.shifts.map(function (s) {
@@ -99,9 +127,8 @@
     }).join('') : '<div class="sub">' + t('wrNoShifts') + '</div>';
 
     root.innerHTML = head +
-      '<div class="section">' + aiHTML + '</div>' +
       '<div class="grid-2" style="align-items:start">' +
-        '<div class="section"><h3>' + t('wrCounts') + '</h3>' + countsHTML + '</div>' +
+        '<div class="section"><h3>' + t('wrCounts') + '</h3>' + aiHTML + countsHTML + '</div>' +
         '<div class="section"><h3>' + t('wrFocusAreas') + '</h3>' + (focusHTML || '<div class="sub">—</div>') + '</div>' +
       '</div>' +
       '<div class="grid-2" style="align-items:start">' +
@@ -109,6 +136,19 @@
         '<div class="section"><h3>' + t('wrShifts') + '</h3>' + shiftsHTML + '</div>' +
       '</div>' +
       '<div class="disclaimer">' + t('wrHuman') + '</div>';
+    wireControls(root);
+  }
+
+  // Wire the window stepper + range toggle. Window lives in WP.state.weeklyWin so a
+  // re-render keeps the chosen period; changing the range resets to the most recent.
+  function wireControls(root) {
+    var win = WP.state.weeklyWin || { days: 7, back: 0 };
+    var older = root.querySelector('#wr-older'), newer = root.querySelector('#wr-newer');
+    if (older) older.onclick = function () { WP.setState({ weeklyWin: { days: win.days, back: win.back + 1 } }); };
+    if (newer) newer.onclick = function () { if (win.back > 0) WP.setState({ weeklyWin: { days: win.days, back: win.back - 1 } }); };
+    root.querySelectorAll('.wr-range[data-days]').forEach(function (b) {
+      b.onclick = function () { WP.setState({ weeklyWin: { days: parseInt(b.dataset.days, 10), back: 0 } }); };
+    });
   }
 
   WP.ui.weeklyReport = { render: render };
