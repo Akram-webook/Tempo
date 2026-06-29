@@ -57,6 +57,9 @@
       // Weekly Intelligence Report — director/admin only (decision patterns, never
       // people). Hidden for everyone else (guardrail, Constitution II / Ethics #6).
       nav.push({ id: 'weekly', routes: ['weekly'], icon: 'chart', label: t('navWeekly') });
+      // Org capability (P6) — director/admin only, aggregated + k-anonymized. The
+      // view re-checks the gate (defence in depth). Never people, never a ranking.
+      nav.push({ id: 'org', routes: ['org'], icon: 'tree', label: t('navOrg') });
       nav.push({ id: 'permissions', routes: ['permissions'], icon: 'key',      label: t('permsTitle') });
       nav.push({ id: 'settings',    routes: ['settings'],    icon: 'settings', label: t('settings') });
     }
@@ -203,6 +206,7 @@
     else if (WP.state.route === 'fairness') WP.ui.fairness.render(root);
     else if (WP.state.route === 'me') WP.ui.me.render(root);
     else if (WP.state.route === 'weekly') WP.ui.weeklyReport.render(root);
+    else if (WP.state.route === 'org') WP.ui.readiness.orgRender(root);
     else if (WP.state.route === 'library') WP.ui.wbkLibrary.render(root);
     else WP.ui.workloadMap.render(root);
 

@@ -83,10 +83,13 @@
       tier1Delivered: t1,
       fairnessGap: fairnessGap,
       monthsSinceTier1: p.monthsSinceTier1,
+      // Fairness signal flags ORG under-investment (a person not given big work lately),
+      // never a verdict on the person. NOTE: pct is an INTERNAL component score only —
+      // it is deliberately NOT rendered anywhere (INTELLIGENCE-ETHICS: no per-person
+      // readiness/promotion score/rank/threshold in the UI). The `note` carries no score.
       note: fairnessGap
-        ? 'Not given a Tier-1 in ' + p.monthsSinceTier1 + ' months — give a fair shot before judging readiness.'
-        : (pct >= 70 ? 'Strong readiness signal — review for next-level scope.'
-                     : 'Developing — keep building Tier-1 track record.'),
+        ? 'Not given a Tier-1 in ' + p.monthsSinceTier1 + ' months — worth a fair shot before judging growth.'
+        : 'Building a Tier-1 track record.',
     };
   }
 

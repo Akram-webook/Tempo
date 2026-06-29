@@ -51,10 +51,12 @@
       return s.state.key === 'overloaded' || s.state.key === 'near' || s.burnout;
     }).sort(function (a, b) { return b.load - a.load; }).slice(0, 6);
 
-    let risk = 0, promo = 0, ramp = 0;
+    let risk = 0, fairShot = 0, ramp = 0;
     people.forEach(function (p) {
       if (WP.growth.flightRisk(p).risk) risk++;
-      if (WP.growth.promotionReadiness(p).pct >= 70) promo++;
+      // Count people the ORG has under-invested in (a fair-shot signal), NOT a "ready"
+      // count gated on a promotion-% threshold (INTELLIGENCE-ETHICS: no rank/threshold).
+      if (WP.growth.promotionReadiness(p).fairnessGap) fairShot++;
       if (WP.growth.isRamping(p)) ramp++;
     });
 
@@ -89,7 +91,7 @@
         '<div class="section"><h3>' + WP.ui.icon('alert', 16) + ' ' + t('needsAttention') + '</h3>' + attnHtml + '</div>' +
         '<div class="section"><h3>' + WP.ui.icon('sprout', 16) + ' ' + t('talent') + '</h3>' +
           '<div class="metrics" style="grid-template-columns:repeat(3,1fr)">' +
-            kpi(t('newSkillShort'), promo, t('promoReady'), 'var(--state-available)') +
+            kpi(t('dashFairShot'), fairShot, t('rdFairTitle'), 'var(--state-available)') +
             kpi(t('flightRisk').split(' ')[0], risk, t('flightRisk'), 'var(--state-overloaded)') +
             kpi(t('rampingShort'), ramp, t('rampingUp').split('—')[0]) +
           '</div></div>' +
@@ -121,7 +123,6 @@
       return personRow(p, s, stateChip(s) + '<span class="tag" style="color:var(--state-overloaded)">' + (s.burnout ? t('burnoutShort') : t('overloadedShort')) + '</span>');
     }).join('') : '<div class="sub">' + t('allClear') + '</div>';
     const devHtml = develop.length ? develop.map(function (p) {
-      const pr = WP.growth.promotionReadiness(p);
       return personRow(p, snaps[p.id], '<span class="tag" style="color:var(--state-balanced)">' +
         (WP.growth.isRamping(p) ? t('rampingShort') : t('toDevelop')) + '</span>');
     }).join('') : '<div class="sub">—</div>';
@@ -154,7 +155,7 @@
       '<div class="metrics">' +
         kpi(t('myLoad'), snap.load + '%', WP.i18n.stateLabel(snap.state), c) +
         kpi(t('currentProjects'), snap.eventCount, '') +
-        kpi(t('promoReady'), pr.pct + '%', t('devOnly').split('—')[0]) +
+        kpi(t('rdTier1Short'), pr.tier1Delivered, t('rdFairTitle')) +
       '</div>' +
       (snap.burnout ? '<div class="section" style="border-color:var(--state-overloaded)"><h3>' + WP.ui.icon('flame', 16) + ' ' + t('burnoutFlag') + '</h3><div class="sub">' + t('talkToManager') + '</div></div>' : '') +
       '<div class="section"><h3>' + WP.ui.icon('sprout', 16) + ' ' + t('yourGrowth') + '</h3><div class="sub">' + ui.esc(pr.note) + '</div></div>' +

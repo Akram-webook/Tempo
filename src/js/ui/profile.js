@@ -140,18 +140,24 @@
     return lensPart + wsPart + skills + eqSection + quarterly + tn;
   }
 
-  function promoSection(p) {
+  /* Opportunity & fair-shot signal — replaces the legacy promotion-% ring (which was a
+   * per-person readiness SCORE, forbidden by INTELLIGENCE-ETHICS). Renders ONLY evidence:
+   * the FAIRNESS-GAP note (org under-investment — "give a fair shot before judging
+   * growth", never a verdict on the person) + the Tier-1-delivered count as a plain
+   * fact. NO percentage, NO ring, NO 70% threshold, NO rank anywhere. */
+  function fairShotSection(p) {
     const r = WP.growth.promotionReadiness(p);
     const t = WP.i18n.t;
-    const col = r.fairnessGap ? 'var(--state-near)' : (r.pct >= 70 ? 'var(--state-available)' : 'var(--state-balanced)');
-    return '<div class="section"><h3>' + t('promoReady') + '</h3>' +
-      '<div class="promo">' +
-        '<div class="ring" style="color:' + col + ';box-shadow:inset 0 0 0 6px ' + col + '">' + r.pct + '%</div>' +
-        '<div style="flex:1"><div style="font-size:13px">' + ui.esc(r.note) + '</div>' +
-        '<div class="mini-label" style="margin-top:6px">Tier-1 delivered: ' + r.tier1Delivered +
-          ' · ' + (r.sustainable ? (WP.state.lang === 'ar' ? 'مستدام' : 'sustainable') : (WP.state.lang === 'ar' ? 'محمّل زيادة' : 'over-loaded')) + '</div>' +
-        '</div></div>' +
-      '<div class="disclaimer">' + t('devOnly') + '</div></div>';
+    const gapNote = r.fairnessGap
+      ? '<div class="rd-fair-note">' + WP.ui.icon('tree', 14) + ' ' +
+          ui.esc(t('rdFairGap').replace('{n}', r.monthsSinceTier1)) + '</div>'
+      : '';
+    const fact = '<div class="mini-label" style="margin-top:6px">' +
+      ui.esc(t('rdTier1').replace('{n}', r.tier1Delivered)) + ' · ' +
+      ui.esc(r.sustainable ? t('rdSustainable') : t('rdOverloaded')) + '</div>';
+    return '<div class="section"><h3>' + WP.ui.icon('tree', 16) + ' ' + t('rdFairTitle') + '</h3>' +
+      gapNote + fact +
+      '<div class="disclaimer">' + t('rdFairDisc') + '</div></div>';
   }
 
   /* Upward feedback RECEIVED by a manager — visible only to people above
@@ -285,8 +291,6 @@
       (sens && !selfView && fr.risk ? '<div class="banner-risk">' + WP.ui.icon('alert',15) + ' ' + t('flightRisk') + ' — ' + ui.esc(fr.reasons.join(' · ')) + '</div>' : '') +
       (WP.growth.isRamping(p) ? '<div class="banner-info">' + WP.ui.icon('sprout',15) + ' ' + t('rampingUp') + '</div>' : '') +
 
-      (sens ? promoSection(p) : '') +
-
       '<div class="profile-body">' +
         '<div class="section"><h3>' + t('pressure') + '</h3>' + projectsList(p) + '</div>' +
         (dc ? '<div class="section"><h3>' + t('dailySummary') + '</h3><div class="kv">' +
@@ -296,12 +300,17 @@
           '<div class="k">' + t('learned') + '</div><div>' + ui.esc(dc.learned) + '</div>' +
           '</div></div>' : '') +
         growthSections(p, sens, selfView) +
+        // Development & growth (P6) — evidence-based, access-gated to canSeeSensitive
+        // (self / direct manager / director). NEVER a readiness score/rank/verdict.
+        // The fair-shot signal sits beside it: evidence + fairness, never a promo %.
+        (sens ? fairShotSection(p) : '') +
+        (sens ? WP.ui.readiness.developmentPanel(p) : '') +
         (sens ? timelineSection(p) : '') +
         upwardReceived(p) +
         compPanel(p) +
       '</div>';
 
-    root.querySelector('#back').onclick = function () { WP._tlCache = null; WP._tlQuarter = 'all'; WP._tlCategory = 'all'; WP.setState({ route: 'map', selectedId: null }); };
+    root.querySelector('#back').onclick = function () { WP._tlCache = null; WP._devCache = null; WP._tlQuarter = 'all'; WP._tlCategory = 'all'; WP.setState({ route: 'map', selectedId: null }); };
     root.querySelectorAll('[data-tlq]').forEach(function (b) { b.onclick = function () { WP._tlQuarter = b.dataset.tlq; WP.setState({}); }; });
     root.querySelectorAll('[data-tlc]').forEach(function (b) { b.onclick = function () { WP._tlCategory = b.dataset.tlc; WP.setState({}); }; });
     const oe = root.querySelector('#open-eval');
@@ -311,6 +320,8 @@
     if (em) em.onclick = function () { WP.setState({ route: 'upward', selectedId: p.managerId }); };
     const se = root.querySelector('#self-eval');
     if (se) se.onclick = function () { WP.setState({ route: 'evaluation', selectedId: p.id, evalOrigin: 'profile' }); };
+    // Wire the development panel's cited-evidence chips (only present when sensitive-gated).
+    if (sens) WP.ui.readiness.wireDevPanel(root, p);
   }
 
   WP.ui.peek = peek;

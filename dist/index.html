@@ -10,6 +10,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Gellix (V3 UI/display font) drop-in slot. build.js inlines @font-face here IF the
+       licensed .woff2 files are present in src/assets/fonts/ (see that folder's README);
+       otherwise this marker becomes empty and the Figtree/IBM Plex fallback stays. -->
+  
   <!-- DESIGN LAYER (swap this file when Claude Design output is ready) -->
   <style>
 /* ============================================================
@@ -1791,6 +1795,34 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .wbk-band-empty { padding: var(--sp-4); border: 1px dashed var(--border); border-radius: var(--radius-sm);
   background: var(--surface-2); color: var(--text-muted); }
 
+/* ── Development & growth panel (P6, WP.readiness.developmentProfile). Evidence,
+   never a score. Calm blocks; gaps framed as "what to put on record next". */
+.rd-block { margin-top: var(--sp-4); }
+.rd-block:first-of-type { margin-top: var(--sp-2); }
+.rd-item { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-3);
+  padding: var(--sp-3) 0; border-bottom: 1px solid var(--border); }
+.rd-item:last-child { border-bottom: 0; }
+.rd-item-t { color: var(--text); font-size: var(--fs-body-m); line-height: 1.45; }
+.rd-item-ev { flex: none; }
+.rd-cov { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-2); }
+.rd-cov-cell { display: inline-flex; align-items: baseline; gap: 5px; padding: 4px 10px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px;
+  font-size: 12.5px; color: var(--text-muted); }
+.rd-cov-n { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.rd-gaps { list-style: none; margin: var(--sp-2) 0 0; padding: 0; }
+.rd-gaps li { color: var(--text-muted); font-size: 13px; padding: 4px 0 4px 18px; position: relative; }
+.rd-gaps li::before { content: "+"; position: absolute; inset-inline-start: 0; color: var(--brand); font-weight: 700; }
+.rd-empty { padding: var(--sp-4); border: 1px dashed var(--border); border-radius: var(--radius);
+  background: var(--surface-2); color: var(--text-muted); margin-top: var(--sp-2); }
+.rd-empty-note { color: var(--text-muted); font-size: var(--fs-body-s); line-height: var(--lh-body-s); margin-top: 2px; }
+/* k-anonymity verdict in the org view — calm, never a re-identifiable count. */
+.rd-suppressed { display: inline-flex; align-items: center; gap: 5px; color: var(--text-muted);
+  font-size: 12.5px; font-style: italic; }
+/* Fair-shot signal — a calm fairness note (org under-investment), never a score. */
+.rd-fair-note { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px;
+  background: var(--surface-2); border: 1px solid var(--border); border-inline-start: 3px solid var(--brand);
+  border-radius: var(--radius-sm); color: var(--text); font-size: 13.5px; line-height: 1.45; }
+
 /* ── Consistency / bias AWARENESS cards (P3, WP.evalIntel.consistencyCheck). Neutral
    "worth a second look" — never blocking, never a rank/score of anyone. */
 .wbk-consist { display: flex; flex-direction: column; gap: var(--sp-3); }
@@ -3043,6 +3075,61 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     wrFocus_evaluations:       { en: 'Evaluations', ar: 'التقييمات' },
     wrFocus_configuration:     { en: 'Configuration', ar: 'الإعدادات' },
     wrFocus_other:             { en: 'Other', ar: 'أخرى' },
+    // ─────────── P6 · Development & growth + Org capability (VIEW) ───────────
+    // The dev panel is DELIBERATELY never titled "Readiness" and shows NO score /
+    // rank / verdict — it supports a human's development judgement, never replaces it.
+    rdTitle:        { en: 'Development & growth (evidence)', ar: 'التطوّر والنمو (بالأدلة)' },
+    rdIntro:        { en: 'What the record shows about growth — to support development, never to rate or rank. Every item traces to its evidence.', ar: 'ما يُظهره السجل عن النمو — لدعم التطوّر، لا للتقييم أو الترتيب. كل بند يعود إلى دليله.' },
+    rdEmpty:        { en: 'Not enough evidence yet', ar: 'لا توجد أدلة كافية بعد' },
+    rdEmptyNote:    { en: 'Too little is on record to describe development yet. As work, recognition and reviews are logged, this fills in.', ar: 'المسجَّل أقل من أن يصف التطوّر بعد. كلما سُجِّل العمل والتقدير والمراجعات، اكتمل هذا.' },
+    rdStrengths:    { en: 'Strengths to build on', ar: 'نقاط قوة للبناء عليها' },
+    rdGrowth:       { en: 'Areas to support', ar: 'مجالات تستحق الدعم' },
+    rdCoverage:     { en: 'Evidence coverage', ar: 'تغطية الأدلة' },
+    rdCoverageNote: { en: 'Counts of sourced evidence on record — not a score.', ar: 'أعداد الأدلة الموثَّقة في السجل — وليست درجة.' },
+    rdNext:         { en: 'What to put on record next', ar: 'ما الذي يُسجَّل لاحقاً' },
+    rdNextNote:     { en: 'Gaps are simply what is not yet logged — not a deficiency.', ar: 'الفجوات هي ببساطة ما لم يُسجَّل بعد — وليست نقصاً.' },
+    rdNoneStrength: { en: 'No strengths evidenced on record yet.', ar: 'لا توجد نقاط قوة موثَّقة في السجل بعد.' },
+    rdNoneGrowth:   { en: 'No support areas surfaced from the record.', ar: 'لم تظهر مجالات دعم من السجل.' },
+    rdViewEvidence: { en: 'View the evidence behind this', ar: 'اعرض الدليل وراء هذا' },
+    rdEvTitle:      { en: 'Cited evidence', ar: 'الأدلة المُستشهد بها' },
+    rdEvIntro:      { en: 'The sourced items on record behind this point — nothing inferred.', ar: 'العناصر الموثَّقة في السجل وراء هذه النقطة — لا شيء مُستنتَج.' },
+    rdEvNone:       { en: 'No sourced items behind this point.', ar: 'لا عناصر موثَّقة وراء هذه النقطة.' },
+    rdCitesOne:     { en: '1 item', ar: 'عنصر واحد' },
+    rdCitesTwo:     { en: '2 items', ar: 'عنصران' },
+    rdCitesFew:     { en: '{n} items', ar: '{n} عناصر' },
+    rdCitesMany:    { en: '{n} items', ar: '{n} عنصراً' },
+    rdCitesOther:   { en: '{n} items', ar: '{n} عنصر' },
+    rdHuman:        { en: 'This informs a development conversation — it carries no readiness score, rank, or promote/hold decision.', ar: 'هذا يدعم حوار التطوّر — لا يحمل درجة جاهزية أو ترتيباً أو قرار ترقية/تأجيل.' },
+    // Fair-shot signal — replaces the old promotion-% ring. Evidence + a fairness note
+    // (org under-investment), NEVER a per-person readiness/promotion score.
+    rdFairTitle:    { en: 'Opportunity & fair shot', ar: 'الفرصة والإنصاف' },
+    rdFairGap:      { en: 'Not given a Tier-1 in {n} months — worth a fair shot before judging growth.', ar: 'لم يُسنَد إليه عمل من الفئة الأولى منذ {n} أشهر — يستحق فرصة عادلة قبل الحكم على نموّه.' },
+    rdTier1:        { en: 'Tier-1 work delivered: {n}', ar: 'أعمال الفئة الأولى المنجزة: {n}' },
+    rdSustainable:  { en: 'sustainable load', ar: 'حمل مستدام' },
+    rdOverloaded:   { en: 'carrying over-load', ar: 'محمّل زيادة' },
+    rdFairDisc:     { en: 'Flags where the organisation has not invested yet — never a score, rank, or verdict on the person.', ar: 'يشير إلى ما لم تستثمر فيه المنظمة بعد — وليس درجةً أو ترتيباً أو حكماً على الشخص.' },
+    rdTier1Short:   { en: 'Tier-1 delivered', ar: 'إنجازات الفئة الأولى' },
+    dashFairShot:   { en: 'Fair shot due', ar: 'فرصة مستحقّة' },
+    // Org-capability view (director/admin only, k-anonymized aggregate).
+    navOrg:         { en: 'Org capability', ar: 'قدرات المنظمة' },
+    orgTitle:       { en: 'Org capability', ar: 'قدرات المنظمة' },
+    orgSub:         { en: 'Where the organisation is strong and where to invest — aggregated and anonymized', ar: 'أين تَقوى المنظمة وأين تستثمر — بشكل مُجمَّع ومجهول الهوية' },
+    orgIntro:       { en: 'Aggregate planning view. Cohorts smaller than five are suppressed; no person, name, or per-person row appears.', ar: 'عرض تخطيطي مُجمَّع. تُحجب أي فئة أصغر من خمسة؛ ولا يظهر أي شخص أو اسم أو صف فردي.' },
+    orgDenied:      { en: 'This view is available to directors and admins only.', ar: 'هذا العرض متاح للمدراء والمشرفين فقط.' },
+    orgEmpty:       { en: 'Not enough data', ar: 'لا توجد بيانات كافية' },
+    orgEmptyNote:   { en: 'Too few completed evaluations to show a capability picture without risking re-identification.', ar: 'عدد التقييمات المكتملة أقل من أن يُظهر صورة القدرات دون خطر إعادة التعرّف.' },
+    orgTooFew:      { en: 'Too few to show', ar: 'أقل من أن يُعرض' },
+    orgDistribution:{ en: 'Capability distribution', ar: 'توزيع القدرات' },
+    orgDeveloping:  { en: 'Developing', ar: 'قيد التطوّر' },
+    orgProficient:  { en: 'Proficient', ar: 'متمكّن' },
+    orgStrong:      { en: 'Strong', ar: 'قوي' },
+    orgSkillGaps:   { en: 'Skill-gap areas to invest in', ar: 'مجالات الفجوة المهارية للاستثمار فيها' },
+    orgCohort:      { en: 'Across {n} completed evaluations', ar: 'عبر {n} تقييماً مكتملاً' },
+    orgGroup_conduct:    { en: 'Conduct', ar: 'السلوك المهني' },
+    orgGroup_behavior:   { en: 'Behaviour', ar: 'السلوكيات' },
+    orgGroup_results:    { en: 'Results', ar: 'النتائج' },
+    orgGroup_capability: { en: 'Capability', ar: 'الكفاءة' },
+    orgHuman:       { en: 'This describes capability areas to plan around — never a person, and never a ranking.', ar: 'هذا يصف مجالات القدرات للتخطيط حولها — لا شخصاً، ولا ترتيباً.' },
     securedNote:    { en: 'Restricted to @webook.com accounts your admin has granted access.', ar: 'مقصور على حسابات @webook.com التي منحها المدير صلاحية الدخول.' },
     noAccessTag:    { en: 'No access', ar: 'لا صلاحية' },
     accessDenied:   { en: 'Access denied', ar: 'الدخول مرفوض' },
@@ -3832,10 +3919,13 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       tier1Delivered: t1,
       fairnessGap: fairnessGap,
       monthsSinceTier1: p.monthsSinceTier1,
+      // Fairness signal flags ORG under-investment (a person not given big work lately),
+      // never a verdict on the person. NOTE: pct is an INTERNAL component score only —
+      // it is deliberately NOT rendered anywhere (INTELLIGENCE-ETHICS: no per-person
+      // readiness/promotion score/rank/threshold in the UI). The `note` carries no score.
       note: fairnessGap
-        ? 'Not given a Tier-1 in ' + p.monthsSinceTier1 + ' months — give a fair shot before judging readiness.'
-        : (pct >= 70 ? 'Strong readiness signal — review for next-level scope.'
-                     : 'Developing — keep building Tier-1 track record.'),
+        ? 'Not given a Tier-1 in ' + p.monthsSinceTier1 + ' months — worth a fair shot before judging growth.'
+        : 'Building a Tier-1 track record.',
     };
   }
 
@@ -6248,10 +6338,12 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       return s.state.key === 'overloaded' || s.state.key === 'near' || s.burnout;
     }).sort(function (a, b) { return b.load - a.load; }).slice(0, 6);
 
-    let risk = 0, promo = 0, ramp = 0;
+    let risk = 0, fairShot = 0, ramp = 0;
     people.forEach(function (p) {
       if (WP.growth.flightRisk(p).risk) risk++;
-      if (WP.growth.promotionReadiness(p).pct >= 70) promo++;
+      // Count people the ORG has under-invested in (a fair-shot signal), NOT a "ready"
+      // count gated on a promotion-% threshold (INTELLIGENCE-ETHICS: no rank/threshold).
+      if (WP.growth.promotionReadiness(p).fairnessGap) fairShot++;
       if (WP.growth.isRamping(p)) ramp++;
     });
 
@@ -6286,7 +6378,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
         '<div class="section"><h3>' + WP.ui.icon('alert', 16) + ' ' + t('needsAttention') + '</h3>' + attnHtml + '</div>' +
         '<div class="section"><h3>' + WP.ui.icon('sprout', 16) + ' ' + t('talent') + '</h3>' +
           '<div class="metrics" style="grid-template-columns:repeat(3,1fr)">' +
-            kpi(t('newSkillShort'), promo, t('promoReady'), 'var(--state-available)') +
+            kpi(t('dashFairShot'), fairShot, t('rdFairTitle'), 'var(--state-available)') +
             kpi(t('flightRisk').split(' ')[0], risk, t('flightRisk'), 'var(--state-overloaded)') +
             kpi(t('rampingShort'), ramp, t('rampingUp').split('—')[0]) +
           '</div></div>' +
@@ -6318,7 +6410,6 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       return personRow(p, s, stateChip(s) + '<span class="tag" style="color:var(--state-overloaded)">' + (s.burnout ? t('burnoutShort') : t('overloadedShort')) + '</span>');
     }).join('') : '<div class="sub">' + t('allClear') + '</div>';
     const devHtml = develop.length ? develop.map(function (p) {
-      const pr = WP.growth.promotionReadiness(p);
       return personRow(p, snaps[p.id], '<span class="tag" style="color:var(--state-balanced)">' +
         (WP.growth.isRamping(p) ? t('rampingShort') : t('toDevelop')) + '</span>');
     }).join('') : '<div class="sub">—</div>';
@@ -6351,7 +6442,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       '<div class="metrics">' +
         kpi(t('myLoad'), snap.load + '%', WP.i18n.stateLabel(snap.state), c) +
         kpi(t('currentProjects'), snap.eventCount, '') +
-        kpi(t('promoReady'), pr.pct + '%', t('devOnly').split('—')[0]) +
+        kpi(t('rdTier1Short'), pr.tier1Delivered, t('rdFairTitle')) +
       '</div>' +
       (snap.burnout ? '<div class="section" style="border-color:var(--state-overloaded)"><h3>' + WP.ui.icon('flame', 16) + ' ' + t('burnoutFlag') + '</h3><div class="sub">' + t('talkToManager') + '</div></div>' : '') +
       '<div class="section"><h3>' + WP.ui.icon('sprout', 16) + ' ' + t('yourGrowth') + '</h3><div class="sub">' + ui.esc(pr.note) + '</div></div>' +
@@ -7203,18 +7294,24 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     return lensPart + wsPart + skills + eqSection + quarterly + tn;
   }
 
-  function promoSection(p) {
+  /* Opportunity & fair-shot signal — replaces the legacy promotion-% ring (which was a
+   * per-person readiness SCORE, forbidden by INTELLIGENCE-ETHICS). Renders ONLY evidence:
+   * the FAIRNESS-GAP note (org under-investment — "give a fair shot before judging
+   * growth", never a verdict on the person) + the Tier-1-delivered count as a plain
+   * fact. NO percentage, NO ring, NO 70% threshold, NO rank anywhere. */
+  function fairShotSection(p) {
     const r = WP.growth.promotionReadiness(p);
     const t = WP.i18n.t;
-    const col = r.fairnessGap ? 'var(--state-near)' : (r.pct >= 70 ? 'var(--state-available)' : 'var(--state-balanced)');
-    return '<div class="section"><h3>' + t('promoReady') + '</h3>' +
-      '<div class="promo">' +
-        '<div class="ring" style="color:' + col + ';box-shadow:inset 0 0 0 6px ' + col + '">' + r.pct + '%</div>' +
-        '<div style="flex:1"><div style="font-size:13px">' + ui.esc(r.note) + '</div>' +
-        '<div class="mini-label" style="margin-top:6px">Tier-1 delivered: ' + r.tier1Delivered +
-          ' · ' + (r.sustainable ? (WP.state.lang === 'ar' ? 'مستدام' : 'sustainable') : (WP.state.lang === 'ar' ? 'محمّل زيادة' : 'over-loaded')) + '</div>' +
-        '</div></div>' +
-      '<div class="disclaimer">' + t('devOnly') + '</div></div>';
+    const gapNote = r.fairnessGap
+      ? '<div class="rd-fair-note">' + WP.ui.icon('tree', 14) + ' ' +
+          ui.esc(t('rdFairGap').replace('{n}', r.monthsSinceTier1)) + '</div>'
+      : '';
+    const fact = '<div class="mini-label" style="margin-top:6px">' +
+      ui.esc(t('rdTier1').replace('{n}', r.tier1Delivered)) + ' · ' +
+      ui.esc(r.sustainable ? t('rdSustainable') : t('rdOverloaded')) + '</div>';
+    return '<div class="section"><h3>' + WP.ui.icon('tree', 16) + ' ' + t('rdFairTitle') + '</h3>' +
+      gapNote + fact +
+      '<div class="disclaimer">' + t('rdFairDisc') + '</div></div>';
   }
 
   /* Upward feedback RECEIVED by a manager — visible only to people above
@@ -7348,8 +7445,6 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       (sens && !selfView && fr.risk ? '<div class="banner-risk">' + WP.ui.icon('alert',15) + ' ' + t('flightRisk') + ' — ' + ui.esc(fr.reasons.join(' · ')) + '</div>' : '') +
       (WP.growth.isRamping(p) ? '<div class="banner-info">' + WP.ui.icon('sprout',15) + ' ' + t('rampingUp') + '</div>' : '') +
 
-      (sens ? promoSection(p) : '') +
-
       '<div class="profile-body">' +
         '<div class="section"><h3>' + t('pressure') + '</h3>' + projectsList(p) + '</div>' +
         (dc ? '<div class="section"><h3>' + t('dailySummary') + '</h3><div class="kv">' +
@@ -7359,12 +7454,17 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
           '<div class="k">' + t('learned') + '</div><div>' + ui.esc(dc.learned) + '</div>' +
           '</div></div>' : '') +
         growthSections(p, sens, selfView) +
+        // Development & growth (P6) — evidence-based, access-gated to canSeeSensitive
+        // (self / direct manager / director). NEVER a readiness score/rank/verdict.
+        // The fair-shot signal sits beside it: evidence + fairness, never a promo %.
+        (sens ? fairShotSection(p) : '') +
+        (sens ? WP.ui.readiness.developmentPanel(p) : '') +
         (sens ? timelineSection(p) : '') +
         upwardReceived(p) +
         compPanel(p) +
       '</div>';
 
-    root.querySelector('#back').onclick = function () { WP._tlCache = null; WP._tlQuarter = 'all'; WP._tlCategory = 'all'; WP.setState({ route: 'map', selectedId: null }); };
+    root.querySelector('#back').onclick = function () { WP._tlCache = null; WP._devCache = null; WP._tlQuarter = 'all'; WP._tlCategory = 'all'; WP.setState({ route: 'map', selectedId: null }); };
     root.querySelectorAll('[data-tlq]').forEach(function (b) { b.onclick = function () { WP._tlQuarter = b.dataset.tlq; WP.setState({}); }; });
     root.querySelectorAll('[data-tlc]').forEach(function (b) { b.onclick = function () { WP._tlCategory = b.dataset.tlc; WP.setState({}); }; });
     const oe = root.querySelector('#open-eval');
@@ -7374,6 +7474,8 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     if (em) em.onclick = function () { WP.setState({ route: 'upward', selectedId: p.managerId }); };
     const se = root.querySelector('#self-eval');
     if (se) se.onclick = function () { WP.setState({ route: 'evaluation', selectedId: p.id, evalOrigin: 'profile' }); };
+    // Wire the development panel's cited-evidence chips (only present when sensitive-gated).
+    if (sens) WP.ui.readiness.wireDevPanel(root, p);
   }
 
   WP.ui.peek = peek;
@@ -9038,6 +9140,248 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 </script>
   <script>
 /* ============================================================
+ * Tempo — Development & growth panel + Org-capability view (P6 · VIEW)
+ * SPEC: docs/SPEC-readiness.md · GATE: ai-os/00-governance/INTELLIGENCE-ETHICS.md
+ * ------------------------------------------------------------
+ * Surfaces WP.readiness — the MOST ethics-sensitive engine (it touches careers).
+ * The engine already refuses to produce a verdict; this RENDER BOUNDARY refuses to
+ * LABEL one. Two surfaces, both V3 .wbk-*, both themes, LTR+RTL, all states:
+ *
+ *   developmentPanel(p)  — one person's evidence-based DEVELOPMENT bundle on their
+ *     profile. Titled "Development & growth (evidence)" — NEVER "Readiness" as a
+ *     score/verdict. NO number, NO rank, NO promote/hold. Gaps are framed as "what to
+ *     put on record next", never a deficiency. Access-gated to canSeeSensitive
+ *     (self / direct manager / director) — the caller (profile.js) only mounts it
+ *     when sensitive is allowed; we re-assert via the engine's own viewer gate.
+ *   orgRender(root)      — director/admin (canManage) aggregated + k-anonymized org
+ *     capability view. Re-checks the gate (defence in depth). Never re-introduces a
+ *     name or per-person row; suppressed cohorts render "too few to show".
+ *
+ * Every figure cites its sourced evidence via a keyboard-accessible chip → a calm
+ * drawer (the P3 evidence-drawer pattern). "Not enough evidence yet" / "Not enough
+ * data" are first-class. NO score / rank / verdict / percentage anywhere.
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+  var ui = WP.ui;
+
+  /* Stable ref for one cited evidence object — mirrors readiness._refOf's identity so
+   * a chip can resolve its refs back to the sourced items behind a point. */
+  function refOf(e) { return e && (e.id || e.source || ((e.category || '') + '@' + (e.ts || ''))); }
+
+  /* One sourced evidence line in the drawer — text + source + date. No score. */
+  function lineHTML(e, t) {
+    var d = e.ts ? String(e.ts).slice(0, 10) : '';
+    return '<li class="ep-line">' +
+        '<span class="ep-text">' + ui.esc(e.text || e.category || '') + '</span>' +
+        '<span class="ep-src">' + WP.ui.icon('eye', 12) + ' ' + t('epSource') + ': ' + ui.esc(e.source || '—') +
+          (d ? ' · ' + d : '') + (e.confidence ? ' · ' + ui.esc(e.confidence) : '') + '</span>' +
+      '</li>';
+  }
+
+  /* "N items" as a REAL, keyboard-accessible control (evidence is traceable, not
+   * decorative). Carries an index into the per-render evidence registry. Empty → no
+   * chip (never a dead affordance). Plural-correct via WP.i18n.plural. */
+  function evChip(evk, count, t) {
+    if (!count) return '';
+    return '<button type="button" class="wbk-band-ev" data-evk="' + evk + '" title="' + t('rdViewEvidence') + '">' +
+      WP.ui.icon('eye', 12) + ' ' + WP.ui.esc(WP.i18n.plural('rdCites', count)) + '</button>';
+  }
+
+  /* Open the cited-evidence drawer for one point — lists ONLY the sourced items
+   * actually on record behind it (de-fabricated). */
+  function openEvidence(items, t) {
+    var host = document.getElementById('overlay-host');
+    if (!host) return;
+    var list = (items || []).filter(Boolean);
+    host.innerHTML = '<div class="overlay"><div class="drawer">' +
+      '<button class="btn icon-btn" id="rd-ev-close" style="margin-bottom:14px" aria-label="Close">' + WP.ui.icon('x', 14) + '</button>' +
+      '<h3>' + WP.ui.icon('eye', 16) + ' ' + t('rdEvTitle') + '</h3>' +
+      '<div class="disclaimer">' + t('rdEvIntro') + '</div>' +
+      (list.length
+        ? '<ul class="ep-list">' + list.map(function (e) { return lineHTML(e, t); }).join('') + '</ul>'
+        : '<div class="ep-empty"><div class="ttl">' + t('rdEvNone') + '</div></div>') +
+      '</div></div>';
+    host.querySelector('#rd-ev-close').onclick = function () { host.innerHTML = ''; };
+    host.querySelector('.overlay').onclick = function (e) { if (e.target.classList.contains('overlay')) host.innerHTML = ''; };
+  }
+
+  /* ---- DEVELOPMENT PANEL (one person, on their profile) -------------------- */
+
+  // Flatten the profile's strengths + growthAreas into one indexed list so each chip
+  // can resolve its OWN evidence (built identically at render + wire time).
+  function evidenceGroups(prof) {
+    var groups = [];
+    (prof.strengths || []).forEach(function (s) { groups.push(s.evidence || []); });
+    (prof.growthAreas || []).forEach(function (g) { groups.push(g.evidence || []); });
+    return groups;
+  }
+
+  function itemRow(item, evk, t) {
+    var n = (item.evidence || []).filter(Boolean).length;
+    return '<div class="rd-item"><div class="rd-item-t">' + ui.esc(item.text) + '</div>' +
+      (n ? '<div class="rd-item-ev">' + evChip(evk, n, t) + '</div>' : '') + '</div>';
+  }
+
+  // Synchronous render from cache; kicks the async load if absent. Loading state is a
+  // calm placeholder, never fabricated content. ALWAYS titled "Development & growth
+  // (evidence)" — never "Readiness", never a score/rank/verdict.
+  function developmentPanel(p) {
+    var t = WP.i18n.t;
+    var cached = (WP._devCache && WP._devCache.id === p.id) ? WP._devCache.prof : null;
+    if (!cached) {
+      WP.readiness.developmentProfile(p.id, { viewer: WP.viewer(), refDate: WP.state.refDate }).then(function (prof) {
+        WP._devCache = { id: p.id, prof: prof };
+        WP.setState({});
+      });
+    }
+    var head = '<div class="section"><h3>' + WP.ui.icon('sprout', 16) + ' ' + t('rdTitle') + '</h3>' +
+      '<div class="disclaimer" style="margin-top:0">' + WP.ui.icon('bulb', 13) + ' ' + t('rdIntro') + '</div>';
+
+    if (!cached) {
+      return head + '<div class="sub" id="rd-loading">' + t('epLoading') + '</div></div>';
+    }
+    // Denied (defence in depth) or genuinely sparse → first-class "Not enough evidence yet".
+    if (cached.denied || !cached.enoughEvidence) {
+      return head +
+        '<div class="rd-empty"><strong>' + WP.ui.icon('clock', 14) + ' ' + t('rdEmpty') + '</strong>' +
+        '<div class="rd-empty-note">' + t('rdEmptyNote') + '</div></div></div>';
+    }
+
+    var ev = 0; // running index across the flattened evidence groups
+    var strengths = (cached.strengths || []).length
+      ? (cached.strengths || []).map(function (s) { return itemRow(s, ev++, t); }).join('')
+      : '<div class="sub">' + t('rdNoneStrength') + '</div>';
+    var growth = (cached.growthAreas || []).length
+      ? (cached.growthAreas || []).map(function (g) { return itemRow(g, ev++, t); }).join('')
+      : '<div class="sub">' + t('rdNoneGrowth') + '</div>';
+
+    // Evidence coverage — transparent COUNTS, explicitly NOT a score.
+    var cov = cached.evidenceCoverage || { byCategory: {} };
+    var catKeys = Object.keys(cov.byCategory || {});
+    var coverage = catKeys.length
+      ? '<div class="rd-cov">' + catKeys.map(function (k) {
+          return '<span class="rd-cov-cell"><span class="rd-cov-n">' + cov.byCategory[k] + '</span> ' + ui.esc(k) + '</span>';
+        }).join('') + '</div>'
+      : '<div class="sub">—</div>';
+
+    // Gaps — framed as "what to put on record next", never a deficiency.
+    var gaps = (cached.gaps || []).length
+      ? '<ul class="rd-gaps">' + cached.gaps.map(function (g) { return '<li>' + ui.esc(g) + '</li>'; }).join('') + '</ul>'
+      : '<div class="sub">—</div>';
+
+    return head +
+      '<div class="rd-block"><div class="mini-label">' + t('rdStrengths') + '</div>' + strengths + '</div>' +
+      '<div class="rd-block"><div class="mini-label">' + t('rdGrowth') + '</div>' + growth + '</div>' +
+      '<div class="rd-block"><div class="mini-label">' + t('rdCoverage') + '</div>' +
+        '<div class="disclaimer" style="margin-top:0">' + t('rdCoverageNote') + '</div>' + coverage + '</div>' +
+      '<div class="rd-block"><div class="mini-label">' + t('rdNext') + '</div>' +
+        '<div class="disclaimer" style="margin-top:0">' + t('rdNextNote') + '</div>' + gaps + '</div>' +
+      '<div class="disclaimer">' + t('rdHuman') + '</div></div>';
+  }
+
+  // Wire the cited-evidence chips inside the freshly-rendered dev panel.
+  function wireDevPanel(root, p) {
+    var t = WP.i18n.t;
+    var cached = (WP._devCache && WP._devCache.id === p.id) ? WP._devCache.prof : null;
+    if (!cached || cached.denied || !cached.enoughEvidence) return;
+    var groups = evidenceGroups(cached);
+    root.querySelectorAll('.rd-item .wbk-band-ev[data-evk]').forEach(function (btn) {
+      var idx = parseInt(btn.dataset.evk, 10);
+      btn.onclick = function () { openEvidence(groups[idx] || [], t); };
+    });
+  }
+
+  /* ---- ORG-CAPABILITY VIEW (director/admin only) --------------------------- */
+
+  function bandLabel(key, t) {
+    return { developing: t('orgDeveloping'), proficient: t('orgProficient'), strong: t('orgStrong') }[key] || key;
+  }
+  function groupLabel(g, t) {
+    var k = 'orgGroup_' + g;
+    var v = t(k);
+    return v === k ? g : v;
+  }
+  // Render one k-anonymized cell: a count, or a calm "too few to show" — never a 1..4
+  // that could re-identify. The engine already suppressed; we only render its verdict.
+  function cellText(cell, t) {
+    if (!cell) return '—';
+    if (cell.suppressed) return '<span class="rd-suppressed">' + WP.ui.icon('lock', 12) + ' ' + t('orgTooFew') + '</span>';
+    return '<b style="font-variant-numeric:tabular-nums">' + cell.count + '</b>';
+  }
+
+  function orgRender(root) {
+    var t = WP.i18n.t;
+    var viewer = WP.viewer();
+    // ACCESS GATE (Ethics #6): director/admin only — defence in depth (nav already hidden).
+    if (!viewer || !WP.access.canManage(viewer)) {
+      root.innerHTML = '<div class="section"><div class="sub">' + WP.ui.icon('lock', 14) + ' ' + t('orgDenied') + '</div></div>';
+      return;
+    }
+    var cap = WP.readiness.orgCapability({ viewer: viewer });
+
+    var head =
+      '<div class="wbk-pageheader"><div class="wbk-ph-main">' +
+        '<h2 class="wbk-ph-title">' + t('orgTitle') + '</h2>' +
+        '<div class="wbk-ph-sub">' + t('orgSub') + '</div>' +
+      '</div></div>' +
+      '<div class="disclaimer">' + WP.ui.icon('bulb', 13) + ' ' + t('orgIntro') + '</div>';
+
+    // EMPTY / suppressed-whole-cohort → "Not enough data" is first-class.
+    if (!cap.enoughData) {
+      root.innerHTML = head +
+        '<div class="section"><div class="wr-empty">' +
+          '<strong>' + WP.ui.icon('clock', 14) + ' ' + t('orgEmpty') + '</strong>' +
+          '<div class="wr-empty-note">' + t('orgEmptyNote') + '</div></div></div>';
+      return;
+    }
+
+    var cohort = cap.cohortSize;
+    // Capability distribution — bands as labelled bars. A suppressed band shows
+    // "too few to show" with no bar fill (no re-identifiable count leaks).
+    var dist = cap.capabilityDistribution || {};
+    var maxBand = Object.keys(dist).reduce(function (m, k) {
+      var c = dist[k]; return (c && !c.suppressed) ? Math.max(m, c.count) : m;
+    }, 1);
+    var distHTML = ['strong', 'proficient', 'developing'].map(function (b) {
+      var cell = dist[b];
+      var wide = (cell && !cell.suppressed) ? Math.round((cell.count / maxBand) * 100) : 0;
+      return '<div class="lr"><div class="nm"><div>' + ui.esc(bandLabel(b, t)) + '</div></div>' +
+        '<div class="prog" style="flex:1;margin:0 12px"><i class="pg-prog" style="width:' + wide + '%"></i></div>' +
+        cellText(cell, t) + '</div>';
+    }).join('');
+
+    // Skill-gap areas — per competency GROUP, each a k-anonymized cell. Describes the
+    // AREA to invest in, never a person.
+    var gaps = cap.skillGapAreas || {};
+    var gapHTML = (WP.readiness.GROUPS || Object.keys(gaps)).map(function (g) {
+      return '<div class="wbk-li"><div><div class="wbk-li-t">' + ui.esc(groupLabel(g, t)) + '</div></div>' +
+        cellText(gaps[g], t) + '</div>';
+    }).join('');
+
+    root.innerHTML = head +
+      '<div class="grid-2" style="align-items:start">' +
+        '<div class="section"><h3>' + t('orgDistribution') + '</h3>' +
+          '<div class="ttl" style="margin-bottom:8px">' + t('orgCohort').replace('{n}', cohort) + '</div>' +
+          distHTML + '</div>' +
+        '<div class="section"><h3>' + t('orgSkillGaps') + '</h3>' +
+          '<div class="ttl" style="margin-bottom:8px">' + t('orgCohort').replace('{n}', cohort) + '</div>' +
+          gapHTML + '</div>' +
+      '</div>' +
+      '<div class="disclaimer">' + t('orgHuman') + '</div>';
+  }
+
+  WP.ui.readiness = {
+    developmentPanel: developmentPanel,
+    wireDevPanel: wireDevPanel,
+    orgRender: orgRender,
+    _refOf: refOf
+  };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
  * WBK Component Library — every component from the WBK DS, live.
  * Buttons, chips, segmented control, stepper, slider, toggle/checkbox/radio,
  * badges, progress (bar + circle), avatar, tabs, toast, system banner, tooltip,
@@ -9538,6 +9882,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       // Weekly Intelligence Report — director/admin only (decision patterns, never
       // people). Hidden for everyone else (guardrail, Constitution II / Ethics #6).
       nav.push({ id: 'weekly', routes: ['weekly'], icon: 'chart', label: t('navWeekly') });
+      // Org capability (P6) — director/admin only, aggregated + k-anonymized. The
+      // view re-checks the gate (defence in depth). Never people, never a ranking.
+      nav.push({ id: 'org', routes: ['org'], icon: 'tree', label: t('navOrg') });
       nav.push({ id: 'permissions', routes: ['permissions'], icon: 'key',      label: t('permsTitle') });
       nav.push({ id: 'settings',    routes: ['settings'],    icon: 'settings', label: t('settings') });
     }
@@ -9684,6 +10031,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     else if (WP.state.route === 'fairness') WP.ui.fairness.render(root);
     else if (WP.state.route === 'me') WP.ui.me.render(root);
     else if (WP.state.route === 'weekly') WP.ui.weeklyReport.render(root);
+    else if (WP.state.route === 'org') WP.ui.readiness.orgRender(root);
     else if (WP.state.route === 'library') WP.ui.wbkLibrary.render(root);
     else WP.ui.workloadMap.render(root);
 

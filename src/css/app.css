@@ -1574,6 +1574,34 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .wbk-band-empty { padding: var(--sp-4); border: 1px dashed var(--border); border-radius: var(--radius-sm);
   background: var(--surface-2); color: var(--text-muted); }
 
+/* ── Development & growth panel (P6, WP.readiness.developmentProfile). Evidence,
+   never a score. Calm blocks; gaps framed as "what to put on record next". */
+.rd-block { margin-top: var(--sp-4); }
+.rd-block:first-of-type { margin-top: var(--sp-2); }
+.rd-item { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-3);
+  padding: var(--sp-3) 0; border-bottom: 1px solid var(--border); }
+.rd-item:last-child { border-bottom: 0; }
+.rd-item-t { color: var(--text); font-size: var(--fs-body-m); line-height: 1.45; }
+.rd-item-ev { flex: none; }
+.rd-cov { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-2); }
+.rd-cov-cell { display: inline-flex; align-items: baseline; gap: 5px; padding: 4px 10px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px;
+  font-size: 12.5px; color: var(--text-muted); }
+.rd-cov-n { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.rd-gaps { list-style: none; margin: var(--sp-2) 0 0; padding: 0; }
+.rd-gaps li { color: var(--text-muted); font-size: 13px; padding: 4px 0 4px 18px; position: relative; }
+.rd-gaps li::before { content: "+"; position: absolute; inset-inline-start: 0; color: var(--brand); font-weight: 700; }
+.rd-empty { padding: var(--sp-4); border: 1px dashed var(--border); border-radius: var(--radius);
+  background: var(--surface-2); color: var(--text-muted); margin-top: var(--sp-2); }
+.rd-empty-note { color: var(--text-muted); font-size: var(--fs-body-s); line-height: var(--lh-body-s); margin-top: 2px; }
+/* k-anonymity verdict in the org view — calm, never a re-identifiable count. */
+.rd-suppressed { display: inline-flex; align-items: center; gap: 5px; color: var(--text-muted);
+  font-size: 12.5px; font-style: italic; }
+/* Fair-shot signal — a calm fairness note (org under-investment), never a score. */
+.rd-fair-note { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px;
+  background: var(--surface-2); border: 1px solid var(--border); border-inline-start: 3px solid var(--brand);
+  border-radius: var(--radius-sm); color: var(--text); font-size: 13.5px; line-height: 1.45; }
+
 /* ── Consistency / bias AWARENESS cards (P3, WP.evalIntel.consistencyCheck). Neutral
    "worth a second look" — never blocking, never a rank/score of anyone. */
 .wbk-consist { display: flex; flex-direction: column; gap: var(--sp-3); }

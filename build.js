@@ -33,6 +33,24 @@ html = html.split("'src/assets/' + " + cond).join(condUri);
 html = html.split("src=\"src/assets/' + " + cond).join("src=\"' + " + condUri);
 
 fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
+// 4) Gellix drop-in (Item 2): base64-inline whichever licensed .woff2 files are present
+//    in src/assets/fonts/ into a @font-face block at the marker. NO files → empty marker
+//    (fallback face stays; no 404, no fake substitute). Zero-code follow-up for Akram.
+const GELLIX = [
+  { file: 'Gellix-Regular.woff2',  weight: 400 },
+  { file: 'Gellix-Medium.woff2',   weight: 500 },
+  { file: 'Gellix-SemiBold.woff2', weight: 600 },
+  { file: 'Gellix-Bold.woff2',     weight: 700 },
+];
+const fontDir = path.join(root, 'src/assets/fonts');
+const faces = GELLIX.filter(g => fs.existsSync(path.join(fontDir, g.file))).map(g => {
+  const b64 = fs.readFileSync(path.join(fontDir, g.file)).toString('base64');
+  return '@font-face{font-family:"Gellix";font-style:normal;font-weight:' + g.weight +
+    ';font-display:swap;src:url("data:font/woff2;base64,' + b64 + '") format("woff2");}';
+});
+const gellixBlock = faces.length ? '<style>\n' + faces.join('\n') + '\n</style>' : '';
+html = html.replace('<!-- @GELLIX-FONT@ -->', gellixBlock);
+
 fs.writeFileSync(path.join(root, 'dist', 'index.html'), html);
 const kb = (Buffer.byteLength(html, 'utf8') / 1024).toFixed(0);
 const leftJs = (html.match(/<script\s+src="src\//g) || []).length;
