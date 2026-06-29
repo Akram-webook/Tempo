@@ -170,11 +170,15 @@
    * trail you can rewrite is worthless). Supabase 'events' when signed in; a
    * separate localStorage key as fallback. Persisted events are *appended*
    * decisions/evidence; derived-from-signal events are recomputed in events.js. */
-  var EVENTS_KEY = 'tempo_events';
+  var EVENTS_BASE = 'tempo_events';
+  // F7: the local event cache is namespaced per signed-in user (tempo_events::<id>),
+  // so one person's appended events never surface in another's cache on a shared
+  // device. Falls back to the global base only if the identity layer is absent.
+  function eventsKey() { return (WP.identity && WP.identity.nsKey) ? WP.identity.nsKey(EVENTS_BASE) : EVENTS_BASE; }
   function localEvents() {
-    try { return JSON.parse(localStorage.getItem(EVENTS_KEY) || '[]') || []; } catch (e) { return []; }
+    try { return JSON.parse(localStorage.getItem(eventsKey()) || '[]') || []; } catch (e) { return []; }
   }
-  function saveLocalEvents(arr) { try { localStorage.setItem(EVENTS_KEY, JSON.stringify(arr)); } catch (e) {} }
+  function saveLocalEvents(arr) { try { localStorage.setItem(eventsKey(), JSON.stringify(arr)); } catch (e) {} }
 
   var events = {
     /* List persisted events (optionally for one subject). Backend when available,
@@ -206,7 +210,7 @@
         .then(function (res) { if (res && res.error) throw res.error; status.offline = false; return { ok: true, offline: false }; })
         .catch(function (e) { status.offline = true; status.lastError = e; return { ok: false, offline: true, error: e }; });
     },
-    _localKey: EVENTS_KEY
+    _localKey: eventsKey   // F7: now a function returning the per-user namespaced key
   };
 
   function eventToRow(e) {

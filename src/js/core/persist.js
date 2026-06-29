@@ -12,7 +12,10 @@
  * ========================================================== */
 (function (WP) {
   'use strict';
-  var KEY = 'tempo_data', V = 2;
+  var BASE = 'tempo_data', V = 2;
+  // F7: read/write the CURRENT signed-in user's namespaced key (tempo_data::<id>),
+  // falling back to the global base only if the identity layer isn't present.
+  function KEY() { return (WP.identity && WP.identity.nsKey) ? WP.identity.nsKey(BASE) : BASE; }
 
   function snapshot() {
     var d = WP.data || {};
@@ -28,11 +31,11 @@
     };
   }
 
-  function saveData() { try { localStorage.setItem(KEY, JSON.stringify(snapshot())); } catch (e) {} }
+  function saveData() { try { localStorage.setItem(KEY(), JSON.stringify(snapshot())); } catch (e) {} }
 
   function hydrate() {
     try {
-      var raw = localStorage.getItem(KEY); if (!raw) return;
+      var raw = localStorage.getItem(KEY()); if (!raw) return;
       var s = JSON.parse(raw); if (!s || s.v !== V) return;     // ignore old/foreign shapes
       var d = WP.data || {};
       if (s.evaluations && d.EVALUATIONS) Object.keys(s.evaluations).forEach(function (k) { d.EVALUATIONS[k] = s.evaluations[k]; });

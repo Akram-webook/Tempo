@@ -63,7 +63,7 @@ function fakeSb(server) {
     if (mgr) assert(WP.access.canSeeSensitive(mgr, spec.id) === true, 'gate: a direct manager can see their report’s timeline');
 
     // --- store: localStorage fallback (no client) append + list, append-only idempotent ---
-    WP._sb = null; try { window.localStorage.removeItem(WP.db.events._localKey); } catch (e) {}
+    WP._sb = null; try { window.localStorage.removeItem(WP.db.events._localKey()); } catch (e) {}
     let r = await WP.db.events.append({ id: 'ap_1', ts: '2026-06-01T00:00:00Z', type: 'decision', subjectId: 'x', category: 'decision', description: 'd', source: 'Activity log' });
     assert(r.ok && r.local, 'store(local): append persists locally');
     let listed = await WP.db.events.list('x');

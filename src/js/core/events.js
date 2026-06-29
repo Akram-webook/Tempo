@@ -33,6 +33,29 @@
     };
   }
 
+  /* F6: a broken engine must NOT masquerade as "no evidence". Each derive branch is
+   * wrapped in try/catch so one thrown signal can't blank the whole timeline — but a
+   * silent catch makes a wiring regression look identical to a genuine absence. So in
+   * dev we LOG the branch + error (production stays silent). User-facing behaviour is
+   * unchanged: still no fabricated events, still graceful — the failure is just now
+   * observable to us, and "not enough evidence" stays reserved for TRUE absence. */
+  function isDevMode() {
+    try {
+      if (WP.config && WP.config.debug != null) return !!WP.config.debug;
+      var h = (typeof location !== 'undefined' && location.hostname) ? location.hostname : '';
+      return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0' || h === '';
+    } catch (e) { return false; }
+  }
+  function warnDerive(branch, subjectId, e) {
+    if (!isDevMode()) return;   // silent in production
+    try {
+      (console.warn || console.log).call(console,
+        '[events.derive] "' + branch + '" branch threw for ' + subjectId +
+        ' — emitting nothing for it (a wiring fault, NOT absence of evidence): ' +
+        (e && e.message ? e.message : e));
+    } catch (_) {}
+  }
+
   /* Build evidence/decision events for one person from live signals. Pure +
    * deterministic given the data; emits NOTHING when a signal is absent (we say
    * "no evidence" rather than invent it). */
@@ -50,7 +73,7 @@
           category: 'workload', confidence: 'observed', source: 'Capacity engine',
           description: 'Workload at ' + snap.load + '% (' + WP.i18n.stateLabel(snap.state) + ') this period' }));
       }
-    } catch (e) {}
+    } catch (e) { warnDerive('workload', subjectId, e); }
 
     // 2) Wellbeing — early SUPPORT signal, never punishment (Ethics #5)
     try {
@@ -62,7 +85,7 @@
             description: 'Early support signal (' + w.band + '): ' + w.factors.map(function (f) { return f.en; }).join('; ') }));
         }
       }
-    } catch (e) {}
+    } catch (e) { warnDerive('wellbeing', subjectId, e); }
 
     // 3) Completed evaluation
     try {
@@ -73,7 +96,7 @@
           type: 'evidence', subjectId: subjectId, category: 'evaluation', confidence: 'recorded', source: 'Evaluation', growth: true,
           description: 'Evaluation completed (' + (rec.period || '') + ')' + (overall != null ? ' — overall ' + overall + '/5' : '') }));
       }
-    } catch (e) {}
+    } catch (e) { warnDerive('evaluation', subjectId, e); }
 
     // 4) Recognition / check-ins (growth highlighted)
     try {
@@ -90,7 +113,7 @@
             description: 'Consistent check-ins (' + eng.weekDone + '/' + eng.weekGoal + ' this week)' }));
         }
       }
-    } catch (e) {}
+    } catch (e) { warnDerive('recognition', subjectId, e); }
 
     // 5) Decision events from the existing activity log (role changes, access, eval edits)
     try {
@@ -100,7 +123,7 @@
           type: 'decision', actor: a.by || null, subjectId: subjectId, category: 'decision', confidence: 'recorded',
           source: 'Activity log', description: (a.type || 'decision') + (a.reason ? ' · ' + a.reason : '') }));
       });
-    } catch (e) {}
+    } catch (e) { warnDerive('decision', subjectId, e); }
 
     return out;
   }

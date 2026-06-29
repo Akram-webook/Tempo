@@ -3301,6 +3301,67 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     refDate: new Date().toISOString().slice(0, 10), // default to TODAY (current period active)
   };
 
+  /* ── F7: per-USER local cache isolation ────────────────────────────────────
+   * tempo_session / tempo_data / tempo_events were GLOBAL browser keys, so on a
+   * shared device (or after a handover) two people's locally-saved evals / access
+   * grants / events could mix until the server re-synced. We namespace every
+   * persisted key by the SIGNED-IN identity (verified email), so each user reads
+   * only their own cache. This is local-cache isolation only — the real authority
+   * stays the server (evaluations/events/people/growth under RLS), untouched here.
+   *
+   * Identity is the signed-in ACCOUNT's email — NOT WP.state.viewerId, which an
+   * admin can "View as" without changing who is logged in. It is locked when authed
+   * flips false→true (sign-in) and cleared when it flips true→false (sign-out); both
+   * paths flow through setState, so this is observed entirely in core. A tiny global
+   * pointer (tempo_uid) records the active identity so the right namespace can be
+   * read at boot. All storage stays wrapped in try/catch (never throws). */
+  var IDPTR = 'tempo_uid';
+  function readPtr() { try { return localStorage.getItem(IDPTR) || '__anon__'; } catch (e) { return '__anon__'; } }
+  function writePtr(id) { try { if (id && id !== '__anon__') localStorage.setItem(IDPTR, id); else localStorage.removeItem(IDPTR); } catch (e) {} }
+  var _active = readPtr();
+  function resolveEmail(viewerId) {
+    if (viewerId === '__admin__') return '__admin__';
+    var p = (WP.access && WP.access.byId) ? WP.access.byId(viewerId) : null;
+    var em = (p && p.email) ? String(p.email).toLowerCase() : '';
+    return em || (viewerId ? String(viewerId) : '__anon__');
+  }
+  function nsKey(base) { return base + '::' + (_active || '__anon__'); }
+  // One-time migration of a legacy un-namespaced key into the current namespace,
+  // then REMOVE the global so a different identity can't later re-adopt it.
+  function migrateLegacy(base) {
+    try {
+      var legacy = localStorage.getItem(base);
+      if (legacy == null) return;
+      var nk = nsKey(base);
+      if (localStorage.getItem(nk) == null) localStorage.setItem(nk, legacy);   // best-effort, once
+      localStorage.removeItem(base);
+    } catch (e) {}
+  }
+  // Only fold legacy globals into a REAL identity (never anonymous), so a signed-out
+  // boot doesn't strand a returning user's work under '__anon__'.
+  function migrateLegacyAll() {
+    if (!_active || _active === '__anon__') return;
+    migrateLegacy('tempo_session'); migrateLegacy('tempo_data'); migrateLegacy('tempo_events');
+  }
+
+  WP.identity = {
+    current: function () { return _active || '__anon__'; },
+    nsKey: nsKey,
+    // Lock the namespace to the signed-in account; on a real change, fold any legacy
+    // globals in and re-hydrate THIS user's saved work. Returns true if it changed.
+    adopt: function (viewerId) {
+      var id = resolveEmail(viewerId);
+      if (!id) return false;
+      if (id === _active) return false;
+      _active = id; writePtr(id);
+      migrateLegacyAll();
+      if (WP.persist && WP.persist.hydrate) WP.persist.hydrate();
+      return true;
+    },
+    clear: function () { _active = '__anon__'; writePtr('__anon__'); },
+    _resolveEmail: resolveEmail   // tests
+  };
+
   // Persist the session so a reload keeps you signed in and on the same page
   // (no re-login after every update). Safe if storage is unavailable.
   // NOTE: refDate is intentionally NOT saved — every load defaults to TODAY (active by default).
@@ -3308,7 +3369,8 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   const NEEDS_SELECTION = { profile: 1, evaluation: 1, upward: 1 };
   (function restore() {
     try {
-      const raw = localStorage.getItem('tempo_session');
+      migrateLegacyAll();                       // fold a returning user's legacy keys in (no-op when anon)
+      const raw = localStorage.getItem(nsKey('tempo_session'));
       if (!raw) return;
       const s = JSON.parse(raw);
       SAVE_KEYS.forEach(function (k) { if (s[k] !== undefined) WP.state[k] = s[k]; });
@@ -3320,12 +3382,18 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     try {
       const o = {};
       SAVE_KEYS.forEach(function (k) { o[k] = WP.state[k]; });
-      localStorage.setItem('tempo_session', JSON.stringify(o));
+      localStorage.setItem(nsKey('tempo_session'), JSON.stringify(o));
     } catch (e) {}
   }
 
   WP.setState = function (patch) {
+    var wasAuthed = !!WP.state.authed;
     Object.assign(WP.state, patch);
+    var nowAuthed = !!WP.state.authed;
+    // Identity lifecycle: lock on sign-in, clear on sign-out. A "View as" change
+    // (viewerId changes while authed stays true) deliberately does NOT re-key.
+    if (nowAuthed && !wasAuthed) { if (WP.identity) WP.identity.adopt(WP.state.viewerId); }
+    else if (!nowAuthed && wasAuthed) { if (WP.identity) WP.identity.clear(); }
     persist();
     if (WP.persist) WP.persist.saveData();   // persist the user's WORK, not just the session
     if (typeof WP.render === 'function') WP.render();
@@ -3809,7 +3877,10 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
  * ========================================================== */
 (function (WP) {
   'use strict';
-  var KEY = 'tempo_data', V = 2;
+  var BASE = 'tempo_data', V = 2;
+  // F7: read/write the CURRENT signed-in user's namespaced key (tempo_data::<id>),
+  // falling back to the global base only if the identity layer isn't present.
+  function KEY() { return (WP.identity && WP.identity.nsKey) ? WP.identity.nsKey(BASE) : BASE; }
 
   function snapshot() {
     var d = WP.data || {};
@@ -3825,11 +3896,11 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     };
   }
 
-  function saveData() { try { localStorage.setItem(KEY, JSON.stringify(snapshot())); } catch (e) {} }
+  function saveData() { try { localStorage.setItem(KEY(), JSON.stringify(snapshot())); } catch (e) {} }
 
   function hydrate() {
     try {
-      var raw = localStorage.getItem(KEY); if (!raw) return;
+      var raw = localStorage.getItem(KEY()); if (!raw) return;
       var s = JSON.parse(raw); if (!s || s.v !== V) return;     // ignore old/foreign shapes
       var d = WP.data || {};
       if (s.evaluations && d.EVALUATIONS) Object.keys(s.evaluations).forEach(function (k) { d.EVALUATIONS[k] = s.evaluations[k]; });
@@ -4019,11 +4090,15 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
    * trail you can rewrite is worthless). Supabase 'events' when signed in; a
    * separate localStorage key as fallback. Persisted events are *appended*
    * decisions/evidence; derived-from-signal events are recomputed in events.js. */
-  var EVENTS_KEY = 'tempo_events';
+  var EVENTS_BASE = 'tempo_events';
+  // F7: the local event cache is namespaced per signed-in user (tempo_events::<id>),
+  // so one person's appended events never surface in another's cache on a shared
+  // device. Falls back to the global base only if the identity layer is absent.
+  function eventsKey() { return (WP.identity && WP.identity.nsKey) ? WP.identity.nsKey(EVENTS_BASE) : EVENTS_BASE; }
   function localEvents() {
-    try { return JSON.parse(localStorage.getItem(EVENTS_KEY) || '[]') || []; } catch (e) { return []; }
+    try { return JSON.parse(localStorage.getItem(eventsKey()) || '[]') || []; } catch (e) { return []; }
   }
-  function saveLocalEvents(arr) { try { localStorage.setItem(EVENTS_KEY, JSON.stringify(arr)); } catch (e) {} }
+  function saveLocalEvents(arr) { try { localStorage.setItem(eventsKey(), JSON.stringify(arr)); } catch (e) {} }
 
   var events = {
     /* List persisted events (optionally for one subject). Backend when available,
@@ -4055,7 +4130,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
         .then(function (res) { if (res && res.error) throw res.error; status.offline = false; return { ok: true, offline: false }; })
         .catch(function (e) { status.offline = true; status.lastError = e; return { ok: false, offline: true, error: e }; });
     },
-    _localKey: EVENTS_KEY
+    _localKey: eventsKey   // F7: now a function returning the per-user namespaced key
   };
 
   function eventToRow(e) {
@@ -4680,6 +4755,29 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     };
   }
 
+  /* F6: a broken engine must NOT masquerade as "no evidence". Each derive branch is
+   * wrapped in try/catch so one thrown signal can't blank the whole timeline — but a
+   * silent catch makes a wiring regression look identical to a genuine absence. So in
+   * dev we LOG the branch + error (production stays silent). User-facing behaviour is
+   * unchanged: still no fabricated events, still graceful — the failure is just now
+   * observable to us, and "not enough evidence" stays reserved for TRUE absence. */
+  function isDevMode() {
+    try {
+      if (WP.config && WP.config.debug != null) return !!WP.config.debug;
+      var h = (typeof location !== 'undefined' && location.hostname) ? location.hostname : '';
+      return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0' || h === '';
+    } catch (e) { return false; }
+  }
+  function warnDerive(branch, subjectId, e) {
+    if (!isDevMode()) return;   // silent in production
+    try {
+      (console.warn || console.log).call(console,
+        '[events.derive] "' + branch + '" branch threw for ' + subjectId +
+        ' — emitting nothing for it (a wiring fault, NOT absence of evidence): ' +
+        (e && e.message ? e.message : e));
+    } catch (_) {}
+  }
+
   /* Build evidence/decision events for one person from live signals. Pure +
    * deterministic given the data; emits NOTHING when a signal is absent (we say
    * "no evidence" rather than invent it). */
@@ -4697,7 +4795,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
           category: 'workload', confidence: 'observed', source: 'Capacity engine',
           description: 'Workload at ' + snap.load + '% (' + WP.i18n.stateLabel(snap.state) + ') this period' }));
       }
-    } catch (e) {}
+    } catch (e) { warnDerive('workload', subjectId, e); }
 
     // 2) Wellbeing — early SUPPORT signal, never punishment (Ethics #5)
     try {
@@ -4709,7 +4807,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
             description: 'Early support signal (' + w.band + '): ' + w.factors.map(function (f) { return f.en; }).join('; ') }));
         }
       }
-    } catch (e) {}
+    } catch (e) { warnDerive('wellbeing', subjectId, e); }
 
     // 3) Completed evaluation
     try {
@@ -4720,7 +4818,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
           type: 'evidence', subjectId: subjectId, category: 'evaluation', confidence: 'recorded', source: 'Evaluation', growth: true,
           description: 'Evaluation completed (' + (rec.period || '') + ')' + (overall != null ? ' — overall ' + overall + '/5' : '') }));
       }
-    } catch (e) {}
+    } catch (e) { warnDerive('evaluation', subjectId, e); }
 
     // 4) Recognition / check-ins (growth highlighted)
     try {
@@ -4737,7 +4835,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
             description: 'Consistent check-ins (' + eng.weekDone + '/' + eng.weekGoal + ' this week)' }));
         }
       }
-    } catch (e) {}
+    } catch (e) { warnDerive('recognition', subjectId, e); }
 
     // 5) Decision events from the existing activity log (role changes, access, eval edits)
     try {
@@ -4747,7 +4845,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
           type: 'decision', actor: a.by || null, subjectId: subjectId, category: 'decision', confidence: 'recorded',
           source: 'Activity log', description: (a.type || 'decision') + (a.reason ? ' · ' + a.reason : '') }));
       });
-    } catch (e) {}
+    } catch (e) { warnDerive('decision', subjectId, e); }
 
     return out;
   }
