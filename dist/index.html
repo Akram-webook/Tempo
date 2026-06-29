@@ -1728,6 +1728,12 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 /* the /5 range track — a highlighted band [low–high], not a point */
 .wbk-band-track { position: relative; block-size: 8px; border-radius: 999px; background: var(--surface-3);
   margin: var(--sp-5) 0 var(--sp-3); }
+/* 1–5 gridlines: thin marks at 0/25/50/75/100% so the span reads against the scale (#4). */
+.wbk-band-grid { position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background-image: repeating-linear-gradient(to right,
+    var(--border) 0, var(--border) 1px, transparent 1px, transparent 25%);
+  border-inline-end: 1px solid var(--border); /* the 5/right-edge tick */
+  opacity: .9; }
 .wbk-band-span { position: absolute; block-size: 100%; border-radius: 999px;
   background: color-mix(in srgb, var(--brand) 55%, transparent); border: 1px solid var(--brand); }
 .wbk-band-scale { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums;
@@ -1738,7 +1744,21 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .wbk-band-reason { list-style: none; margin: var(--sp-3) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
 .wbk-band-reason li { display: flex; flex-direction: column; gap: 2px; padding: var(--sp-3);
   background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: var(--fs-body-m); color: var(--text); }
-.wbk-band-ev { display: inline-flex; align-items: center; gap: var(--sp-1); color: var(--text-muted); font-size: var(--fs-body-s); }
+/* "cites N" is a real control opening the cited-evidence drawer (#1) — reset the button
+   chrome, keep it quiet, but give it a clear hover + keyboard focus ring. */
+.wbk-band-ev { display: inline-flex; align-items: center; gap: var(--sp-1); align-self: flex-start;
+  color: var(--text-muted); font-size: var(--fs-body-s); font-family: inherit;
+  background: none; border: 1px solid transparent; border-radius: var(--radius-sm);
+  padding: 2px 6px; margin-block-start: 2px; cursor: pointer; text-decoration: underline;
+  text-decoration-style: dotted; text-underline-offset: 2px; }
+.wbk-band-ev:hover { color: var(--text); background: var(--surface-2); border-color: var(--border); }
+.wbk-band-ev:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+/* Collapsed (anchoring guard): only the title + note + reveal button show. */
+.wbk-band--collapsed .wbk-band-head, .wbk-band--collapsed .wbk-band-track,
+.wbk-band--collapsed .wbk-band-scale, .wbk-band--collapsed .wbk-band-val,
+.wbk-band--collapsed .wbk-band-reason, .wbk-band--collapsed .ep-gaps { display: none; }
+#sb-reveal { margin-block-start: var(--sp-3); }
+#sb-reveal[disabled] { opacity: .6; cursor: progress; }
 .wbk-band-risk { border-color: var(--state-notice-border); }
 .wbk-band-risk .wbk-band-ev { color: var(--state-notice); }
 .wbk-band-empty { padding: var(--sp-4); border: 1px dashed var(--border); border-radius: var(--radius-sm);
@@ -1752,6 +1772,10 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .wbk-consist-ic { flex: none; color: var(--state-notice); margin-block-start: 1px; }
 .wbk-consist-t { font-weight: 600; font-size: var(--fs-label-m); line-height: var(--lh-label-m); color: var(--text); }
 .wbk-consist-x { font-size: var(--fs-body-s); line-height: var(--lh-body-s); color: var(--text-muted); margin-top: 2px; }
+/* Quiet "calibration looks consistent" line (#6) — confirms the check ran; never an alarm. */
+.wbk-consist-ok { display: flex; align-items: center; gap: var(--sp-2); color: var(--text-muted);
+  font-size: var(--fs-body-s); line-height: var(--lh-body-s); }
+.wbk-consist-ok-ic { display: inline-flex; color: var(--state-positive); }
 
 </style>
 </head>
@@ -2656,7 +2680,19 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     sbConfHigh:     { en: 'High confidence', ar: 'ثقة عالية' },
     sbConfMed:      { en: 'Medium confidence', ar: 'ثقة متوسطة' },
     sbConfLow:      { en: 'Low confidence', ar: 'ثقة منخفضة' },
-    sbCites:        { en: 'cites {n} item(s)', ar: 'يستند إلى {n} عنصر' },
+    // Plural forms (en: one/other · ar: one/two/few/many/other) — see WP.i18n.plural.
+    sbCitesOne:     { en: 'cites 1 item', ar: 'يستند إلى عنصر واحد' },
+    sbCitesTwo:     { en: 'cites 2 items', ar: 'يستند إلى عنصرين' },
+    sbCitesFew:     { en: 'cites {n} items', ar: 'يستند إلى {n} عناصر' },
+    sbCitesMany:    { en: 'cites {n} items', ar: 'يستند إلى {n} عنصراً' },
+    sbCitesOther:   { en: 'cites {n} items', ar: 'يستند إلى {n} عنصر' },
+    sbReveal:       { en: 'Show suggested range', ar: 'إظهار النطاق المقترح' },
+    sbRevealNote:   { en: 'Form your own view first — reveal the evidence-based range only if you want a second reference.', ar: 'كوّن رأيك أولاً — أظهر النطاق المستند إلى الأدلة فقط إذا أردت مرجعاً ثانياً.' },
+    sbHide:         { en: 'Hide', ar: 'إخفاء' },
+    sbViewEvidence: { en: 'View cited evidence', ar: 'عرض الأدلة المُستشهد بها' },
+    sbEvTitle:      { en: 'Cited evidence', ar: 'الأدلة المُستشهد بها' },
+    sbEvIntro:      { en: 'The sourced items behind this point — traceable, not invented.', ar: 'العناصر الموثّقة وراء هذه النقطة — قابلة للتتبّع وليست مُختلقة.' },
+    sbEvNone:       { en: 'No traceable items for this point.', ar: 'لا عناصر قابلة للتتبّع لهذه النقطة.' },
     sbWeigh:        { en: 'Weigh these', ar: 'ضع هذه في الحسبان' },
     sbAnchorOrg:    { en: 'Anchored to this cycle’s average ({v}/5).', ar: 'مُعاير على متوسط هذه الدورة ({v}/٥).' },
     sbAnchorDefault:{ en: 'Anchored to a neutral midpoint (no cycle baseline yet).', ar: 'مُعاير على نقطة وسط محايدة (لا أساس للدورة بعد).' },
@@ -2665,7 +2701,12 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     // ─────────── P3 · Consistency awareness ───────────
     ccTitle:        { en: 'Worth a second look', ar: 'يستحق نظرة ثانية' },
     ccIntro:        { en: 'Calibration awareness across your own reviews — not a judgment of you or anyone. Nothing here blocks you.', ar: 'وعي بالمعايرة عبر تقييماتك — وليس حكماً عليك أو على أحد. لا شيء هنا يمنعك.' },
-    ccCites:        { en: 'cites {n} review(s)', ar: 'يستند إلى {n} تقييم' },
+    ccCitesOne:     { en: 'cites 1 review', ar: 'يستند إلى تقييم واحد' },
+    ccCitesTwo:     { en: 'cites 2 reviews', ar: 'يستند إلى تقييمين' },
+    ccCitesFew:     { en: 'cites {n} reviews', ar: 'يستند إلى {n} تقييمات' },
+    ccCitesMany:    { en: 'cites {n} reviews', ar: 'يستند إلى {n} تقييماً' },
+    ccCitesOther:   { en: 'cites {n} reviews', ar: 'يستند إلى {n} تقييم' },
+    ccOk:           { en: 'Calibration looks consistent across your reviews.', ar: 'تبدو المعايرة متّسقة عبر تقييماتك.' },
     skills:         { en: 'Skills & competencies', ar: 'المهارات والكفاءات' },
     hardSkills:     { en: 'Technical', ar: 'تقنية' },
     softSkills:     { en: 'Behavioral', ar: 'سلوكية' },
@@ -2939,6 +2980,23 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     return s[WP.state.lang] || s.en;
   }
 
+  // Plural-correct lookup. Picks the CLDR category for n in the active language
+  // (en → one/other; ar → one/two/few/many/other) and reads the matching flat key
+  // `<prefix><Category>` (e.g. sbCitesOne / sbCitesTwo / sbCitesFew). Falls back to
+  // `<prefix>Other`. Replaces {n}. So "1 item" / "2 items" and the full Arabic forms
+  // are honest, not the lazy "item(s)".
+  function pluralCat(n, lang) {
+    try { return new Intl.PluralRules(lang === 'ar' ? 'ar' : 'en').select(n); }
+    catch (e) { return n === 1 ? 'one' : 'other'; }
+  }
+  function plural(prefix, n) {
+    const cat = pluralCat(n, WP.state.lang);
+    const key = prefix + cat.charAt(0).toUpperCase() + cat.slice(1);
+    let s = STRINGS[key] || STRINGS[prefix + 'Other'];
+    const v = s ? (s[WP.state.lang] || s.en) : prefix;
+    return v.replace('{n}', n);
+  }
+
   function isRTL() { return WP.state.lang === 'ar'; }
 
   function name(person) {
@@ -2966,7 +3024,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     return d.getDate() + ' ' + MONTHS_SHORT[d.getMonth()];
   }
 
-  WP.i18n = { t, isRTL, name, title, eventName, stateLabel, shortDate };
+  WP.i18n = { t, plural, isRTL, name, title, eventName, stateLabel, shortDate };
 })(window.WP = window.WP || {});
 
 </script>
@@ -7501,6 +7559,49 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       '</li>';
   }
 
+  // Mirror of evalIntel's citeId(): the stable ref string for a cited item. Lets the
+  // band's "cites N" chip resolve its refs back to the sourced evidence objects.
+  function refOf(e) { return e && (e.id || e.source || ((e.category || '') + '@' + (e.ts || ''))); }
+
+  // "cites N items" as a REAL, keyboard-accessible control (Heuristic #1/#6 — evidence
+  // is traceable, not decorative). Carries its refs so a click opens them. Empty refs →
+  // no chip (never a dead affordance). Plural-correct via WP.i18n.plural.
+  function evChip(refs, prefix, t) {
+    var ids = (refs || []).filter(Boolean);
+    if (!ids.length) return '';
+    return '<button type="button" class="wbk-band-ev" data-refs="' + WP.ui.esc(ids.join('|')) + '"' +
+        ' title="' + t('sbViewEvidence') + '">' +
+      WP.ui.icon('eye', 12) + ' ' + WP.ui.esc(WP.i18n.plural(prefix, ids.length)) + '</button>';
+  }
+
+  // Evidence "timeline" filtered to a point's refs: a calm drawer listing the SOURCED
+  // items behind it. De-fabricated — only items actually on record appear.
+  function openEvidence(refs, all, t) {
+    var set = {}; (refs || []).forEach(function (r) { set[r] = 1; });
+    var items = (all || []).filter(function (e) { return set[refOf(e)]; });
+    var host = document.getElementById('overlay-host');
+    if (!host) return;
+    host.innerHTML = '<div class="overlay"><div class="drawer">' +
+      '<button class="btn icon-btn" id="ev-close" style="margin-bottom:14px" aria-label="Close">' + WP.ui.icon('x', 14) + '</button>' +
+      '<h3>' + WP.ui.icon('eye', 16) + ' ' + t('sbEvTitle') + '</h3>' +
+      '<div class="disclaimer">' + t('sbEvIntro') + '</div>' +
+      (items.length
+        ? '<ul class="ep-list">' + items.map(function (e) {
+            return lineHTML({ text: e.text || catLabel(e.category || '', t), source: e.source, ts: e.ts }, t);
+          }).join('') + '</ul>'
+        : '<div class="ep-empty"><div class="ttl">' + t('sbEvNone') + '</div></div>') +
+      '</div></div>';
+    host.querySelector('#ev-close').onclick = function () { host.innerHTML = ''; };
+    host.querySelector('.overlay').onclick = function (e) { if (e.target.classList.contains('overlay')) host.innerHTML = ''; };
+  }
+
+  // Wire the cited-evidence chips inside a freshly-rendered band to the evidence drawer.
+  function wireEvidence(host, all, t) {
+    host.querySelectorAll('.wbk-band-ev[data-refs]').forEach(function (btn) {
+      btn.onclick = function () { openEvidence(btn.dataset.refs.split('|'), all, t); };
+    });
+  }
+
   /* Render the evidence-prep summary. PREP ONLY — deliberately renders NO score,
    * rating, or verdict; just sourced lines, growth highlights, and listed gaps. */
   function prepHTML(s, t, ar) {
@@ -7571,23 +7672,22 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 
     var track =
       '<div class="wbk-band-val">' + lo.toFixed(1) + '–' + hi.toFixed(1) + '<span>/5</span></div>' +
+      // gridlines (1–5) keep the span keyed to the scale, not floating decoration (#4).
       '<div class="wbk-band-track" role="img" aria-label="' + t('sbAria').replace('{lo}', lo).replace('{hi}', hi) + '">' +
+        '<span class="wbk-band-grid" aria-hidden="true"></span>' +
         '<span class="wbk-band-span" style="inset-inline-start:' + left + '%;inline-size:' + width + '%"></span></div>' +
       '<div class="wbk-band-scale"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>';
 
     var reason = s.reasoning && s.reasoning.length
       ? '<ul class="wbk-band-reason">' + s.reasoning.map(function (r) {
-          var n = (r.evidence || []).length;
-          return '<li><span>' + WP.ui.esc(r.text) + '</span>' +
-            (n ? '<span class="wbk-band-ev">' + WP.ui.icon('eye', 12) + ' ' + t('sbCites').replace('{n}', n) + '</span>' : '') + '</li>';
+          return '<li><span>' + WP.ui.esc(r.text) + '</span>' + evChip(r.evidence, 'sbCites', t) + '</li>';
         }).join('') + '</ul>'
       : '';
 
     var risks = s.risks && s.risks.length
       ? '<div class="ep-gaps"><div class="mini-label">' + WP.ui.icon('alert', 13) + ' ' + t('sbWeigh') + '</div>' +
           '<ul class="wbk-band-reason">' + s.risks.map(function (rk) {
-            return '<li class="wbk-band-risk"><span>' + WP.ui.esc(rk.text) + '</span>' +
-              '<span class="wbk-band-ev">' + WP.ui.icon('eye', 12) + ' ' + t('sbCites').replace('{n}', (rk.evidence || []).length) + '</span></li>';
+            return '<li class="wbk-band-risk"><span>' + WP.ui.esc(rk.text) + '</span>' + evChip(rk.evidence, 'sbCites', t) + '</li>';
           }).join('') + '</ul></div>'
       : '';
 
@@ -7669,7 +7769,14 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 
       (showPrep ? '<div class="section eval-prep" id="eval-prep-host" aria-live="polite"><div class="ttl">' + WP.ui.icon('clipboard',14) + ' ' + t('epLoading') + '</div></div>' : '') +
 
-      (showPrep ? '<div class="section wbk-band" id="eval-suggested-band" data-suggested="" aria-live="polite"><div class="ttl">' + WP.ui.icon('sparkles',14) + ' ' + t('epLoading') + '</div></div>' : '') +
+      // ANCHORING GUARD (Heuristic #2/#5): the suggested range is COLLAPSED on load —
+      // the manager forms their own view first, then reveals it on demand. data-suggested
+      // stays EMPTY until reveal, so "shown" == "revealed" for B1's provenance stamp.
+      (showPrep ? '<div class="section wbk-band wbk-band--collapsed" id="eval-suggested-band" data-suggested="" aria-live="polite">' +
+        '<h3>' + WP.ui.icon('sparkles',14) + ' ' + t('sbTitle') + '</h3>' +
+        '<div class="disclaimer">' + t('sbRevealNote') + '</div>' +
+        '<button type="button" class="btn" id="sb-reveal" disabled>' + WP.ui.icon('eye',14) + ' ' + t('epLoading') + '</button>' +
+      '</div>' : '') +
 
       '<div class="section"><h3>' + (selfMode ? t('selfAssessment') : t('downwardFeedback')) + ' · ' + t('criteriaTitle') +
         '<span class="ttl" style="font-weight:400"> · ' + t('groupWeight') + ' 100% · ' + t('scale') + ' 1–5</span></h3>' +
@@ -7691,22 +7798,31 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     // eval with no AI input. Held in a closure the approve handler reads.
     let aiSuggestion = null;
     if (showPrep && WP.evalIntel) {
+      // Fetch eagerly so reveal is instant, but DO NOT render or stamp until the
+      // manager reveals it. Revealing is the act that makes the suggestion "shown":
+      // only then do we fill the band, stamp data-suggested, and arm aiSuggestion for
+      // the acceptance flag. A band never revealed = no AI shown = no provenance — which
+      // keeps B1's later aiAccepted stamp honest. (CONTRACT: shown == revealed.)
+      const revealBand = function (s, host) {
+        if (s && s.enoughEvidence && Array.isArray(s.range)) aiSuggestion = s;
+        host.classList.remove('wbk-band--collapsed');
+        host.innerHTML = bandHTML(s, t);
+        host.setAttribute('data-suggested',
+          (s && s.enoughEvidence && Array.isArray(s.range)) ? (s.range[0] + '-' + s.range[1]) : '');
+        wireEvidence(host, (s && s.evidence) || [], t); // chips → cited-evidence drawer (#1)
+      };
+      const armReveal = function (s) {
+        const host = root.querySelector('#eval-suggested-band');
+        if (!host) return;
+        const btn = host.querySelector('#sb-reveal');
+        if (!btn) return;
+        btn.disabled = false;
+        btn.innerHTML = WP.ui.icon('eye', 14) + ' ' + t('sbReveal');
+        btn.onclick = function () { revealBand(s, host); };
+      };
       Promise.resolve(WP.evalIntel.suggestedRange(p.id, ev.period, { viewer: viewer, refDate: WP.state.refDate }))
-        .then(function (s) {
-          if (s && s.enoughEvidence && Array.isArray(s.range)) aiSuggestion = s;
-          const host = root.querySelector('#eval-suggested-band');
-          if (host) {
-            host.innerHTML = bandHTML(s, t);
-            // Stable provenance hook (B1): stamp the SHOWN band on the element so
-            // acceptance is measured against exactly what the manager saw, not a
-            // recomputation. Empty when there was no real suggestion.
-            host.setAttribute('data-suggested', (s && s.enoughEvidence && Array.isArray(s.range)) ? (s.range[0] + '-' + s.range[1]) : '');
-          }
-        })
-        .catch(function () {
-          const host = root.querySelector('#eval-suggested-band');
-          if (host) { host.innerHTML = bandHTML(null, t); host.setAttribute('data-suggested', ''); }
-        });
+        .then(armReveal)
+        .catch(function () { armReveal(null); });
     }
 
     // Fill the evidence-prep panel asynchronously (reads the append-only event store).
@@ -7970,8 +8086,17 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     if (consistHost && WP.evalIntel && WP.evalIntel.consistencyCheck) {
       Promise.resolve(WP.evalIntel.consistencyCheck(viewer.id, cycle.id, { refDate: WP.state.refDate }))
         .then(function (c) {
-          if (!c || !c.enoughData || !c.warnings || !c.warnings.length) { consistHost.hidden = true; return; }
+          // Not enough data → stay hidden (no fabricated calibration claim).
+          if (!c || !c.enoughData) { consistHost.hidden = true; return; }
           consistHost.hidden = false;
+          // Zero warnings but the check DID run → a quiet "looks consistent" line so the
+          // evaluator knows it ran and passed (#6) — never an accusation, never a score.
+          if (!c.warnings || !c.warnings.length) {
+            consistHost.innerHTML =
+              '<div class="wbk-consist-ok"><span class="wbk-consist-ok-ic">' + WP.ui.icon('check', 14) + '</span> ' +
+                ui.esc(t('ccOk')) + '</div>';
+            return;
+          }
           consistHost.innerHTML =
             '<h3>' + WP.ui.icon('bulb', 14) + ' ' + t('ccTitle') + '</h3>' +
             '<div class="disclaimer">' + t('ccIntro') + '</div>' +
@@ -7981,7 +8106,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
                 '<div><div class="wbk-consist-t">' + ui.esc(w.text) + '</div>' +
                   '<div class="wbk-consist-x">' + ui.esc(w.explanation || '') + '</div>' +
                   '<div class="wbk-band-ev">' + WP.ui.icon('eye', 12) + ' ' +
-                    t('ccCites').replace('{n}', (w.evidence || []).length) + '</div></div>' +
+                    ui.esc(WP.i18n.plural('ccCites', (w.evidence || []).length)) + '</div></div>' +
               '</div>';
             }).join('') + '</div>';
         })

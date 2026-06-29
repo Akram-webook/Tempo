@@ -126,8 +126,17 @@
     if (consistHost && WP.evalIntel && WP.evalIntel.consistencyCheck) {
       Promise.resolve(WP.evalIntel.consistencyCheck(viewer.id, cycle.id, { refDate: WP.state.refDate }))
         .then(function (c) {
-          if (!c || !c.enoughData || !c.warnings || !c.warnings.length) { consistHost.hidden = true; return; }
+          // Not enough data → stay hidden (no fabricated calibration claim).
+          if (!c || !c.enoughData) { consistHost.hidden = true; return; }
           consistHost.hidden = false;
+          // Zero warnings but the check DID run → a quiet "looks consistent" line so the
+          // evaluator knows it ran and passed (#6) — never an accusation, never a score.
+          if (!c.warnings || !c.warnings.length) {
+            consistHost.innerHTML =
+              '<div class="wbk-consist-ok"><span class="wbk-consist-ok-ic">' + WP.ui.icon('check', 14) + '</span> ' +
+                ui.esc(t('ccOk')) + '</div>';
+            return;
+          }
           consistHost.innerHTML =
             '<h3>' + WP.ui.icon('bulb', 14) + ' ' + t('ccTitle') + '</h3>' +
             '<div class="disclaimer">' + t('ccIntro') + '</div>' +
@@ -137,7 +146,7 @@
                 '<div><div class="wbk-consist-t">' + ui.esc(w.text) + '</div>' +
                   '<div class="wbk-consist-x">' + ui.esc(w.explanation || '') + '</div>' +
                   '<div class="wbk-band-ev">' + WP.ui.icon('eye', 12) + ' ' +
-                    t('ccCites').replace('{n}', (w.evidence || []).length) + '</div></div>' +
+                    ui.esc(WP.i18n.plural('ccCites', (w.evidence || []).length)) + '</div></div>' +
               '</div>';
             }).join('') + '</div>';
         })
