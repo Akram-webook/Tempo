@@ -944,6 +944,74 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 }
 .tree > li::before, .tree > li::after { display: none; }
 
+/* ============================================================
+ * VERTICAL STACK — a manager's reports stack DOWN, not across.
+ * Top-level departments stay horizontal (the .tree's default inline-block
+ * layout); only ul.stack (depth >= 1) switches to a stacked list, so
+ * expanding a team grows the page vertically and horizontal scroll goes away.
+ * Responsive: 1 column narrow, 2 columns when there's room. RTL-safe (logical props).
+ * ========================================================== */
+.tree ul.stack {
+  white-space: normal; text-align: start;
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px;
+  padding: 16px 0 2px; margin-inline-start: 22px; position: relative;
+}
+@media (min-width: 720px) {
+  .tree ul.stack { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; }
+}
+/* file-tree connector: a rail down the stack + a tick into each card (1-col) */
+.tree ul.stack::before {
+  content: ''; position: absolute; inset-inline-start: -12px; top: -8px; bottom: 16px;
+  width: 0; border-inline-start: 2px solid var(--node-line);
+}
+.tree ul.stack > li {
+  display: block; padding: 0; position: relative; vertical-align: top; text-align: start;
+}
+.tree ul.stack > li::before { display: none; }                 /* drop the horizontal-tree connector */
+.tree ul.stack > li::after {                                    /* short tick from the rail into the card */
+  content: ''; display: block; position: absolute; inset-inline-start: -12px; top: 22px;
+  width: 12px; height: 0; border-top: 2px solid var(--node-line); border-inline-start: 0;
+}
+@media (min-width: 720px) {
+  /* 2-col: the rail+tick only lines up with the first column — keep the rail as a grouping
+     cue, drop the per-card ticks so the second column doesn't sprout dangling lines. */
+  .tree ul.stack > li::after { display: none; }
+}
+/* stacked cards fill their grid cell; COMPACT becomes a scannable list row */
+.tree ul.stack .node { width: 100%; max-width: none; margin: 0; }
+.tree ul.stack .node-compact {
+  flex-direction: row; align-items: center; text-align: start; gap: 10px; padding: 9px 12px;
+}
+.tree ul.stack .node-compact .avatar { width: 34px; height: 34px; margin: 0; }
+.tree ul.stack .node-compact .nm { flex: 1; min-width: 0; text-align: start; }
+.tree ul.stack .node-compact .loadbar { margin: 0; width: 96px; flex: none; }
+.tree ul.stack .node-compact .statusline { margin-inline-start: auto; }
+.tree ul.stack .node-compact .node-caret { position: static; transform: none; inset: auto; margin: 0; box-shadow: none; }
+
+/* COMPACT density (also applies to the horizontal top row) — tighter card, color always on */
+.node-compact { padding: 10px 11px 12px; gap: 4px; }
+.node-compact .loadbar { margin-top: 2px; }
+
+/* FOCUS affordance on a branch node — drill into its subtree (hide siblings). Revealed on
+   hover; always reachable by keyboard (focus-visible reveals it). SVG icon, token-driven. */
+.node-focus {
+  position: absolute; top: 6px; inset-inline-start: 8px; z-index: 4;
+  width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: 6px; background: var(--surface);
+  color: var(--text-muted); cursor: pointer; opacity: 0; transition: opacity .12s ease, color .12s ease, border-color .12s ease;
+}
+.node:hover .node-focus, .node-focus:focus-visible { opacity: 1; }
+.node-focus:hover { border-color: var(--brand); color: var(--brand); }
+.node-focus:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* FOCUS-MODE enter/exit animation — brief, and disabled under reduced-motion */
+.tree-scroll.tree-anim .tree { animation: treeFocus 190ms ease both; }
+@keyframes treeFocus { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .tree-scroll.tree-anim .tree { animation: none; }
+  .tree-fit { transition: none; }
+}
+
 /* ---- list view ---- */
 .list { display: flex; flex-direction: column; gap: 8px; }
 .row {
