@@ -20,6 +20,9 @@ try{
   assert(f('o.taher.c@webook.com').person.id==='p_osama','o.taher.c → Osama');
   assert(f('fouda@webook.com').person.id==='p_fouda','Fouda account exists');
   assert(f('abdelaal@webook.com').person.id==='p_abdelaal','Abdelaal account exists');
+  // Phase A — Motaa Aldarra now has a verified login (was getting errNoAccount).
+  assert(f('motaa@webook.com').person.id==='p_motaa','motaa → p_motaa (Phase A login)');
+  assert(WP.access.hasAccess('p_motaa')===true,'p_motaa passes the access gate (non-tbc)');
   assert(f('akram@gmail.com').error==='errBadDomain','wrong domain rejected');
   assert(f('nobody@webook.com').error==='errNoAccount','unknown rejected');
   assert(WP.access.isSuperAdmin(WP.access.byId('p_akram'))===true,'akram super admin');

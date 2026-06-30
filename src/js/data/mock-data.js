@@ -117,6 +117,7 @@
     p_shamma: 'shamma@webook.com', p_idris: 'mohammed.adris.c@webook.com', p_zaidan: 'zaidan@webook.com',
     p_faraj: 'faraj@webook.com', p_meshalB: 'meshal@webook.com', p_fouda: 'fouda@webook.com',
     p_abdelaal: 'abdelaal@webook.com',
+    p_motaa: 'motaa@webook.com',
   };
   PEOPLE.forEach(function (p) {
     if (EMAILS[p.id]) p.email = EMAILS[p.id];
