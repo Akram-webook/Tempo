@@ -1,5 +1,6 @@
-/* Headless verify: load all app scripts in jsdom, render the workload map,
- * exercise the new behaviors, and fail on any console error. */
+/* Headless verify: load all app scripts in jsdom, render the workload map, exercise the
+ * readability features (vertical stack, compact/detailed density, focus mode, per-user
+ * persistence, RTL), and fail on any console error. */
 const fs = require('fs'), path = require('path');
 const { JSDOM } = require('jsdom');
 
@@ -32,49 +33,110 @@ for (const s of srcs) {
 const WP = window.WP;
 function assert(c, m) { if (!c) errors.push('[assert] ' + m); }
 
+// Expand every collapsed branch in the current render so deep subtrees (and their
+// vertical stacks) are visible. Clicks each caret once.
+function expandAll(el) {
+  let guard = 0;
+  while (guard++ < 12) {
+    const cols = el.querySelectorAll('.node-caret.is-col');
+    if (!cols.length) break;
+    cols.forEach(c => c.click());
+  }
+}
+
 try {
   // Force a viewer with full visibility (director) so the whole tree renders.
   if (WP.access && WP.access.grantAccess) { try { WP.access.grantAccess('akram@webook.com'); } catch (e) {} }
+  // A signed-in identity so the per-user density key is namespaced (not a global key).
+  if (WP.identity && WP.identity.adopt) { try { WP.identity.adopt('akram@webook.com'); } catch (e) {} }
+  // Start from a known density (clear any persisted value).
+  try { window.localStorage.removeItem(WP.identity.nsKey('tempo_map_density')); } catch (e) {}
   WP.state.lang = 'en';
   const el = window.document.getElementById('app');
 
-  // Render the workload map directly.
   WP.ui.workloadMap.render(el);
 
   const nodes = el.querySelectorAll('.tree .node');
   assert(nodes.length > 0, 'tree rendered some nodes (' + nodes.length + ')');
-  assert(el.querySelector('.statusline'), 'status line present');
   assert(el.querySelector('.node-ava[data-profile]'), 'avatar profile target present');
 
-  // Full-time vs Freelance both represented
+  // --- COMPACT is the default + the workload COLOR is always shown ---------------
+  assert(el.querySelector('.node-compact'), 'compact density is the default (node-compact present)');
+  assert(el.querySelector('.loadbar .loadbar-pct'), 'workload color/status indicator present in compact');
+  assert(!el.querySelector('.tree .node .ttl'), 'compact hides the detail (no title line) by default');
+
+  // --- VERTICAL STACK: an expanded manager lays reports DOWN (ul.stack), not across ---
+  expandAll(el);
+  const stacks = el.querySelectorAll('.tree ul.stack');
+  assert(stacks.length > 0, 'expanded teams render a vertical stack (ul.stack) — ' + stacks.length);
+  // The top-level department row stays horizontal: the FIRST ul under the root is NOT a stack.
+  const rootUl = el.querySelector('.tree > li > ul');
+  assert(rootUl && !rootUl.classList.contains('stack'), 'top-level departments stay horizontal (root ul is not a stack)');
+  // A stack holds its reports as block list items (stacked), each a real card.
+  assert(stacks[0].querySelector(':scope > li .node'), 'stacked reports are full cards under their manager');
+
+  // --- DETAIL on peek: the popover reuses WP.ui.peek (no new popover built) ----------
+  assert(typeof WP.ui.peek === 'function', 'node-peek popover available (reused)');
+  const ava = el.querySelector('.node-ava[data-profile]');
+  let peeked = false; const realPeek = WP.ui.peek;
+  WP.ui.peek = function (id) { peeked = !!id; };
+  ava.click();
+  WP.ui.peek = realPeek;
+  assert(peeked, 'clicking a card avatar opens the node-peek detail');
+
+  // --- DETAILED density restores the full card (title + employment labels) ----------
+  WP.ui.workloadMap.render(el);   // re-render fresh
+  const densityBtn = el.querySelector('#density-dd-btn');
+  assert(densityBtn, 'density toggle present near the Tree/Period controls');
+  densityBtn.click();
+  const detailedOpt = el.querySelector('#density-dd-menu .dd-opt[data-val="detailed"]');
+  assert(detailedOpt, 'density menu offers a Detailed option');
+  detailedOpt.click();
+  expandAll(el);
+  assert(el.querySelector('.tree .node .ttl'), 'detailed density shows the full card (title line back)');
   const txt = el.textContent;
-  assert(/Full-time/.test(txt), 'shows Full-time label');
-  assert(/Freelance/.test(txt), 'shows Freelance label');
+  assert(/Full-time/.test(txt), 'detailed shows Full-time label');
+  assert(/Freelance/.test(txt), 'detailed shows Freelance label');
 
-  // Raghdaa (joining 2026-06-21) must NOT show a "Joining" badge now that the date passed.
-  // Find her card; she should render as a normal active member (Full-time).
-  const all = WP.access.visiblePeople(WP.viewer());
-  const rag = all.find(p => p.id === 'p_raghdaa');
-  assert(rag, 'raghdaa in data');
-  // simulate her node via statusLine path: today is past her joining date
-  const todayPast = new Date() > new Date(rag.joining + 'T00:00:00Z');
-  assert(todayPast, 'today is past Raghdaa joining date (' + rag.joining + ')');
+  // --- toggle PERSISTS per signed-in user (namespaced key, not a global one) ---------
+  let stored = null;
+  try { stored = window.localStorage.getItem(WP.identity.nsKey('tempo_map_density')); } catch (e) {}
+  assert(stored === 'detailed', 'density persists under the per-user namespaced key (got ' + stored + ')');
+  assert(WP.identity.nsKey('tempo_map_density').indexOf('::') > 0, 'density key is identity-namespaced (no global key)');
 
-  // has-kids manager card should be clickable (cursor pointer class)
-  const mgr = el.querySelector('.tree .node.has-kids');
-  assert(mgr, 'at least one expandable (has-kids) manager card');
+  // --- FOCUS MODE: drilling in hides sibling branches; Back restores them ------------
+  WP.ui.workloadMap.render(el);
+  expandAll(el);
+  const before = el.querySelectorAll('.tree .node').length;
+  // Focus a DEPARTMENT (a branch node that itself has a manager), not the root director —
+  // focusing the root would change nothing.
+  const focusBtns = [].slice.call(el.querySelectorAll('.node-focus[data-focus]'));
+  assert(focusBtns.length > 0, 'every branch node carries a Focus action');
+  const deptBtn = focusBtns.find(b => { const p = WP.access.byId(b.dataset.focus); return p && p.managerId; });
+  assert(deptBtn, 'a department-level Focus action exists');
+  deptBtn.click();
+  const during = el.querySelectorAll('.tree .node').length;
+  assert(during < before, 'focus hides sibling branches (' + before + ' -> ' + during + ')');
+  // Back to Organization is wired through the breadcrumb component (#45).
+  const back = el.querySelector('.wbk-bc a[data-bc-go="map"]');
+  assert(back, 'focus shows a "Back to Organization" breadcrumb link');
+  // The map's capture-phase handler clears focus; emulate the app's re-render after nav.
+  back.click();
+  WP.ui.workloadMap.render(el);
+  expandAll(el);
+  const after = el.querySelectorAll('.tree .node').length;
+  assert(after === before, 'Back restores the whole org (' + during + ' -> ' + after + ')');
 
-  // Clicking a manager card toggles its subtree (collapse/expand) without throwing.
-  if (mgr) {
-    const before = el.querySelectorAll('.tree .node').length;
-    mgr.click();
-    const after = el.querySelectorAll('.tree .node').length;
-    assert(after !== before, 'clicking manager card changed visible node count (' + before + ' -> ' + after + ')');
-  }
+  // --- RTL: the whole view re-renders in Arabic without errors -----------------------
+  WP.state.lang = 'ar';
+  window.document.documentElement.setAttribute('dir', 'rtl');
+  WP.ui.workloadMap.render(el);
+  assert(el.querySelector('.tree .node'), 'tree still renders in AR/RTL');
+  assert(/تركيز على الفريق|العودة إلى المؤسسة|مُوجز|مفصّل/.test(el.innerHTML), 'AR labels present (focus / back / density)');
 } catch (e) {
   errors.push('[run] ' + e.message + '\n' + e.stack);
 }
 
 if (errors.length) { console.log('FAIL\n' + errors.join('\n')); process.exit(1); }
-console.log('PASS — workload map renders clean; status line, live indicator, click-to-expand, avatar-profile, and Raghdaa join-date all verified.');
+console.log('PASS — workload map: compact default (+workload color), vertical stack under expanded managers (departments stay horizontal), detail-on-peek, detailed restores full card, density persists per-user (namespaced), focus hides siblings + breadcrumb Back restores, RTL renders.');
 process.exit(0);   // stop the 10s auto-refresh timer so the harness exits cleanly

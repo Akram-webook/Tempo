@@ -10,6 +10,24 @@
   let collapseInit = false;
   let focusId = null;      // scope the tree to one team (subtree root)
   let _root = null, _base = null;   // last render target + scope (for expandAll/collapseAll)
+  let animateNext = false; // one-shot: play the focus enter/exit animation on the NEXT render only
+
+  // Card density — COMPACT by default so a large team scans at a glance (photo + name +
+  // a small workload bar + the workload COLOR, which is the key signal). DETAILED restores
+  // the full card. Persisted PER SIGNED-IN USER via the identity-namespaced key (never a
+  // global key — reuses WP.identity.nsKey from state.js). Never throws if storage is gone.
+  const DENSITY_KEY = 'tempo_map_density';
+  function densityKey() { return (WP.identity && WP.identity.nsKey) ? WP.identity.nsKey(DENSITY_KEY) : DENSITY_KEY; }
+  function loadDensity() { try { return localStorage.getItem(densityKey()) === 'detailed' ? 'detailed' : 'compact'; } catch (e) { return 'compact'; } }
+  function saveDensity(v) { try { localStorage.setItem(densityKey(), v); } catch (e) {} }
+  let density = null;      // resolved lazily on first render (after the identity is known)
+
+  // ponytail: DEFERRED — infinite canvas + minimap (zoom/pan, Figma-style). Deliberately
+  // NOT built: over-engineering for ~37 people / 5 departments. The vertical stack +
+  // density toggle + focus mode below solve the real readability pain. Upgrade path if the
+  // org ever reaches hundreds–thousands of nodes: introduce a virtualized pan/zoom canvas
+  // (e.g. a transform-scaled viewport + minimap) — the data + render stay; only the
+  // viewport wrapper changes. Revisit only at that scale.
 
   // Progressive disclosure: keep the leadership spine open (director + the team-lead
   // row) so the first view actually fills the canvas, and collapse only each team's
@@ -112,23 +130,44 @@
   }
 
   function nodeHTML(person, snap, kidCount, isCol) {
+    const t = WP.i18n.t;
     const accent = ui.stateColor(snap.state);
-    const flame = snap.burnout ? '<div class="flame" title="' + WP.i18n.t('burnoutFlag') + '">' + WP.ui.icon('flame', 15) + '</div>' : '';
+    const compact = density === 'compact';
+    const flame = snap.burnout ? '<div class="flame" title="' + t('burnoutFlag') + '">' + WP.ui.icon('flame', 15) + '</div>' : '';
     // Caret keeps the report COUNT visible and acts as a secondary toggle; the whole
     // card is also clickable to expand (see render). aria-expanded for screen readers.
     const caret = kidCount
       ? '<button class="node-caret' + (isCol ? ' is-col' : '') + '" data-caret="' + person.id +
-        '" aria-label="' + (isCol ? 'show team' : 'hide team') + '" aria-expanded="' + (!isCol) + '">' +
+        '" aria-label="' + (isCol ? t('showTeamA11y') : t('hideTeamA11y')) + '" aria-expanded="' + (!isCol) + '">' +
         kidCount + '<span class="chev"></span></button>'
       : '';
-    // Manager cards expand on click; the avatar is the dedicated "open profile" affordance.
-    return '<div class="node' + (person.tbc ? ' is-tbc' : '') + (kidCount ? ' has-kids' : '') + '"' +
+    // Focus = drill into this subtree (hide siblings). A real <button> → keyboard-operable
+    // on every branch node. Only meaningful where there's a team to drill into.
+    const focusBtn = kidCount
+      ? '<button class="node-focus" data-focus="' + person.id + '" aria-label="' + t('focusTeam') + '" title="' + t('focusTeam') + '">' + WP.ui.icon('target', 13) + '</button>'
+      : '';
+    // The workload color/status dot is ALWAYS shown (the key signal) — even in compact.
+    const ava = '<span class="node-ava" data-profile="' + person.id + '" role="button" tabindex="0"' +
+        ' aria-label="' + ui.esc(WP.i18n.name(person)) + ' — ' + t('openProfile') + '">' + ui.avatar(person, accent) + '</span>';
+    const nm = '<div class="nm">' + ui.esc(WP.i18n.name(person)) + '</div>';
+
+    // COMPACT card: photo + name + small workload indicator + color/status. Full detail
+    // is one click away via the existing node-peek popover (the avatar opens it). Open
+    // roles (tbc) have no load → show the status line instead so they still read clearly.
+    const cls = 'node' + (person.tbc ? ' is-tbc' : '') + (kidCount ? ' has-kids' : '') + (compact ? ' node-compact' : '');
+    if (compact) {
+      return '<div class="' + cls + '" data-id="' + person.id + '" style="--node-accent:' + accent + '"' +
+          ' title="' + (kidCount ? (isCol ? t('clickShowTeam') : t('clickHideTeam')) : t('openProfile')) + '">' +
+        flame + focusBtn + ava + nm +
+        (person.tbc ? statusLine(person) : loadBar(snap)) +
+        caret +
+      '</div>';
+    }
+    // DETAILED card: title, employment/status, account, load bar + %.
+    return '<div class="' + cls + '"' +
         ' data-id="' + person.id + '" style="--node-accent:' + accent + '"' +
-        (kidCount ? ' title="' + (isCol ? 'Click to show team' : 'Click to hide team') + '"' : '') + '>' +
-      flame +
-      '<span class="node-ava" data-profile="' + person.id + '" role="button" tabindex="0"' +
-        ' aria-label="' + ui.esc(WP.i18n.name(person)) + ' — open profile">' + ui.avatar(person, accent) + '</span>' +
-      '<div class="nm">' + ui.esc(WP.i18n.name(person)) + '</div>' +
+        (kidCount ? ' title="' + (isCol ? t('clickShowTeam') : t('clickHideTeam')) + '"' : '') + '>' +
+      flame + focusBtn + ava + nm +
       '<div class="ttl">' + ui.esc(WP.i18n.title(person)) + '</div>' +
       statusLine(person) +
       acctLine(person) +
@@ -172,16 +211,23 @@
       const label = WP.state.lang === 'ar' ? (p.teamAr || p.team) : p.team;
       return '<div class="team-tag">' + ui.esc(label) + '</div>';
     }
-    function li(p) {
+    // depth 0 = root(s); depth 1 = the top-level departments (kept laid out
+    // HORIZONTALLY, as today). At depth >= 1 a manager's reports render as a VERTICAL
+    // stacked list (ul.stack) instead of a horizontal row — so expanding a team grows
+    // the page DOWN, not sideways, and horizontal scroll disappears.
+    function li(p, depth) {
       const kids = childrenOf(p.id);
       const isCol = !!colMap[p.id];
-      const childUl = (kids.length && !isCol) ? '<ul>' + kids.map(li).join('') + '</ul>' : '';
+      const stack = depth >= 1 ? ' class="stack"' : '';
+      const childUl = (kids.length && !isCol)
+        ? '<ul' + stack + '>' + kids.map(function (k) { return li(k, depth + 1); }).join('') + '</ul>'
+        : '';
       // team-lead nodes carry a labeled header so each section is named + separated
       return '<li' + (p.team ? ' class="team-branch"' : '') + '>' +
         teamTag(p) + nodeHTML(p, snapById[p.id], kids.length, isCol) + childUl + '</li>';
     }
     return '<div class="tree-scroll"><div class="tree-fit"><ul class="tree">' +
-      roots.map(li).join('') + '</ul></div></div>';
+      roots.map(function (r) { return li(r, 0); }).join('') + '</ul></div></div>';
   }
 
   // Localized team label (team leads carry a team name; everyone else falls back to their name).
@@ -375,6 +421,7 @@
     const base = WP.access.visiblePeople(viewer);
     if (!collapseInit) { collapsed = defaultCollapsed(base); collapseInit = true; }
     _root = root; _base = base;   // remembered so expandAll/collapseAll can re-render (standalone export)
+    if (density === null) density = loadDensity();   // resolve once the signed-in identity is known
 
     // SCOPE → focus the tree on one team (subtree). Search is a predictive
     // quick-jump (typeahead), handled separately so typing never re-renders the tree.
@@ -403,8 +450,15 @@
     const periodItems = ['day', 'week', 'month', 'year'].map(function (k) {
       return { val: k, label: t(k), sel: k === win };
     });
+    // Density toggle (progressive disclosure) — DEFAULT compact. Only meaningful for the
+    // tree; the list view has its own columns, so we don't show a redundant control there.
+    const densityItems = [
+      { val: 'compact', label: t('densityCompact'), icon: 'grid', sel: density === 'compact' },
+      { val: 'detailed', label: t('densityDetailed'), icon: 'panel', sel: density === 'detailed' },
+    ];
     const toggle = '<div class="toolbar">' +
       ddMenu('view-dd', listMode ? 'list' : 'tree', listMode ? t('listView') : t('treeView'), viewItems) +
+      (listMode ? '' : ddMenu('density-dd', density === 'compact' ? 'grid' : 'panel', density === 'compact' ? t('densityCompact') : t('densityDetailed'), densityItems)) +
       ddMenu('period-dd', null, t(win), periodItems) +
       dateNav(win, WP.state.refDate) +
     '</div>';
@@ -418,14 +472,23 @@
       '<span class="legend-item"><span class="emp emp-free">' + t('freelance') + '</span></span>' +
       '</div>';
 
+    const animCls = animateNext ? ' tree-anim' : '';
+    animateNext = false;
     const body = people.length === 0
       ? '<div class="map-empty">' + WP.ui.icon('users', 18) + ' <span>' + t('emptyTeam') + '</span>' +
           (focusPerson ? ' <button class="btn" id="empty-showall">' + t('showAll') + '</button>' : '') + '</div>'
-      : (listMode ? '<div id="map-table"></div>' : treeChart(people, snapById, colMap));
+      : (listMode ? '<div id="map-table"></div>' : treeChart(people, snapById, colMap).replace('class="tree-scroll"', 'class="tree-scroll' + animCls + (focusPerson ? ' is-focused' : '') + '"'));
+    // FOCUS MODE: the breadcrumb (the #45 component) carries the way back. When focused,
+    // the "People & workload" crumb becomes a link that restores the whole org ("Back to
+    // Organization"); the focused team is the current page. Wired below via a capture-phase
+    // handler so it clears focus before app.js's central route nav fires.
+    const crumbs = focusPerson
+      ? [{ label: t('bcTempo'), route: 'dashboard' }, { label: t('backToOrg'), route: 'map' }, { label: teamLabel(focusPerson) }]
+      : [{ label: t('bcTempo'), route: 'dashboard' }, { label: t('mapTitle') }];
     // Standalone export (WP.EMBED) supplies its own slim title bar → skip the in-app
     // page header/breadcrumb here. In the app, WP.EMBED is falsy → unchanged.
     root.innerHTML = (WP.EMBED ? '' : WP.ui.pageHeader({
-        crumbs: [{ label: t('bcTempo'), route: 'dashboard' }, { label: t('mapTitle') }],
+        crumbs: crumbs,
         title: t('mapTitle'),
         subtitle: t('mapSub'),
         right: chartActions(),   // page-level: open / share the full standalone chart export
@@ -517,12 +580,24 @@
     // page-level header actions (full-screen chart + copy link)
     wireChartActions(root);
 
-    // compact toolbar dropdowns (View · Period)
+    // compact toolbar dropdowns (View · Density · Period)
     setupMenu(root, 'view-dd', function (v) { listMode = (v === 'list'); render(root); });
+    setupMenu(root, 'density-dd', function (v) { density = (v === 'detailed') ? 'detailed' : 'compact'; saveDensity(density); render(root); });
     setupMenu(root, 'period-dd', function (v) { WP.setState({ window: v }); });
     closeMenusOnOutside(root);
     const esa = root.querySelector('#empty-showall');
-    if (esa) esa.onclick = function () { focusId = null; render(root); };
+    if (esa) esa.onclick = function () { setFocus(root, null); };
+
+    // FOCUS action on a branch node → drill into that subtree (hide siblings, auto-expand).
+    root.querySelectorAll('[data-focus]').forEach(function (b) {
+      b.onclick = function (e) { e.stopPropagation(); setFocus(root, b.dataset.focus); };
+    });
+    // "Back to Organization" via the breadcrumb component: clear focus in a capture-phase
+    // handler so it runs BEFORE app.js's central route nav (which then re-renders the map).
+    if (focusPerson) {
+      const back = root.querySelector('.wbk-bc a[data-bc-go="map"]');
+      if (back) back.addEventListener('click', function () { focusId = null; collapsed = defaultCollapsed(base); animateNext = true; }, true);
+    }
 
     // unified Find — searches people AND teams; jump to a person or their whole team
     setupFinder(root, base, allSnapById);
@@ -532,6 +607,22 @@
 
     // keep the board live — refresh on a light interval (see scheduleAutoRefresh)
     scheduleAutoRefresh(root);
+  }
+
+  // Drill into / out of a subtree (Focus mode). Resets collapse so the focused team is
+  // auto-expanded, plays the enter/exit animation once, and MANAGES KEYBOARD FOCUS: on
+  // ENTER the breadcrumb "Back to Organization" link is focused (the way out is reachable
+  // immediately); on EXIT the toolbar View control is focused.
+  function setFocus(root, id) {
+    const base = WP.access.visiblePeople(WP.viewer());
+    focusId = id || null;
+    collapsed = focusId ? {} : defaultCollapsed(base);
+    animateNext = true;
+    render(root);
+    const target = focusId
+      ? root.querySelector('.wbk-bc a[data-bc-go="map"]')
+      : root.querySelector('#view-dd-btn');
+    if (target && target.focus) target.focus();
   }
 
   // Live clock for the "Updated …" indicator.
