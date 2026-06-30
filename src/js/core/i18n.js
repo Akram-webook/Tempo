@@ -620,6 +620,11 @@
     subActive:      { en: 'Active cycle', ar: 'الدورة الحالية' },
     subHistory:     { en: 'History', ar: 'السجل' },
     manageAccess:   { en: 'Manage access', ar: 'إدارة الصلاحيات' },
+
+    /* ── Standalone Operations Chart export (chart.html) ── */
+    ocTitle:        { en: 'Operations Chart', ar: 'مخطط العمليات' },
+    ocExpandAll:    { en: 'Expand all', ar: 'توسيع الكل' },
+    ocCollapseAll:  { en: 'Collapse all', ar: 'طي الكل' },
   };
 
   function t(key) {

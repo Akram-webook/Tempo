@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Operations Chart — Tempo (Sample data)</title>
+  <meta name="description" content="Tempo — Operations org chart preview (sample data). Read-only, no login." />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/svg+xml" href="src/assets/wbk-pink.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- @GELLIX-FONT@ -->
+  <link rel="stylesheet" href="src/css/tokens.css" />
+  <link rel="stylesheet" href="src/css/app.css" />
+  <style>
+    /* Standalone export chrome — slim header, no sidebar. Tokens only. */
+    body { margin: 0; background: var(--bg, var(--surface)); color: var(--text); }
+    #chart-bar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center;
+      justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap;
+      padding: var(--sp-3) var(--sp-5); background: var(--surface); border-bottom: 1px solid var(--border); }
+    .oc-bar-l { display: flex; align-items: center; gap: var(--sp-3); }
+    .oc-bar-r { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+    .oc-title { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-h3); color: var(--text); }
+    .oc-sample { display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-body-s); font-weight: 600;
+      color: var(--text-muted); border: 1px solid var(--border); border-radius: 999px; padding: 2px var(--sp-3); }
+    #chart-view { padding: var(--sp-5); max-inline-size: 1280px; margin: 0 auto; }
+    /* The app centres the tree in a full-viewport canvas; in this slim standalone the
+       header/metrics/legend sit above it, so align the tree to the top (no big gap). */
+    #chart-view .tree-scroll { align-items: flex-start; min-height: 50vh; }
+  </style>
+</head>
+<body>
+  <header id="chart-bar"></header>
+  <main id="chart-view"><div id="view"></div></main>
+  <div id="overlay-host"></div>
+
+  <!-- data → core → ui (no login, no app shell, no auth/router) → standalone boot -->
+  <script src="src/js/data/mock-data.js"></script>
+  <script src="src/js/data/growth-data.js"></script>
+  <script src="src/js/data/evaluation.js"></script>
+  <script src="src/js/data/engage-data.js"></script>
+  <script src="src/js/core/config.js"></script>
+  <script src="src/js/core/i18n.js"></script>
+  <script src="src/js/core/state.js"></script>
+  <script src="src/js/core/access.js"></script>
+  <script src="src/js/core/capacity.js"></script>
+  <script src="src/js/core/growth.js"></script>
+  <script src="src/js/core/persist.js"></script>
+  <script src="src/js/core/wellbeing.js"></script>
+  <script src="src/js/core/fairness.js"></script>
+  <script src="src/js/core/events.js"></script>
+  <script src="src/js/core/readiness.js"></script>
+  <script src="src/js/ui/components.js"></script>
+  <script src="src/js/ui/icons.js"></script>
+  <script src="src/js/ui/workloadMap.js"></script>
+  <script src="src/js/ui/profile.js"></script>
+  <script src="src/js/ui/readiness.js"></script>
+  <script src="src/js/chart-boot.js"></script>
+</body>
+</html>

@@ -9,6 +9,7 @@
   let collapsed = {};      // person ids whose subtree is collapsed
   let collapseInit = false;
   let focusId = null;      // scope the tree to one team (subtree root)
+  let _root = null, _base = null;   // last render target + scope (for expandAll/collapseAll)
 
   // Progressive disclosure: keep the leadership spine open (director + the team-lead
   // row) so the first view actually fills the canvas, and collapse only each team's
@@ -335,6 +336,7 @@
     const viewer = WP.viewer();
     const base = WP.access.visiblePeople(viewer);
     if (!collapseInit) { collapsed = defaultCollapsed(base); collapseInit = true; }
+    _root = root; _base = base;   // remembered so expandAll/collapseAll can re-render (standalone export)
 
     // SCOPE → focus the tree on one team (subtree). Search is a predictive
     // quick-jump (typeahead), handled separately so typing never re-renders the tree.
@@ -382,11 +384,13 @@
       ? '<div class="map-empty">' + WP.ui.icon('users', 18) + ' <span>' + t('emptyTeam') + '</span>' +
           (focusPerson ? ' <button class="btn" id="empty-showall">' + t('showAll') + '</button>' : '') + '</div>'
       : (listMode ? '<div id="map-table"></div>' : treeChart(people, snapById, colMap));
-    root.innerHTML = WP.ui.pageHeader({
+    // Standalone export (WP.EMBED) supplies its own slim title bar → skip the in-app
+    // page header/breadcrumb here. In the app, WP.EMBED is falsy → unchanged.
+    root.innerHTML = (WP.EMBED ? '' : WP.ui.pageHeader({
         crumbs: [{ label: t('bcTempo'), route: 'dashboard' }, { label: t('mapTitle') }],
         title: t('mapTitle'),
         subtitle: t('mapSub'),
-      }) + metricsBar(m) +
+      })) + metricsBar(m) +
       // The predictive finder is the tree's quick-jump; in list mode the table's own
       // search/filter does that job, so we don't show two search boxes (minimalism).
       '<div class="controlbar">' + toggle + (listMode ? '' : mapFilters(base)) + '</div>' +
@@ -688,5 +692,21 @@
     if (sce) sce.onclick = function () { focusTeam(null); };
   }
 
-  WP.ui.workloadMap = { render: render };
+  // Expand/collapse the WHOLE tree — reused by the standalone export's top controls.
+  function setAllCollapsed(flag) {
+    if (!_base) return;
+    if (!flag) { collapsed = {}; }
+    else {
+      const hasKids = {}; _base.forEach(function (p) { if (p.managerId) hasKids[p.managerId] = true; });
+      collapsed = {}; _base.forEach(function (p) { if (hasKids[p.id]) collapsed[p.id] = true; });
+    }
+    collapseInit = true;
+    if (_root) render(_root);
+  }
+
+  WP.ui.workloadMap = {
+    render: render,
+    expandAll: function () { setAllCollapsed(false); },
+    collapseAll: function () { setAllCollapsed(true); },
+  };
 })(window.WP = window.WP || {});
