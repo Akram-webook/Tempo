@@ -53,8 +53,11 @@ function inlineShell(srcFile) {
   return html;
 }
 
-function buildPage(srcFile, outFile) {
-  const html = inlineShell(srcFile);
+function buildPage(srcFile, outFile, opts) {
+  let html = inlineShell(srcFile);
+  // The public chart never authenticates and never reads EMAILS — so don't ship the
+  // real @webook.com directory into a harvestable public page. Empty the map for it.
+  if (opts && opts.stripEmails) html = html.replace(/const EMAILS = \{[^}]*\};/, 'const EMAILS = {};');
   fs.writeFileSync(path.join(root, 'dist', outFile), html);
   const kb = (Buffer.byteLength(html, 'utf8') / 1024).toFixed(0);
   const leftJs = (html.match(/<script\s+src="src\//g) || []).length;
@@ -64,4 +67,4 @@ function buildPage(srcFile, outFile) {
 
 fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
 buildPage('index.html', 'index.html');
-buildPage('chart.html', 'chart.html');
+buildPage('chart.html', 'chart.html', { stripEmails: true });

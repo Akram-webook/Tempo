@@ -118,6 +118,13 @@
     p_faraj: 'faraj@webook.com', p_meshalB: 'meshal@webook.com', p_fouda: 'fouda@webook.com',
     p_abdelaal: 'abdelaal@webook.com',
     p_motaa: 'motaa@webook.com',
+    p_hamdi: 'hamdi@webook.com', p_ayman: 'ayman@webook.com', p_ayah: 'ayah@webook.com',
+    p_hani: 'hani@webook.com', p_batool: 'batool@webook.com', p_farah: 'alsmay@webook.com',
+    p_zarea: 'zarea@webook.com', p_khaled: 'khaled@webook.com', p_amen: 'amen@webook.com',
+    p_batarfi: 'batarfi@webook.com', p_rafah: 'rafah.alansari@webook.com', p_aljazi: 'alshubaike@webook.com',
+    p_shahad: 'shahad@webook.com', p_duha: 'duha.alzahrani.c@webook.com', p_ibrahim: 'ibrahim.albard.c@webook.com',
+    p_rana: 'alsalem@webook.com', p_rosa: 'rosa@webook.com', p_altahini: 'altahini@webook.com',
+    p_meshalA: 'alsmari@webook.com', p_raghdaa: 'raghdaa@webook.com',
   };
   PEOPLE.forEach(function (p) {
     if (EMAILS[p.id]) p.email = EMAILS[p.id];

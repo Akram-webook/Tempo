@@ -28,6 +28,18 @@ try{
   assert(!WP.ui.login,'no login UI loaded');
   assert(typeof WP.auth==='undefined','no auth module loaded (public, read-only)');
 
+  // ── privacy: the PUBLIC built chart ships ZERO real @webook.com addresses ──
+  // (build.js empties the EMAILS map for the chart bundle; the app keeps it for login.)
+  const distChart=path.join(root,'dist','chart.html');
+  if(fs.existsSync(distChart)){
+    const built=fs.readFileSync(distChart,'utf8');
+    // No real account address ships: the directory entry pattern (p_xxx: 'name@webook.com')
+    // must not survive. (Remaining @webook.com hits are i18n login copy / comments naming the
+    // domain — not personal data, so they're allowed; emptying EMAILS is the privacy fix.)
+    assert(!/p_\w+\s*:\s*'[^']+@webook\.com'/.test(built),'built dist/chart.html ships NO real directory emails');
+    assert(/const EMAILS = \{\};/.test(built),'EMAILS map is emptied in the public chart bundle');
+  }
+
   // ── lands directly on the chart (boot ran on load) ──
   const view=doc.getElementById('view');
   assert(doc.getElementById('chart-bar'),'standalone top bar exists');

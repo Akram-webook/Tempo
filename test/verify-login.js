@@ -23,6 +23,22 @@ try{
   // Phase A — Motaa Aldarra now has a verified login (was getting errNoAccount).
   assert(f('motaa@webook.com').person.id==='p_motaa','motaa → p_motaa (Phase A login)');
   assert(WP.access.hasAccess('p_motaa')===true,'p_motaa passes the access gate (non-tbc)');
+  // Phase B — the remaining 20 real people now resolve (verified Slack-directory emails).
+  const PHASE_B={p_hamdi:'hamdi@webook.com',p_ayman:'ayman@webook.com',p_ayah:'ayah@webook.com',
+    p_hani:'hani@webook.com',p_batool:'batool@webook.com',p_farah:'alsmay@webook.com',
+    p_zarea:'zarea@webook.com',p_khaled:'khaled@webook.com',p_amen:'amen@webook.com',
+    p_batarfi:'batarfi@webook.com',p_rafah:'rafah.alansari@webook.com',p_aljazi:'alshubaike@webook.com',
+    p_shahad:'shahad@webook.com',p_duha:'duha.alzahrani.c@webook.com',p_ibrahim:'ibrahim.albard.c@webook.com',
+    p_rana:'alsalem@webook.com',p_rosa:'rosa@webook.com',p_altahini:'altahini@webook.com',
+    p_meshalA:'alsmari@webook.com',p_raghdaa:'raghdaa@webook.com'};
+  Object.keys(PHASE_B).forEach(function(id){
+    assert(f(PHASE_B[id]).person && f(PHASE_B[id]).person.id===id, PHASE_B[id]+' → '+id);
+    assert(WP.access.hasAccess(id)===true, id+' passes the access gate (non-tbc)');
+  });
+  // Only the 3 TBC vacancies stay account-less (no email mapped).
+  ['p_tbc_af_spec','p_tbc_af_coord','p_tbc_sports'].forEach(function(id){
+    assert(!WP.access.byId(id) || !WP.access.byId(id).email, id+' (TBC vacancy) has no login');
+  });
   assert(f('akram@gmail.com').error==='errBadDomain','wrong domain rejected');
   assert(f('nobody@webook.com').error==='errNoAccount','unknown rejected');
   assert(WP.access.isSuperAdmin(WP.access.byId('p_akram'))===true,'akram super admin');
