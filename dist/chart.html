@@ -2667,6 +2667,19 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   if (WP.config.supabaseAnonKey === undefined) WP.config.supabaseAnonKey = 'sb_publishable_0SzG8Od9htPYqlp9PSwYqQ_IvPjdYgt';
   // — Google sign-in (optional alternative). —
   if (WP.config.googleClientId === undefined)  WP.config.googleClientId = '';
+  // — Auth provider selector (DECOUPLED from the Supabase DATA layer above). —
+  // Supabase stays connected for WP.db (people/evaluations) no matter what this is;
+  // this ONLY chooses how people sign IN. Values: 'google' | 'verified-link' | 'directory'.
+  //
+  // TEMPORARY STOPGAP — set to 'directory' to unblock everyone TODAY. Supabase's
+  // built-in email sender is rate-limited ("Could not send the code"), so the
+  // verified-LINK path locks people out. Google (PR #51) is the intended provider
+  // but is blocked on the real OAuth Client ID. The directory gate is instant
+  // (registered @webook.com email → straight in) but is NOT identity-proof:
+  // anyone who types a known @webook.com email gets in. Acceptable short-term for
+  // an internal pilot on an obscure URL; flip back to 'google' the moment the
+  // Client ID is wired.
+  if (WP.config.authMode === undefined)        WP.config.authMode = 'directory';
 
   /* ----------------------------------------------------------------
    * MVP FLAG (reversible, one line) — what the org SEES in v1.

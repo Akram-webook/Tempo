@@ -15,6 +15,10 @@ for(const s of srcs){try{new window.Function(fs.readFileSync(path.join(root,s),'
 const WP=window.WP;function assert(c,m){if(!c)errors.push('[assert] '+m);}
 function submitEmail(view,val){view.querySelector('#login-email').value=val;view.querySelector('#login-form').dispatchEvent(new window.Event('submit'));}
 try{
+  // The TEMPORARY stopgap sets config.authMode='directory' as the default. This suite
+  // exercises the verified-LINK provider, which still exists — select it explicitly.
+  // mode() reads WP.config.authMode live, so this takes effect immediately.
+  WP.config.authMode='verified-link';
   const f=WP.auth.findByEmail;
   assert(f('akram@webook.com').person.id==='p_akram','akram → p_akram');
   assert(f('o.taher.c@webook.com').person.id==='p_osama','o.taher.c → Osama');

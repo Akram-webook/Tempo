@@ -32,8 +32,23 @@
     return p ? { person: p } : { error: 'errNoAccount' };
   }
 
-  function modeVerifiedLink() { return !!(WP.config && WP.config.supabaseUrl && WP.config.supabaseAnonKey); }
-  function modeGoogle() { return !modeVerifiedLink() && !!(WP.config && WP.config.googleClientId); }
+  // Is Supabase configured? This gates the DATA layer (WP.db) and the verified-link
+  // option — NOT the same question as "which auth provider do we use".
+  function dbConfigured() { return !!(WP.config && WP.config.supabaseUrl && WP.config.supabaseAnonKey); }
+  function googleConfigured() { return !!(WP.config && WP.config.googleClientId); }
+  // The active AUTH provider. WP.config.authMode wins when set to a known value;
+  // otherwise fall back to the legacy precedence (verified-link > google > directory).
+  // Decoupled from dbConfigured() so we can pick the directory gate (or Google) while
+  // Supabase stays wired for data.
+  function mode() {
+    var m = WP.config && WP.config.authMode;
+    if (m === 'google' || m === 'verified-link' || m === 'directory') return m;
+    if (dbConfigured()) return 'verified-link';
+    if (googleConfigured()) return 'google';
+    return 'directory';
+  }
+  function modeVerifiedLink() { return mode() === 'verified-link'; }
+  function modeGoogle() { return mode() === 'google'; }
   function redirectUrl() { return location.origin + location.pathname; }
 
   function signIn(personId) {
@@ -86,9 +101,14 @@
   // Called on boot when verified mode is on: consumes the link's token from the
   // URL (detectSessionInUrl) and restores any persisted session ("stay signed in").
   function initSession() {
-    if (!modeVerifiedLink()) return;
+    // Create the Supabase client whenever Supabase is configured — WP.db (the data
+    // layer) reads through WP._sb, so it must exist even when the AUTH provider is
+    // the directory gate or Google. Only the verified-LINK email session wiring below
+    // is auth-mode specific.
+    if (!dbConfigured()) return;
     sbClient(function (sb) {
       if (!sb) return;
+      if (!modeVerifiedLink()) return;   // client is up for WP.db; no email-link auth to wire
       try {
         sb.auth.onAuthStateChange(function (_evt, session) { if (session && !WP.state.authed) handleSession(session); });
         sb.auth.getSession().then(function (res) {
@@ -234,7 +254,7 @@
     domain: DOMAIN, emailOf: emailOf, findByEmail: findByEmail,
     signIn: signIn, signOut: signOut,
     sendLink: sendLink, initSession: initSession, handleSession: handleSession,
-    mode: function () { return modeVerifiedLink() ? 'verified-link' : modeGoogle() ? 'google' : 'directory'; }
+    mode: mode
   };
   WP.ui.login = { render: render };
 })(window.WP = window.WP || {});
